@@ -3,3 +3,4 @@ flask-login
 flask-cors
 gunicorn
 pymongo==4.4.0
+bcrypt
