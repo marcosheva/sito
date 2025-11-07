@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Libri</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: rgb(221, 186, 31);
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background-color: rgb(240, 240, 240);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+            border: 1px solid #ccc;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #999;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background: #333;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f3f3f3;
+        }
+        a {
+            display: inline-block;
+            margin-bottom: 10px;
+            color: #333;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <a href="/">⬅ Torna alla Home</a>
+        <h1>Libri in libreria</h1>
+
+        <table>
+            <tr>
+                <th>Titolo</th>
+                <th>Autore</th>
+                <th>Anno</th>
+                <th>ISBN</th>
+                
+            </tr>
+            {% for l in libri %}
+            <tr>
+                <td>{{ l.titolo }}</td>
+                <td>{{ l.autore }}</td>
+                <td>{{ l.anno }}</td>
+                <td>{{ l.isbn }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</body>
+</html>

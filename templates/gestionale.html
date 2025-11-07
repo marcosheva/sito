@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Gestionale Entrate/Uscite</title>
+<style>
+body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; color: #333; }
+h1 { color: #444; }
+table { border-collapse: collapse; width: 100%; margin-top: 20px; background: #fff; border-radius: 5px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+th { background: #007BFF; color: white; }
+tr:hover { background-color: #f1f1f1; }
+input, select, button { padding: 8px; margin: 2px; border-radius: 4px; border: 1px solid #ccc; }
+button { cursor: pointer; background: #28a745; color: white; border: none; }
+button:hover { background: #218838; }
+.success { color: green; font-weight: bold; }
+.error { color: red; font-weight: bold; }
+.entrata { color: green; font-weight: bold; }
+.uscita { color: red; font-weight: bold; }
+.totali { font-size: 18px; font-weight: bold; margin: 10px 0; }
+a.delete { color: red; text-decoration: none; font-weight: bold; }
+a.delete:hover { text-decoration: underline; }
+form.inline { display: flex; flex-wrap: wrap; justify-content: center; }
+.logout { display: inline-block; margin-top: 10px; text-decoration: none; color: blue; font-weight: bold; }
+.riga-entrata { background-color: #d4edda; } /* verde chiaro */
+.riga-uscita { background-color: #f8d7da; }  /* rosso chiaro */
+.riga-entrata:hover { background-color: #c3e6cb; }
+.riga-uscita:hover { background-color: #f5c6cb; }
+</style>
+</head>
+<body>
+    <a href="/">⬅ Torna alla Home</a>
+<h1>Gestionale Entrate/Uscite - Utente: {{ username }}</h1>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <p class="{{ 'success' if category == 'success' else 'error' if category == 'danger' else 'info' }}">{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<h2>Nuovo Movimento</h2>
+<form method="post" class="inline" action="/gestionale">
+    <input type="hidden" name="azione" value="inserisci">
+    <select name="tipo" required>
+        <option value="uscita">Uscita</option>
+        <option value="entrata">Entrata</option>
+    </select>
+    <input type="text" name="descrizione" placeholder="Descrizione" required>
+    <input type="number" name="importo" step="0.01" placeholder="Importo" required>
+    <button type="submit">Aggiungi</button>
+</form>
+
+<div class="totali">
+    Entrate: <span class="entrata">{{ "%.2f"|format(entrate) }}</span> | 
+    Uscite: <span class="uscita">{{ "%.2f"|format(uscite) }}</span> | 
+    Saldo: {{ "%.2f"|format(saldo) }}
+</div>
+
+<h2>Lista Movimenti</h2>
+{% if movimenti|length == 0 %}
+    <p style="text-align: center; color: #666; font-style: italic; margin: 20px 0;">Nessun movimento presente. Aggiungi il primo movimento usando il form sopra.</p>
+{% else %}
+<table>
+    <tr>
+        <th>ID</th><th>Tipo</th><th>Descrizione</th><th>Importo</th><th>Data</th><th>Azioni</th>
+    </tr>
+    {% for movimento in movimenti %}
+        {% set classe_riga = 'riga-entrata' if movimento['tipo'] == 'entrata' else 'riga-uscita' %}
+    <form method="post" action="/gestionale" id="form-{{ movimento['_id'] }}" style="display: contents;">
+        <tr class="{{ classe_riga }}">
+            <td>{{ movimento['id']|string }}</td>
+            <td>
+                <select name="tipo">
+                    <option value="uscita" {{ 'selected' if movimento['tipo'] == 'uscita' else '' }}>Uscita</option>
+                    <option value="entrata" {{ 'selected' if movimento['tipo'] == 'entrata' else '' }}>Entrata</option>
+                </select>
+            </td>
+            <td>
+                <input type="text" name="descrizione" value="{{ movimento['descrizione'] }}">
+            </td>
+            <td>
+                <input type="number" step="0.01" name="importo" value="{{ movimento['importo'] }}">
+            </td>
+            <td>{{ movimento['data'].strftime('%Y-%m-%d %H:%M:%S') if movimento.get('data') else 'N/A' }}</td>
+            <td>
+                <input type="hidden" name="id" value="{{ movimento['_id']|string }}">
+                <input type="hidden" name="azione" value="modifica">
+                <button type="submit">💾 Salva</button>
+                <a class="delete" href="/gestionale?elimina={{ movimento['_id']|string }}" onclick="return confirm('Vuoi eliminare questo movimento?')">❌ Elimina</a>
+            </td>
+        </tr>
+    </form>
+    {% endfor %}
+</table>
+{% endif %}
+
+<a href="/logout" class="logout">🚪 Logout</a>
+
+</body>
+</html>

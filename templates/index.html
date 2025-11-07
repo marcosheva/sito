@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Tutte cose belle</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: rgb(221, 186, 31);
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background-color: rgb(240, 240, 240);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+            border: 1px solid #ccc;
+        }
+
+        /* Link in alto a destra */
+        .login-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 10px;
+        }
+
+        .login-container a {
+            text-decoration: none;
+            color: #333;
+            font-weight: bold;
+            padding: 10px;
+            background-color: #f1f1f1;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .login-container a:hover {
+            background-color: #ddd;
+        }
+
+        .login-container span {
+            padding-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        {% if current_user.is_authenticated %}
+            <!-- Se l'utente è autenticato, mostra il nome utente e un link per il logout -->
+            <span>Benvenuto, {{ current_user.username }}</span>
+            <a href="/logout">Logout</a>
+        {% else %}
+            <!-- Altrimenti, mostra il link al login -->
+            <a href="/login">Login</a>
+        {% endif %}
+    </div>
+
+    <div class="container">
+        <h1>Tutte cose belle</h1>
+        <p>Benvenuto nella mia prima pagina web con Flask!</p>
+        
+        <a href="https://www.gazzetta.it/">Gazzetta</a>
+        <a href="https://siciliaweb.it/">La Sicilia</a>
+        <a href="/quote">Quote!</a>
+        <a href="/bet365">Bet365!</a>
+        <a href="/prodotti">Prodotti!</a>
+        <a href="/libri">Libri!</a>
+        <a href="/gestionale">Gestionale!</a>
+    </div>
+</body>
+</html>

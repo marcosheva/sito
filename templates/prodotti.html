@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Magazzino</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: rgb(221, 186, 31);
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background-color: rgb(240, 240, 240);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+            border: 1px solid #ccc;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #999;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background: #333;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f3f3f3;
+        }
+        a, button {
+            margin: 2px;
+            padding: 5px 8px;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            background: #ddd;
+            color: #000;
+            cursor: pointer;
+        }
+        a:hover, button:hover {
+            background: #bbb;
+        }
+        form {
+            margin-bottom: 15px;
+        }
+        input {
+            padding: 5px;
+            margin: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 100%;
+            box-sizing: border-box;
+            font-size: 16px;
+            font-family: Arial, sans-serif;
+            color: #333;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <a href="/">⬅ Torna alla Home</a>
+    <h1>Prodotti in magazzino</h1>
+
+    <!-- ✅ FORM INSERIMENTO -->
+    <form action="/prodotti/aggiungi" method="post">
+        <input type="text" name="nome" placeholder="Nome" required>
+        <input type="text" name="marca" placeholder="Marca" required>
+        <input type="number" name="quantita" placeholder="Quantità" required>
+        <button type="submit">➕ Aggiungi</button>
+    </form>
+
+    <table>
+        <tr>
+            <th>Nome</th>
+            <th>Marca</th>
+            <th>Quantità</th>
+            <th>Azioni</th>
+        </tr>
+        {% for p in prodotti %}
+        <tr>
+            <td>{{ p.nome }}</td>
+            <td>{{ p.marca }}</td>
+            <td>{{ p.quantita }}</td>
+            <td>
+                <!-- ✏️ Modifica -->
+                <a href="/prodotti/modifica/{{ p._id }}">Modifica</a>
+
+                <!-- 🗑️ Elimina -->
+                <form action="/prodotti/elimina/{{ p._id }}" method="post" style="display:inline;">
+                    <button type="submit">Elimina</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+</body>
+</html>

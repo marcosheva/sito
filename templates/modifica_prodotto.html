@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Modifica Prodotto</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: rgb(221, 186, 31);
+            padding: 20px;
+        }
+        .container {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        input, button {
+            padding: 8px;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Modifica prodotto</h1>
+    <form action="/prodotti/modifica/{{ prodotto._id }}" method="post">
+        <input type="text" name="nome" value="{{ prodotto.nome }}" required>
+        <input type="text" name="marca" value="{{ prodotto.marca }}" required>
+        <input type="number" name="quantita" value="{{ prodotto.quantita }}" required>
+        <button type="submit">💾 Salva</button>
+        <a href="/prodotti">Annulla</a>
+    </form>
+</div>
+</body>
+</html>
