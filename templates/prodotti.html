@@ -1,106 +1,210 @@
 <!DOCTYPE html>
 <html lang="it">
+
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Magazzino</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: rgb(221, 186, 31);
+        /* Reset di base */
+        * {
             margin: 0;
-            padding: 20px;
+            padding: 0;
+            box-sizing: border-box;
         }
+
+        /* Corpo della pagina */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            line-height: 1.6;
+            padding: 0;
+        }
+
         .container {
-            background-color: rgb(240, 240, 240);
-            padding: 20px;
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 30px;
+            background-color: #fff;
             border-radius: 10px;
-            box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
-            border: 1px solid #ccc;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
         }
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-top: 20px;
+
+        h1 {
+            font-size: 32px;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 600;
         }
-        th, td {
-            border: 1px solid #999;
-            padding: 8px;
-            text-align: left;
+
+        a {
+            text-decoration: none;
+            color: #333;
+            font-weight: bold;
+            font-size: 16px;
         }
-        th {
-            background: #333;
+
+        a:hover {
+            color: #007BFF;
+        }
+
+        .back-home {
+            display: inline-block;
+            margin-bottom: 30px;
+            font-size: 16px;
+            background: #007BFF;
             color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
         }
-        tr:nth-child(even) {
-            background-color: #f3f3f3;
+
+        .back-home:hover {
+            background: #0056b3;
         }
-        a, button {
-            margin: 2px;
-            padding: 5px 8px;
+
+        /* Form di inserimento prodotto */
+        form {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 30px;
+            gap: 15px;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #fafafa;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus {
+            border-color: #007BFF;
+            outline: none;
+        }
+
+        button[type="submit"] {
+            padding: 12px 20px;
+            background-color: #28a745;
+            color: white;
+            font-size: 16px;
             border: none;
             border-radius: 5px;
-            text-decoration: none;
-            background: #ddd;
-            color: #000;
             cursor: pointer;
+            transition: background-color 0.3s ease;
         }
-        a:hover, button:hover {
-            background: #bbb;
+
+        button[type="submit"]:hover {
+            background-color: #218838;
         }
-        form {
-            margin-bottom: 15px;
-        }
-        input {
-            padding: 5px;
-            margin: 5px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
+
+        /* Tabella */
+        table {
             width: 100%;
-            box-sizing: border-box;
-            font-size: 16px;
-            font-family: Arial, sans-serif;
-            color: #333;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #007BFF;
+            color: white;
+            font-size: 18px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        td a,
+        td button {
+            font-size: 14px;
+            padding: 8px 12px;
+            text-decoration: none;
+            background-color: #f8f9fa;
+            color: #007BFF;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        td a:hover,
+        td button:hover {
+            background-color: #007BFF;
+            color: white;
+        }
+
+        /* Pulsante elimina */
+        td form button {
+            background-color: #dc3545;
+        }
+
+        td form button:hover {
+            background-color: #c82333;
         }
     </style>
 </head>
 
 <body>
-<div class="container">
-    <a href="/">⬅ Torna alla Home</a>
-    <h1>Prodotti in magazzino</h1>
 
-    <!-- ✅ FORM INSERIMENTO -->
-    <form action="/prodotti/aggiungi" method="post">
-        <input type="text" name="nome" placeholder="Nome" required>
-        <input type="text" name="marca" placeholder="Marca" required>
-        <input type="number" name="quantita" placeholder="Quantità" required>
-        <button type="submit">➕ Aggiungi</button>
-    </form>
+    <div class="container">
+        <a href="/" class="back-home">⬅ Torna alla Home</a>
+        <h1>Prodotti in Magazzino</h1>
 
-    <table>
-        <tr>
-            <th>Nome</th>
-            <th>Marca</th>
-            <th>Quantità</th>
-            <th>Azioni</th>
-        </tr>
-        {% for p in prodotti %}
-        <tr>
-            <td>{{ p.nome }}</td>
-            <td>{{ p.marca }}</td>
-            <td>{{ p.quantita }}</td>
-            <td>
-                <!-- ✏️ Modifica -->
-                <a href="/prodotti/modifica/{{ p._id }}">Modifica</a>
+        <!-- ✅ FORM INSERIMENTO -->
+        <form action="/prodotti/aggiungi" method="post">
+            <input type="text" name="nome" placeholder="Nome prodotto" required>
+            <input type="text" name="marca" placeholder="Marca prodotto" required>
+            <input type="number" name="quantita" placeholder="Quantità" required>
+            <button type="submit">➕ Aggiungi Prodotto</button>
+        </form>
 
-                <!-- 🗑️ Elimina -->
-                <form action="/prodotti/elimina/{{ p._id }}" method="post" style="display:inline;">
-                    <button type="submit">Elimina</button>
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
-</div>
+        <!-- Tabella dei prodotti -->
+        <table>
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Marca</th>
+                    <th>Quantità</th>
+                    <th>Azioni</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in prodotti %}
+                <tr>
+                    <td>{{ p.nome }}</td>
+                    <td>{{ p.marca }}</td>
+                    <td>{{ p.quantita }}</td>
+                    <td>
+                        <!-- ✏️ Modifica -->
+                        <a href="/prodotti/modifica/{{ p._id }}">Modifica</a>
+
+                        <!-- 🗑️ Elimina -->
+                        <form action="/prodotti/elimina/{{ p._id }}" method="post" style="display:inline;">
+                            <button type="submit">Elimina</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
 </body>
+
 </html>
