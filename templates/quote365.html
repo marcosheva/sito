@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+ 
+  <meta charset="UTF-8" />
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📊 Quote Sportive Complete | MongoDB</title>
+  <style nonce='random123456'>
+    :root {
+      --primary: #0b63d0; 
+      --primary-light: #eaf3ff;
+      --text-dark: #1e1e1e;
+      --text-light: #666;
+      --bg: #f5f7fa;
+      --white: #fff;
+      --radius: 10px;
+      --shadow: 0 2px 8px rgba(0,0,0,0.08);
+      --past-bg: #f0f0f0;
+      --soon-bg: #fff8c4;
+    }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text-dark); }
+    header { background: var(--primary); color:white; padding:16px 24px; display:flex; align-items:center; justify-content:space-between; box-shadow: var(--shadow); }
+    header h1 { margin:0; font-size:1.4rem; }
+    .controls { display:flex; gap:8px; align-items:center; }
+    select, input, button { padding:6px 10px; border-radius: var(--radius); border:1px solid #ccc; font-size:0.9rem; }
+    button { background: var(--primary); color:white; border:none; cursor:pointer; transition: background 0.2s; }
+    button:hover { background:#084fa5; }
+    #status { margin-bottom:10px; color: var(--text-light); font-size:0.9rem; }
+    table { width:100%; background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); overflow:hidden; }
+    th, td { text-align:left; padding:4px 6px; border-bottom:1px solid #eee; font-size:0.9rem; }
+    th { background: var(--primary); color:white; position:sticky; top:0; }
+    tr:hover { background: var(--primary-light); }
+    tr.past { background: var(--past-bg); color: #999; }
+    tr.soon { background: rgb(69, 235, 69); }
+    details { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); margin:4px 0; padding:10px; }
+    summary { cursor:pointer; font-weight:bold; color:var(--primary); }
+    .market { margin-left:10px; padding:4px 0; border-top:1px solid #eee; }
+    .market strong { color:var(--text-dark); }
+    .odds { display:flex; flex-wrap:wrap; gap:10px; margin-top:4px; }
+    .odd-item { background:#f5f7fa; padding:4px 8px; border-radius:8px; font-size:0.85rem; box-shadow: var(--shadow); }
+    @media (max-width:768px){
+      table, thead, tbody, th, td, tr { display:block; }
+      th { position:static; }
+      tr { background: var(--white); margin-bottom:10px; border-radius: var(--radius); box-shadow: var(--shadow); }
+      td { border:none; display:flex; justify-content:space-between; padding:8px 12px; }
+      td::before { content: attr(data-label); font-weight:600; color: var(--text-light); }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="/">⬅ Torna alla Home</a>
+    <h1>📊 Quote Sportive Complete</h1>
+    <div class="controls">
+      <label for="sportSelect">Sport:</label>
+      <select id="sportSelect">
+        <option value="calcio">⚽ Calcio</option>
+        <option value="basket">🏀 Basket</option>
+        <option value="tennis">🎾 Tennis</option>
+        <option value="hockey">🏒 Hockey</option>
+        <option value="baseball">⚾ Baseball</option>
+        <option value="pallamano">🤾 Pallamano</option>
+        <option value="freccette">🎯 Freccette</option>
+        <option value="pingpong">🏓 Ping Pong</option>
+        <option value="rugby">🏉 Rugby</option>
+        <option value="futsal">🥅 Futsal</option>
+      </select>
+
+      <label for="limitInput">Limite:</label>
+      <input id="limitInput" type="number" value="20" min="10" max="2000" />
+
+      <button id="refreshBtn">Aggiorna</button>
+    </div>
+  </header>
+
+  <main>
+    <div id="status">⏳ Caricamento iniziale...</div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Match ID</th>
+          <th>Partita</th>
+          <th>Campionato</th>
+          <th>Orario</th>
+          <th>1</th>
+          <th>X</th>
+          <th>2</th>
+          <th>Dettagli Quote</th>
+        </tr>
+      </thead>
+      <tbody id="eventsBody"></tbody>
+    </table>
+  </main>
+
+  <script nonce='random123456'>
+    // Conversione data senza correzione (già corretta dal backend)
+    function parseDate(s) {
+      const d = new Date(s.replace(" ", "T"));
+      return d;
+    }
+
+    function inOrarioLocale(orario) {
+      return parseDate(orario).toLocaleString("it-IT");
+    }
+
+    // Genera HTML per tutti i mercati extra (spread, over/under, ecc.)
+    function generaMercati(quote) {
+      if (!quote || Object.keys(quote).length === 0) return "<em>Nessun mercato aggiuntivo</em>";
+      return Object.entries(quote).map(([categoria, odds]) => `
+        <div class="market">
+          <strong>${categoria}</strong>
+          <div class="odds">
+            ${odds.map(o => `
+              <div class="odd-item">
+                ${(o.name || o.header || "Sconosciuto")} 
+                ${o.handicap ? `(${o.handicap})` : ""}: 
+                <b>${o.odds || "—"}</b>
+              </div>`).join("")}
+          </div>
+        </div>
+      `).join("");
+    }
+
+    async function load() {
+      const sport = document.getElementById('sportSelect').value;
+      const limit = document.getElementById('limitInput').value;
+      const status = document.getElementById('status');
+      const tbody = document.getElementById('eventsBody');
+      status.textContent = '⏳ Caricamento...';
+      tbody.innerHTML = '';
+
+      try {
+        const res = await fetch(`http://localhost:5000/api/events?sport=${sport}&limit=${limit}`);
+        const data = await res.json();
+
+        if (!data.results || !data.results.length) {
+          status.textContent = '⚠️ Nessun evento trovato';
+          return;
+        }
+
+        const eventiOrdinati = data.results
+          .sort((a, b) => parseDate(a.start_time) - parseDate(b.start_time));
+
+        status.textContent = `✅ Trovati ${eventiOrdinati.length} eventi`;
+
+        tbody.innerHTML = eventiOrdinati.map((ev, i) => {
+          const q = ev.quote_1x2 || {};
+          const now = new Date();
+          const start = parseDate(ev.start_time);
+          const diffMs = start - now;
+          let rowClass = "";
+          if (diffMs < 0) rowClass = "past";
+          else if (diffMs <= 60*60*1000) rowClass = "soon";
+
+          const quoteExtra = generaMercati(ev.quote || {});
+
+          return `
+            <tr class="${rowClass}">
+              <td data-label="#">${i + 1}</td>
+              <td data-label="Match ID">${ev.match_id}</td>
+              <td data-label="Partita">${ev.home_name} vs ${ev.away_name}</td>
+              <td data-label="Campionato">${ev.league}</td>
+              <td data-label="Orario">${inOrarioLocale(ev.start_time)}</td>
+              <td data-label="1">${q["1"] || "—"}</td>
+              <td data-label="X">${q["X"] || "—"}</td>
+              <td data-label="2">${q["2"] || "—"}</td>
+              <td>
+                <details>
+                  <summary>Mostra mercati</summary>
+                  ${quoteExtra}
+                </details>
+              </td>
+            </tr>
+          `;
+        }).join("");
+
+      } catch (err) {
+        console.error(err);
+        status.textContent = '❌ Errore nel caricamento dei dati';
+      }
+    }
+
+    document.getElementById('refreshBtn').addEventListener('click', load);
+    document.getElementById('sportSelect').addEventListener('change', load);
+    window.addEventListener('load', load);
+  </script>
+</body>
+</html>

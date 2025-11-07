@@ -410,9 +410,9 @@ def login():
 
     return render_template("login.html")
 
-@app.route("/bet365")
+@app.route("/quote365")
 def bet365():
-    return render_template("bet365.html")
+    return render_template("quote365.html")
 
 @app.route("/api/events")
 def api_events():
