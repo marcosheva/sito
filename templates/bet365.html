@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'nonce-random123';">
+ 
   <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'nonce-random123456'; style-src 'self' 'nonce-random123456'; connect-src 'self' http://localhost:5000;">
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>📊 Quote Sportive Complete | MongoDB</title>
-  <style nonce='random123'>
+  <style nonce='random123456'>
     :root {
       --primary: #0b63d0; 
       --primary-light: #eaf3ff;
@@ -96,7 +97,7 @@
     </table>
   </main>
 
-  <script>
+  <script nonce='random123456'>
     // Conversione data senza correzione (già corretta dal backend)
     function parseDate(s) {
       const d = new Date(s.replace(" ", "T"));
