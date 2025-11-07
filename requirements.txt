@@ -1,5 +1,5 @@
 flask
 flask-login
-werkzeug
+flask-cors
 gunicorn
-pymongo==4.4.0  
+pymongo==4.4.0
