@@ -10,12 +10,14 @@
             margin: 0;
             padding: 20px;
         }
+
         .container {
             background-color: rgb(240, 240, 240);
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
             border: 1px solid #ccc;
+            text-align: center; /* Centra il contenuto */
         }
 
         /* Link in alto a destra */
@@ -42,6 +44,29 @@
         .login-container span {
             padding-right: 10px;
         }
+
+        /* Stili per i bottoni blu */
+        .button {
+            display: inline-block;
+            background-color: #007BFF; /* Colore blu */
+            color: white;
+            padding: 12px 25px;
+            margin: 10px 15px; /* Aggiunge un po' di spazio tra i bottoni */
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        .button:hover {
+            background-color: #0056b3; /* Colore blu più scuro al passaggio del mouse */
+        }
+
+        /* Contenitore per i bottoni centrato */
+        .buttons-container {
+            text-align: center;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -59,14 +84,17 @@
     <div class="container">
         <h1>Tutte cose belle</h1>
         <p>Benvenuto nella mia prima pagina web con Flask!</p>
-        
-        <a href="https://www.gazzetta.it/">Gazzetta</a>
-        <a href="https://siciliaweb.it/">La Sicilia</a>
-        <a href="/quote">Quote!</a>
-        <a href="/bet365">Bet365!</a>
-        <a href="/prodotti">Prodotti!</a>
-        <a href="/libri">Libri!</a>
-        <a href="/gestionale">Gestionale!</a>
+
+        <!-- Contenitore per i bottoni -->
+        <div class="buttons-container">
+            <a href="https://www.gazzetta.it/" class="button">Gazzetta</a>
+            <a href="https://siciliaweb.it/" class="button">La Sicilia</a>
+            <a href="/quote" class="button">Quote!</a>
+            <a href="/bet365" class="button">Bet365!</a>
+            <a href="/prodotti" class="button">Prodotti!</a>
+            <a href="/libri" class="button">Libri!</a>
+            <a href="/gestionale" class="button">Gestionale!</a>
+        </div>
     </div>
 </body>
 </html>
