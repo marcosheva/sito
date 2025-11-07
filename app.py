@@ -17,6 +17,7 @@ app.permanent_session_lifetime = timedelta(minutes=20)  # Timeout della sessione
 
 # Abilitare CORS (se necessario)
 CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 # ===== LOGIN =====
 login_manager = LoginManager()
