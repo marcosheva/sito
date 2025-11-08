@@ -123,13 +123,65 @@ def gestionale():
         importo = float(request.form.get("importo", 0))
 
         if azione == "inserisci":
+            # Usa l'ID numerico dell'utente se presente, altrimenti cerca nei movimenti esistenti
+            user_id_to_save = None
+            
+            # Cerca l'utente nel database per vedere se ha un campo 'id' numerico
+            user_doc = users_col.find_one({"_id": ObjectId(user_id)})
+            
+            # Prima prova con l'ID numerico dell'utente (se presente)
+            if hasattr(current_user, 'original_id') and current_user.original_id is not None:
+                user_id_to_save = current_user.original_id
+                print(f"DEBUG: Uso original_id dell'utente: {user_id_to_save}")
+            elif user_doc and "id" in user_doc:
+                user_id_to_save = user_doc["id"]
+                print(f"DEBUG: Trovato campo 'id' numerico nell'utente: {user_id_to_save}")
+            
+            # Se ancora non ha trovato, cerca nei movimenti esistenti dell'utente
+            if user_id_to_save is None:
+                # Cerca movimenti esistenti dell'utente corrente (prova prima come stringa)
+                movimento_utente = movimenti_col.find_one({"user_id": user_id})
+                
+                # Se non trova, prova come numero
+                if not movimento_utente:
+                    try:
+                        user_id_int = int(user_id) if user_id.isdigit() else None
+                        if user_id_int is not None:
+                            movimento_utente = movimenti_col.find_one({"user_id": user_id_int})
+                    except (ValueError, AttributeError):
+                        pass
+                
+                if movimento_utente:
+                    existing_user_id = movimento_utente.get("user_id")
+                    print(f"DEBUG: Movimento utente esistente con user_id: {existing_user_id} (tipo: {type(existing_user_id)})")
+                    user_id_to_save = existing_user_id
+                else:
+                    # Se non trova movimenti, usa l'ID numerico se l'utente lo ha, altrimenti usa stringa
+                    if user_doc and "id" in user_doc:
+                        user_id_to_save = user_doc["id"]
+                    else:
+                        user_id_to_save = user_id
+                    print(f"DEBUG: Nessun movimento esistente, uso user_id: {user_id_to_save} (tipo: {type(user_id_to_save)})")
+            
+            # Genera un nuovo ID sequenziale
+            # Trova il massimo ID esistente
+            max_id_doc = movimenti_col.find_one(sort=[("id", -1)])
+            nuovo_id = 1
+            if max_id_doc and "id" in max_id_doc:
+                nuovo_id = max_id_doc["id"] + 1
+                print(f"DEBUG: Massimo ID trovato: {max_id_doc['id']}, nuovo ID: {nuovo_id}")
+            else:
+                print(f"DEBUG: Nessun ID esistente trovato, uso ID: {nuovo_id}")
+            
             movimenti_col.insert_one({
-                "user_id": user_id,
+                "id": nuovo_id,
+                "user_id": user_id_to_save,
                 "tipo": tipo,
                 "descrizione": descrizione,
                 "importo": importo,
                 "data": datetime.now()
             })
+            print(f"DEBUG: Movimento inserito con id: {nuovo_id}, user_id: {user_id_to_save} (tipo: {type(user_id_to_save)})")
             flash("✅ Movimento inserito con successo", "success")
             return redirect(url_for("gestionale"))
         elif azione == "modifica":
@@ -190,8 +242,39 @@ def gestionale():
     # Eliminazione movimento
     elimina_id = request.args.get("elimina")
     if elimina_id:
-        movimenti_col.delete_one({"_id": ObjectId(elimina_id), "user_id": user_id})
-        flash("❌ Movimento eliminato!", "danger")
+        print(f"DEBUG: Eliminazione movimento - ID: {elimina_id}, user_id: {user_id} (tipo: {type(user_id)})")
+        
+        # Prova a eliminare con user_id come stringa
+        result = movimenti_col.delete_one({"_id": ObjectId(elimina_id), "user_id": user_id})
+        print(f"DEBUG: Tentativo 1 - user_id stringa: {result.deleted_count} documenti eliminati")
+        
+        # Se non trova nulla, prova anche con user_id come numero
+        if result.deleted_count == 0:
+            try:
+                user_id_int = int(user_id) if user_id.isdigit() else None
+                if user_id_int is not None:
+                    result = movimenti_col.delete_one({"_id": ObjectId(elimina_id), "user_id": user_id_int})
+                    print(f"DEBUG: Tentativo 2 - user_id numerico ({user_id_int}): {result.deleted_count} documenti eliminati")
+            except (ValueError, AttributeError) as e:
+                print(f"DEBUG: Errore conversione user_id: {e}")
+        
+        # Se ancora non trova nulla, prova con l'ID numerico dell'utente (se presente)
+        if result.deleted_count == 0:
+            try:
+                user_doc = users_col.find_one({"_id": ObjectId(user_id)})
+                if user_doc and "id" in user_doc:
+                    user_id_num = user_doc["id"]
+                    result = movimenti_col.delete_one({"_id": ObjectId(elimina_id), "user_id": user_id_num})
+                    print(f"DEBUG: Tentativo 3 - user_id numerico dal DB ({user_id_num}): {result.deleted_count} documenti eliminati")
+            except Exception as e:
+                print(f"DEBUG: Errore tentativo con ID numerico: {e}")
+        
+        if result.deleted_count > 0:
+            flash("❌ Movimento eliminato!", "danger")
+        else:
+            flash("❌ Errore: movimento non trovato o non autorizzato", "danger")
+            print(f"DEBUG: Nessun documento eliminato. ID: {elimina_id}, user_id: {user_id}")
+        
         return redirect(url_for("gestionale"))
 
     # Lista movimenti e saldo
