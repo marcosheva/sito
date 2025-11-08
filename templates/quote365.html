@@ -135,7 +135,7 @@
       tbody.innerHTML = '';
 
       try {
-        const res = await fetch(`https://sito-4be3.onrender.com?sport=${sport}&limit=${limit}`);
+        const res = await fetch(`https://sito-4be3.onrender.com/api/events?sport=${sport}&limit=${limit}`);
         const data = await res.json();
 
         if (!data.results || !data.results.length) {
@@ -191,5 +191,6 @@
   </script>
 </body>
 </html>
+
 
 
