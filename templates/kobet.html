@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🏆 Quote Sportive | KroosBet</title>
+  <style>
+    :root {
+      --bg-dark: #1a1a1a;
+      --bg-light: #333;
+      --bg-panel: #444;
+      --accent: #f6a800;
+      --accent-hover: #d88a00;
+      --text-light: #f4f4f4;
+      --text-muted: #aaa;
+      --border: #2e2e2e;
+      --shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+      --radius: 10px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-light);
+    }
+
+    header {
+      background: var(--bg-panel);
+      padding: 15px 30px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: var(--shadow);
+      border-bottom: 2px solid var(--accent);
+    }
+
+    header h1 {
+      color: var(--accent);
+      font-size: 1.6rem;
+      margin: 0;
+    }
+
+    a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: 0.2s;
+    }
+
+    a:hover {
+      color: var(--accent);
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    select, input, button {
+      background: var(--bg-light);
+      color: var(--text-light);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px 12px;
+      font-size: 1rem;
+      transition: 0.3s;
+    }
+
+    button {
+      background: var(--accent);
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+      color: var(--bg-dark);
+    }
+
+    button:hover {
+      background: var(--accent-hover);
+    }
+
+    main {
+      display: flex;
+      padding: 20px;
+      gap: 20px;
+    }
+
+    .sidebar {
+      width: 250px;
+      background: var(--bg-panel);
+      padding: 15px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .sidebar h2 {
+      font-size: 1.2rem;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+
+    .sidebar a {
+      display: block;
+      margin: 10px 0;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 1rem;
+      transition: 0.2s;
+    }
+
+    .sidebar a:hover {
+      color: var(--accent);
+    }
+
+    .tabs {
+      display: flex;
+      margin-bottom: 20px;
+      justify-content: center;
+    }
+
+    .tab {
+      padding: 10px 20px;
+      background: var(--bg-panel);
+      color: var(--text-light);
+      cursor: pointer;
+      transition: 0.3s;
+      border-radius: var(--radius);
+      margin-right: 10px;
+    }
+
+    .tab:hover {
+      background: var(--accent);
+    }
+
+    .tab.active {
+      background: var(--accent);
+      color: var(--bg-dark);
+      font-weight: bold;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--bg-panel);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: center;
+      font-size: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background: var(--bg-light);
+      color: var(--accent);
+      text-transform: uppercase;
+    }
+
+    tr:hover {
+      background: var(--accent-hover);
+      cursor: pointer;
+    }
+
+    tr.past {
+      opacity: 0.5;
+    }
+
+    tr.soon {
+      background: rgba(73, 201, 73, 0.15);
+    }
+
+    td[data-label="1"], td[data-label="X"], td[data-label="2"] {
+      font-weight: bold;
+      color: var(--accent);
+      cursor: pointer;
+      transition: 0.3s;
+      background: var(--bg-light);
+      border-radius: 5px;
+    }
+
+    td[data-label="1"]:hover,
+    td[data-label="X"]:hover,
+    td[data-label="2"]:hover {
+      background: var(--accent);
+      color: var(--bg-dark);
+    }
+
+    details {
+      background: var(--bg-light);
+      border-radius: var(--radius);
+      margin-top: 5px;
+      padding: 8px;
+    }
+
+    summary {
+      cursor: pointer;
+      color: var(--accent);
+      font-weight: bold;
+    }
+
+    .odd-item {
+      display: inline-block;
+      margin: 3px;
+      padding: 5px 8px;
+      background: var(--bg-panel);
+      border-radius: 6px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+
+    .odd-item b {
+      color: var(--accent);
+    }
+
+    @media (max-width: 768px) {
+      main {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 100%;
+        margin-bottom: 20px;
+      }
+
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+
+      th {
+        display: none;
+      }
+
+      td {
+        border: none;
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 12px;
+      }
+
+      td::before {
+        content: attr(data-label);
+        font-weight: bold;
+        color: var(--text-muted);
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="/">⬅ Home</a>
+    <h1>🏆 KroosBet</h1>
+    <div class="controls">
+      <label for="sportSelect">Sport:</label>
+      <select id="sportSelect">
+        <option value="calcio">⚽ Calcio</option>
+        <option value="basket">🏀 Basket</option>
+        <option value="tennis">🎾 Tennis</option>
+        <option value="rugby">🏉 Rugby</option>
+      </select>
+
+      <label for="limitInput">Limite:</label>
+      <input id="limitInput" type="number" value="20" min="10" max="2000" />
+
+      <button id="refreshBtn">Aggiorna</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="sidebar">
+      <h2>Menu Sport</h2>
+      <a href="#">Calcio</a>
+      <a href="#">Basket</a>
+      <a href="#">Tennis</a>
+      <a href="#">Rugby</a>
+      <a href="#">Football</a>
+      <a href="#">Altro</a>
+    </div>
+
+    <div>
+      <div class="tabs">
+        <div class="tab active" data-market="1x2">1X2</div>
+        <div class="tab" data-market="ggng">GG/NG</div>
+        <div class="tab" data-market="ou">Over/Under</div>
+        <div class="tab" data-market="dc">Doppia Chance</div>
+      </div>
+
+      <div id="status">⏳ Caricamento iniziale...</div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Partita</th>
+            <th>Campionato</th>
+            <th>Orario</th>
+            <th>1</th>
+            <th>X</th>
+            <th>2</th>
+            <th>Dettagli</th>
+          </tr>
+        </thead>
+        <tbody id="eventsBody"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <script>
+    // Conversione data senza correzione (già corretta dal backend)
+    function parseDate(s) {
+      const d = new Date(s.replace(" ", "T"));
+      return d;
+    }
+
+    function inOrarioLocale(orario) {
+      return parseDate(orario).toLocaleString("it-IT");
+    }
+
+    // Seleziona mercato per tab
+    function changeTabMarket(market) {
+      const allTabs = document.querySelectorAll('.tab');
+      allTabs.forEach(tab => tab.classList.remove('active'));
+      const selectedTab = document.querySelector(`.tab[data-market="${market}"]`);
+      selectedTab.classList.add('active');
+      load(market); // Ricarica i dati per il mercato selezionato
+    }
+
+    async function load(market = '1x2') {
+      const sport = document.getElementById('sportSelect').value;
+      const limit = document.getElementById('limitInput').value;
+      const status = document.getElementById('status');
+      const tbody = document.getElementById('eventsBody');
+      status.textContent = '⏳ Caricamento...';
+      tbody.innerHTML = '';
+
+      try {
+        const res = await fetch(`http://localhost:5000/api/events?sport=${sport}&limit=${limit}`);
+        const data = await res.json();
+
+        if (!data.results || !data.results.length) {
+          status.textContent = '⚠️ Nessun evento trovato';
+          return;
+        }
+
+        const eventiOrdinati = data.results
+          .sort((a, b) => parseDate(a.start_time) - parseDate(b.start_time));
+
+        status.textContent = `✅ Trovati ${eventiOrdinati.length} eventi`;
+
+        tbody.innerHTML = eventiOrdinati.map((ev, i) => {
+          const q = ev.quote_1x2 || {};
+          const now = new Date();
+          const start = parseDate(ev.start_time);
+          const diffMs = start - now;
+          let rowClass = "";
+          if (diffMs < 0) rowClass = "past";
+          else if (diffMs <= 60*60*1000) rowClass = "soon";
+
+          return `
+            <tr class="${rowClass}">
+              <td data-label="#">${i + 1}</td>
+              <td data-label="Partita">${ev.home_name} vs ${ev.away_name}</td>
+              <td data-label="Campionato">${ev.league}</td>
+              <td data-label="Orario">${inOrarioLocale(ev.start_time)}</td>
+              <td data-label="1">${q["1"] || "—"}</td>
+              <td data-label="X">${q["X"] || "—"}</td>
+              <td data-label="2">${q["2"] || "—"}</td>
+              <td>
+                <details>
+                  <summary>Mercati</summary>
+                  ${ev.quote_1x2 ? 'Mostra mercati' : 'Nessun mercato'}
+                </details>
+              </td>
+            </tr>
+          `;
+        }).join("");
+
+      } catch (err) {
+        console.error(err);
+        status.textContent = '❌ Errore nel caricamento delle quote';
+      }
+    }
+
+    // Imposta l'evento di cambio tab
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => changeTabMarket(tab.dataset.market));
+    });
+
+    window.addEventListener('load', () => changeTabMarket('1x2'));
+  </script>
+</body>
+</html>

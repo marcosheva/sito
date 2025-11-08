@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🏆 Quote Sportive | Quote365</title>
+  <style>
+    :root {
+      --bg-dark:rgb(142, 145, 103);
+      --bg-panel: #2d4a2d;
+      --bg-light: #3d5a3d;
+      --accent: #49c949;
+      --accent-hover: #3bb13b;
+      --text-light: #f0f8f0;
+      --text-muted: #c0d0c0;
+      --border: #4f6f4f;
+      --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      --radius: 10px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg-dark);
+      color: var(--text-light);
+      font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    header {
+      background: var(--bg-panel);
+      padding: 15px 25px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: var(--shadow);
+      border-bottom: 2px solid var(--accent);
+    }
+
+    header h1 {
+      font-size: 1.4rem;
+      color: var(--accent);
+      margin: 0;
+    }
+
+    a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: 0.2s;
+    }
+
+    a:hover {
+      color: var(--accent);
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    select, input, button {
+      background: var(--bg-light);
+      color: var(--text-light);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 6px 10px;
+      font-size: 0.9rem;
+      transition: 0.3s;
+    }
+
+    button {
+      background: var(--accent);
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+      color: var(--bg-dark);
+    }
+
+    button:hover {
+      background: var(--accent-hover);
+    }
+
+    main {
+      padding: 20px;
+      max-width: 1600px;
+      margin: auto;
+    }
+
+    #status {
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      text-align: center;
+      font-size: 0.95rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--bg-panel);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: center;
+      font-size: 0.9rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background: var(--bg-light);
+      color: var(--accent);
+      text-transform: uppercase;
+      font-size: 0.85rem;
+    }
+
+    tr:hover {
+      background: rgba(73, 201, 73, 0.08);
+    }
+
+    tr.past {
+      opacity: 0.5;
+    }
+
+    tr.soon {
+      background: rgba(73, 201, 73, 0.15);
+    }
+
+    td[data-label="1"], td[data-label="X"], td[data-label="2"] {
+      font-weight: bold;
+      color: var(--accent);
+      cursor: pointer;
+      transition: 0.3s;
+      background: var(--bg-light);
+      border-radius: 5px;
+    }
+
+    td[data-label="1"]:hover,
+    td[data-label="X"]:hover,
+    td[data-label="2"]:hover {
+      background: var(--accent);
+      color: var(--bg-dark);
+    }
+
+    details {
+      background: var(--bg-light);
+      border-radius: var(--radius);
+      margin-top: 5px;
+      padding: 8px;
+    }
+
+    summary {
+      cursor: pointer;
+      color: var(--accent);
+      font-weight: bold;
+    }
+
+    .odd-item {
+      display: inline-block;
+      margin: 3px;
+      padding: 5px 8px;
+      background: var(--bg-panel);
+      border-radius: 6px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+
+    .odd-item b {
+      color: var(--accent);
+    }
+
+    /* Stili per le tab globali */
+    .global-tabs-container {
+      background: var(--bg-panel);
+      border-radius: var(--radius);
+      padding: 15px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .global-tabs-container .tabs-header {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 8px;
+    }
+
+    .global-tabs-container .tab-button {
+      width: 100%;
+      min-width: 0;
+    }
+
+    /* Stili per le tab dei mercati */
+    .tabs-container {
+      background: var(--bg-light);
+      border-radius: var(--radius);
+      padding: 10px;
+      margin-top: 5px;
+      min-width: 300px;
+    }
+
+    .tabs-header {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-bottom: 10px;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 5px;
+    }
+
+    .tab-button {
+      background: var(--bg-panel);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      border-radius: 5px 5px 0 0;
+      padding: 8px 16px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.3s;
+      border-bottom: none;
+      flex: 1;
+      min-width: 100px;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tab-button:hover {
+      background: var(--bg-light);
+      color: var(--text-light);
+    }
+
+    .tab-button.active {
+      background: var(--accent);
+      color: var(--bg-dark);
+      font-weight: bold;
+      border-color: var(--accent);
+    }
+
+    .tab-content {
+      display: none;
+      padding: 10px;
+      background: var(--bg-panel);
+      border-radius: 0 0 var(--radius) var(--radius);
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .market {
+      margin-bottom: 10px;
+    }
+
+    .market strong {
+      color: var(--accent);
+      display: block;
+      margin-bottom: 5px;
+      font-size: 0.9rem;
+    }
+
+    .odds {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    @media (max-width: 768px) {
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+
+      th {
+        display: none;
+      }
+
+      td {
+        border: none;
+        display: flex;
+        justify-content: space-between;
+        padding: 10px;
+      }
+
+      td::before {
+        content: attr(data-label);
+        font-weight: bold;
+        color: var(--text-muted);
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="/">⬅ Home</a>
+    <h1>🏆 Quote365</h1>
+    <div class="controls">
+      <label for="sportSelect">Sport:</label>
+      <select id="sportSelect">
+        <option value="calcio">⚽ Calcio</option>
+        <option value="basket">🏀 Basket</option>
+        <option value="tennis">🎾 Tennis</option>
+        <option value="rugby">🏉 Rugby</option>
+      </select>
+
+      <label for="limitInput">Limite:</label>
+      <input id="limitInput" type="number" value="20" min="10" max="2000" />
+
+      <button id="refreshBtn">Aggiorna</button>
+    </div>
+  </header>
+
+  <main>
+    <div id="status">⏳ Caricamento quote...</div>
+
+    <!-- Tab globali per i mercati -->
+    <div class="global-tabs-container" id="globalTabs" style="display: none;">
+      <div class="tabs-header">
+        <button class="tab-button active" onclick="showGlobalTab('1x2')">1X2</button>
+        <!-- Le altre tab verranno aggiunte dinamicamente -->
+      </div>
+    </div>
+
+    <table>
+      <thead id="tableHeader">
+        <tr>
+          <th>#</th>
+          <th>ID</th>
+          <th>Match</th>
+          <th>Campionato</th>
+          <th>Orario</th>
+          <th>1</th>
+          <th>X</th>
+          <th>2</th>
+          <th>Dettagli</th>
+        </tr>
+      </thead>
+      <tbody id="eventsBody"></tbody>
+    </table>
+  </main>
+
+  <script>
+    function parseDate(s) {
+      const d = new Date(s.replace(" ", "T"));
+      return d;
+    }
+
+    function inOrarioLocale(orario) {
+      return parseDate(orario).toLocaleString("it-IT");
+    }
+
+    function generaMercati(quote, eventIndex) {
+      if (!quote || Object.keys(quote).length === 0)
+        return "<em>Nessun mercato aggiuntivo</em>";
+      
+      const categories = Object.entries(quote);
+      const tabId = `tabs-${eventIndex}`;
+      
+      // Genera i pulsanti delle tab
+      const tabButtons = categories.map(([categoria], idx) => `
+        <button class="tab-button ${idx === 0 ? 'active' : ''}" 
+                onclick="showTab('${tabId}', ${idx})">
+          ${categoria.replace(/_/g, ' ')}
+        </button>
+      `).join('');
+      
+      // Genera il contenuto delle tab
+      const tabContents = categories.map(([categoria, odds], idx) => `
+        <div class="tab-content ${idx === 0 ? 'active' : ''}" id="${tabId}-content-${idx}">
+          <div class="market">
+            <strong>${categoria.replace(/_/g, ' ')}</strong>
+            <div class="odds">
+              ${odds.map((o) => `
+                <div class="odd-item">
+                  ${(o.name || o.header || "Sconosciuto")} 
+                  ${o.handicap ? `(${o.handicap})` : ""}: 
+                  <b>${o.odds || "—"}</b>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        </div>
+      `).join('');
+      
+      return `
+        <div class="tabs-container">
+          <div class="tabs-header">${tabButtons}</div>
+          ${tabContents}
+        </div>
+      `;
+    }
+
+    function showTab(tabId, index) {
+      // Trova tutti i contenuti e i pulsanti delle tab per questo evento
+      const container = document.querySelector(`#${tabId}-content-0`)?.closest('.tabs-container');
+      if (!container) return;
+      
+      // Nascondi tutte le tab e rimuovi active da tutti i pulsanti
+      const allContents = container.querySelectorAll('.tab-content');
+      const allButtons = container.querySelectorAll('.tab-button');
+      
+      allContents.forEach(content => content.classList.remove('active'));
+      allButtons.forEach(button => button.classList.remove('active'));
+      
+      // Mostra la tab selezionata
+      const activeContent = document.getElementById(`${tabId}-content-${index}`);
+      const activeButton = container.querySelector(`button[onclick*="showTab('${tabId}', ${index})"]`);
+      
+      if (activeContent) activeContent.classList.add('active');
+      if (activeButton) activeButton.classList.add('active');
+    }
+
+    let allEvents = [];
+    let currentMarketTab = '1x2';
+
+    function showGlobalTab(marketType) {
+      currentMarketTab = marketType;
+      
+      // Aggiorna i pulsanti delle tab
+      document.querySelectorAll('.global-tabs-container .tab-button').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.getAttribute('onclick')?.includes(`'${marketType}'`)) {
+          btn.classList.add('active');
+        }
+      });
+      
+      // Aggiorna l'intestazione della tabella
+      updateTableHeader(marketType);
+      
+      // Ricarica la tabella con il mercato selezionato
+      renderTable();
+    }
+
+    // Rendi la funzione accessibile globalmente
+    window.showGlobalTab = showGlobalTab;
+
+    function renderTable() {
+      const tbody = document.getElementById("eventsBody");
+      const eventiOrdinati = allEvents.sort(
+        (a, b) => parseDate(a.start_time) - parseDate(b.start_time)
+      );
+
+      tbody.innerHTML = eventiOrdinati
+        .map((ev, i) => {
+          const now = new Date();
+          const start = parseDate(ev.start_time);
+          const diffMs = start - now;
+          let rowClass = "";
+          if (diffMs < 0) rowClass = "past";
+          else if (diffMs <= 60 * 60 * 1000) rowClass = "soon";
+
+          // Genera le celle in base al mercato selezionato
+          let marketCells = '';
+          
+          if (currentMarketTab === '1x2') {
+            const q = ev.quote_1x2 || {};
+            marketCells = `
+              <td data-label="1">${q["1"] || "—"}</td>
+              <td data-label="X">${q["X"] || "—"}</td>
+              <td data-label="2">${q["2"] || "—"}</td>
+            `;
+          } else {
+            // Per altri mercati, mostra le prime 3 quote disponibili
+            const market = ev.quote?.[currentMarketTab] || [];
+            const odds = market.slice(0, 3);
+            marketCells = odds.map((o, idx) => `
+              <td data-label="${o.name || o.header || `Opzione ${idx + 1}`}">
+                ${o.handicap ? `${o.handicap}: ` : ''}${o.odds || "—"}
+              </td>
+            `).join('');
+            // Riempi con celle vuote se ci sono meno di 3 quote
+            while (odds.length < 3) {
+              marketCells += '<td data-label="—">—</td>';
+              odds.push({});
+            }
+          }
+
+          const quoteExtra = generaMercati(ev.quote || {}, i);
+
+          return `
+            <tr class="${rowClass}">
+              <td data-label="#">${i + 1}</td>
+              <td data-label="ID">${ev.match_id || "—"}</td>
+              <td data-label="Partita">${ev.home_name} vs ${ev.away_name}</td>
+              <td data-label="Campionato">${ev.league}</td>
+              <td data-label="Orario">${inOrarioLocale(ev.start_time)}</td>
+              ${marketCells}
+              <td>
+                <details>
+                  <summary>📊 Mercati</summary>
+                  ${quoteExtra}
+                </details>
+              </td>
+            </tr>
+          `;
+        })
+        .join("");
+    }
+
+    function updateTableHeader(marketType) {
+      const thead = document.getElementById('tableHeader');
+      const headerRow = thead.querySelector('tr');
+      
+      // Mantieni le prime 5 colonne fisse (#, ID, Match, Campionato, Orario)
+      const marketCols = headerRow.querySelectorAll('th:nth-child(n+6):not(:last-child)');
+      
+      // Rimuovi le colonne dei mercati esistenti
+      marketCols.forEach(col => col.remove());
+      
+      // Aggiungi le nuove colonne in base al mercato
+      let newCols = '';
+      if (marketType === '1x2') {
+        newCols = '<th>1</th><th>X</th><th>2</th>';
+      } else {
+        // Per altri mercati, mostra 3 colonne generiche
+        newCols = '<th>Opzione 1</th><th>Opzione 2</th><th>Opzione 3</th>';
+      }
+      
+      // Inserisci prima dell'ultima colonna (Dettagli)
+      const lastCol = headerRow.querySelector('th:last-child');
+      lastCol.insertAdjacentHTML('beforebegin', newCols);
+    }
+
+    function updateGlobalTabs(events) {
+      // Raccogli tutti i tipi di mercati disponibili
+      const marketTypes = new Set(['1x2']);
+      
+      events.forEach(ev => {
+        if (ev.quote) {
+          Object.keys(ev.quote).forEach(market => {
+            marketTypes.add(market);
+          });
+        }
+      });
+
+      // Crea i pulsanti delle tab
+      const tabsContainer = document.getElementById('globalTabs');
+      const tabsHeader = tabsContainer.querySelector('.tabs-header');
+      
+      tabsHeader.innerHTML = Array.from(marketTypes)
+        .sort((a, b) => {
+          // Metti 1x2 sempre per primo
+          if (a === '1x2') return -1;
+          if (b === '1x2') return 1;
+          return a.localeCompare(b);
+        })
+        .map((market, idx) => {
+          const marketName = market.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+          return `
+            <button class="tab-button ${idx === 0 ? 'active' : ''}" 
+                    onclick="showGlobalTab('${market}')">
+              ${marketName}
+            </button>
+          `;
+        }).join('');
+
+      tabsContainer.style.display = 'block';
+    }
+
+    async function load() {
+      const sport = document.getElementById("sportSelect").value;
+      const limit = document.getElementById("limitInput").value;
+      const status = document.getElementById("status");
+      const tbody = document.getElementById("eventsBody");
+      status.textContent = "⏳ Caricamento quote...";
+      tbody.innerHTML = "";
+
+      try {
+        const res = await fetch(`/api/events?sport=${sport}&limit=${limit}`);
+        const data = await res.json();
+
+        if (!data.results || !data.results.length) {
+          status.textContent = "⚠️ Nessun evento trovato";
+          return;
+        }
+
+        allEvents = data.results;
+        status.textContent = `✅ Trovati ${allEvents.length} eventi`;
+
+        // Aggiorna le tab globali
+        updateGlobalTabs(allEvents);
+        
+        // Aggiorna l'intestazione della tabella
+        updateTableHeader(currentMarketTab);
+        
+        // Renderizza la tabella
+        renderTable();
+      } catch (err) {
+        console.error(err);
+        status.textContent = "❌ Errore nel caricamento delle quote";
+      }
+    }
+
+    document.getElementById("refreshBtn").addEventListener("click", load);
+    document.getElementById("sportSelect").addEventListener("change", load);
+    window.addEventListener("load", load);
+  </script>
+</body>
+</html>

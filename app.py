@@ -542,7 +542,12 @@ def login():
 @app.route("/quote365")
 def bet365():
     return render_template("quote365.html")
-
+@app.route("/sitobet")
+def sitobet():
+    return render_template("sitobet.html")
+@app.route("/kobet")
+def kobet():
+    return render_template("kobet.html")
 @app.route("/api/events")
 def api_events():
     """API endpoint per ottenere gli eventi sportivi da MongoDB"""
@@ -577,6 +582,9 @@ def api_events():
             "error": str(e),
             "results": []
         }), 500
+        
+        
+        
 
 @app.route("/logout")
 @login_required
@@ -584,6 +592,8 @@ def logout():
     logout_user()
     flash("✅ Disconnessione avvenuta con successo.", "success")
     return redirect(url_for("login"))
+
+
 
 # ===== CREAZIONE UTENTE DI TEST =====
 if __name__ == "__main__":
