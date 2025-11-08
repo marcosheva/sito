@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <title>Modifica Prodotto</title>
+    <title>Modifica Libro</title>
     <style>
         body {
             font-family: "Segoe UI", Arial, sans-serif;
@@ -90,25 +90,40 @@
 </head>
 <body>
     <div class="container">
-        <h1>📚 Modifica Prodotto</h1>
-        <form action="/prodotti/modifica/{{ prodotto._id }}" method="post">
+        <h1>📚 Modifica Libro</h1>
+        <form action="/libri/modifica/{{ libro._id }}" method="post">
             <div>
-                <label for="nome">Nome</label>
-                <input type="text" id="nome" name="nome" value="{{ prodotto.nome }}" required>
+                <label for="titolo">Titolo</label>
+                <input type="text" id="titolo" name="titolo" value="{{ libro.titolo }}" required>
             </div>
 
             <div>
-                <label for="marca">Marca</label>
-                <input type="text" id="marca" name="marca" value="{{ prodotto.marca }}" required>
+                <label for="autore">Autore</label>
+                <input type="text" id="autore" name="autore" value="{{ libro.autore }}" required>
             </div>
 
             <div>
-                <label for="quantita">Quantità</label>
-                <input type="number" id="quantita" name="quantita" value="{{ prodotto.quantita }}" required>
+                <label for="anno">Anno di pubblicazione</label>
+                <input type="number" id="anno" name="anno" value="{{ libro.anno }}" required>
+            </div>
+
+            <div>
+                <label for="genere">Genere</label>
+                <input type="text" id="genere" name="genere" value="{{ libro.genere }}" required>
+            </div>
+
+            <div>
+                <label for="isbn">ISBN</label>
+                <input type="number" id="isbn" name="isbn" value="{{ libro.isbn }}" required>
+            </div>
+
+            <div>
+                <label for="quantita">Quantità disponibile</label>
+                <input type="number" id="quantita" name="quantita" value="{{ libro.quantita }}" required>
             </div>
 
             <button type="submit">💾 Salva modifiche</button>
-            <a href="/prodotti">🔙 Annulla</a>
+            <a href="/libri">🔙 Annulla</a>
         </form>
     </div>
 </body>

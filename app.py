@@ -109,6 +109,52 @@ def libri():
     libri = list(col.find())
     return render_template("libri.html", libri=libri)
 
+@app.route("/libri/aggiungi", methods=["POST"])
+def aggiungi_libro():
+    col = client["libreria"]["libri"]
+    titolo = request.form.get("titolo", "")
+    autore = request.form.get("autore", "")
+    anno = int(request.form.get("anno", 0))
+    genere = request.form.get("genere", "")
+    isbn = int(request.form.get("isbn", 0))
+    quantita = int(request.form.get("quantita", 0))
+    col.insert_one({
+        "titolo": titolo,
+        "autore": autore,
+        "anno": anno,
+        "genere": genere,
+        "isbn": isbn,
+        "quantita": quantita
+    })
+    flash("✅ Libro aggiunto!", "success")
+    return redirect(url_for("libri"))
+
+@app.route("/libri/elimina/<id>", methods=["POST"])
+def elimina_libro(id):
+    col = client["libreria"]["libri"]
+    col.delete_one({"_id": ObjectId(id)})
+    flash("❌ Libro eliminato!", "danger")
+    return redirect(url_for("libri"))
+
+@app.route("/libri/modifica/<id>")
+def modifica_libro(id):
+    col = client["libreria"]["libri"]
+    libro = col.find_one({"_id": ObjectId(id)})
+    return render_template("modifica_libro.html", libro=libro)
+
+@app.route("/libri/modifica/<id>", methods=["POST"])
+def salva_modifica_libro(id):
+    col = client["libreria"]["libri"]
+    titolo = request.form["titolo"]
+    autore = request.form["autore"]
+    genere = request.form["genere"]
+    quantita = int(request.form["quantita"])
+    anno = int(request.form["anno"])
+    isbn = int(request.form["isbn"])
+    col.update_one({"_id": ObjectId(id)}, {"$set": {"titolo": titolo, "autore": autore, "anno": anno, "isbn": isbn, "genere": genere, "quantita": quantita}})
+    flash("✏️ Libro modificato!", "info")
+    return redirect(url_for("libri"))
+
 # ===== GESTIONE MOVIMENTI =====
 @app.route("/gestionale", methods=["GET", "POST"])
 @login_required
