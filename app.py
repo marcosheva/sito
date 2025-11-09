@@ -44,6 +44,7 @@ def load_user(user_id):
 # ===== ROTTE =====
 
 @app.route("/")
+@login_required
 def home():
     return render_template("index.html", nome="Mario")
 
@@ -97,9 +98,9 @@ def modifica_prodotto(id):
 @app.route("/prodotti/modifica/<id>", methods=["POST"])
 def salva_modifica_prodotto(id):
     col = client["libreria"]["prodotti"]
-    nome = request.form["nome"]
-    marca = request.form["marca"]
-    quantita = int(request.form["quantita"])
+    nome = request.form.get("nome", "")
+    marca = request.form.get("marca", "")
+    quantita = int(request.form.get("quantita", 0) or 0)
     col.update_one({"_id": ObjectId(id)}, {"$set": {"nome": nome, "marca": marca, "quantita": quantita}})
     flash("✏️ Prodotto modificato!", "info")
     return redirect(url_for("prodotti"))
@@ -145,12 +146,12 @@ def modifica_libro(id):
 @app.route("/libri/modifica/<id>", methods=["POST"])
 def salva_modifica_libro(id):
     col = client["libreria"]["libri"]
-    titolo = request.form["titolo"]
-    autore = request.form["autore"]
-    genere = request.form["genere"]
-    quantita = int(request.form["quantita"])
-    anno = int(request.form["anno"])
-    isbn = int(request.form["isbn"])
+    titolo = request.form.get("titolo", "")
+    autore = request.form.get("autore", "")
+    genere = request.form.get("genere", "")
+    quantita = int(request.form.get("quantita", 0) or 0)
+    anno = int(request.form.get("anno", 0) or 0)
+    isbn = int(request.form.get("isbn", 0) or 0)
     col.update_one({"_id": ObjectId(id)}, {"$set": {"titolo": titolo, "autore": autore, "anno": anno, "isbn": isbn, "genere": genere, "quantita": quantita}})
     flash("✏️ Libro modificato!", "info")
     return redirect(url_for("libri"))
