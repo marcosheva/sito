@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Le Mie Schedine - Kroosbet</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .accordion-content.open {
+            max-height: 2000px;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-3xl font-bold text-yellow-400">📋 Le Mie Schedine</h1>
+                <p class="text-sm text-gray-400 mt-1">Credito disponibile: <span class="font-bold text-green-400 text-lg" id="credito-display">{{ "%.2f"|format(credito) }} €</span></p>
+            </div>
+            <div class="flex space-x-4">
+                <a href="/kroosbet" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-sm">Nuova Schedina</a>
+                <a href="/" class="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded text-sm">Home</a>
+            </div>
+        </div>
+
+        {% if schedine %}
+        <div class="space-y-3">
+            {% for schedina in schedine %}
+            <div class="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+                <!-- Header accordion (sempre visibile) -->
+                <div class="p-4 cursor-pointer hover:bg-gray-750 transition" onclick="toggleAccordion('schedina-{{ loop.index }}')">
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center space-x-4">
+                            <svg id="icon-{{ loop.index }}" class="w-5 h-5 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                            <div>
+                                <h2 class="text-xl font-bold text-yellow-400">Schedina #{{ loop.index }}</h2>
+                                <p class="text-xs text-gray-400 mt-1">Data: {{ schedina.data_str }}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <div class="text-right">
+                                <p class="text-sm text-gray-400">Importo</p>
+                                <p class="text-lg font-bold text-green-400">{{ "%.2f"|format(schedina.importo) }} €</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-sm text-gray-400">Vincita Pot.</p>
+                                <p class="text-lg font-bold text-yellow-400">{{ "%.2f"|format(schedina.vincita) }} €</p>
+                            </div>
+                            <div>
+                                {% if schedina.stato == "vincente" %}
+                                    <span class="px-3 py-1 bg-green-500 text-white text-xs font-bold rounded">✅ Vincente</span>
+                                {% elif schedina.stato == "perdente" %}
+                                    <span class="px-3 py-1 bg-red-500 text-white text-xs font-bold rounded">❌ Perdente</span>
+                                {% elif schedina.stato == "cancellata" %}
+                                    <span class="px-3 py-1 bg-gray-500 text-white text-xs font-bold rounded">🗑️ Cancellata</span>
+                                {% else %}
+                                    <span class="px-3 py-1 bg-yellow-500 text-black text-xs font-bold rounded">⏳ In Corso</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Contenuto accordion (nascosto di default) -->
+                <div id="schedina-{{ loop.index }}" class="accordion-content">
+                    <div class="px-4 pb-4 border-t border-gray-700">
+                        <div class="pt-4">
+                            <h3 class="text-sm font-bold text-gray-300 mb-3">Selezioni:</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-4">
+                                {% for scommessa in schedina.scommesse %}
+                                <div class="bg-gray-700 rounded p-3">
+                                    <div class="flex justify-between items-start mb-2">
+                                        <span class="text-xs text-gray-400">ID: {{ scommessa.id }}</span>
+                                        <span class="text-xs font-bold text-yellow-400">{{ scommessa.quota }}</span>
+                                    </div>
+                                    <p class="text-sm font-semibold mb-1">{{ scommessa.evento }}</p>
+                                    <p class="text-xs text-gray-300">
+                                        {{ scommessa.categoria }}: <span class="font-bold">{{ scommessa.segno }}</span>
+                                    </p>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <div class="flex justify-between items-center pt-4 border-t border-gray-700">
+                                <div>
+                                    <p class="text-xs text-gray-400">Totale selezioni: <span class="font-bold text-white">{{ schedina.scommesse|length }}</span></p>
+                                    {% set totale_quota = 1.0 %}
+                                    {% for scommessa in schedina.scommesse %}
+                                        {% set totale_quota = totale_quota * (scommessa.quota|float) %}
+                                    {% endfor %}
+                                    <p class="text-xs text-gray-400 mt-1">Quota totale: <span class="font-bold text-white">{{ "%.2f"|format(totale_quota) }}</span></p>
+                                </div>
+                                
+                                <!-- Pulsanti cambio stato -->
+                                <div class="flex space-x-2">
+                                    {% if schedina.stato != "vincente" %}
+                                    <button onclick="cambiaStato('{{ schedina._id }}', 'vincente')" 
+                                            class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded transition">
+                                        ✅ Vincente
+                                    </button>
+                                    {% endif %}
+                                    {% if schedina.stato != "perdente" %}
+                                    <button onclick="cambiaStato('{{ schedina._id }}', 'perdente')" 
+                                            class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded transition">
+                                        ❌ Perdente
+                                    </button>
+                                    {% endif %}
+                                    {% if schedina.stato != "cancellata" %}
+                                    <button onclick="cambiaStato('{{ schedina._id }}', 'cancellata')" 
+                                            class="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white text-xs font-bold rounded transition">
+                                        🗑️ Cancella
+                                    </button>
+                                    {% endif %}
+                                    {% if schedina.stato != "in_corso" %}
+                                    <button onclick="cambiaStato('{{ schedina._id }}', 'in_corso')" 
+                                            class="px-3 py-1 bg-yellow-600 hover:bg-yellow-700 text-white text-xs font-bold rounded transition">
+                                        ⏳ In Corso
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="bg-gray-800 rounded-lg p-12 text-center border border-gray-700">
+            <p class="text-2xl text-gray-400 mb-4">📭</p>
+            <p class="text-xl text-gray-300 mb-2">Nessuna schedina salvata</p>
+            <p class="text-sm text-gray-500 mb-6">Crea la tua prima schedina per iniziare!</p>
+            <a href="/kroosbet" class="inline-block bg-yellow-500 hover:bg-yellow-600 text-black font-bold px-6 py-3 rounded">
+                Crea Nuova Schedina
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function toggleAccordion(id) {
+            const content = document.getElementById(id);
+            const iconId = id.replace('schedina-', 'icon-');
+            const icon = document.getElementById(iconId);
+            
+            content.classList.toggle('open');
+            if (content.classList.contains('open')) {
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        async function cambiaStato(schedinaId, nuovoStato) {
+            if (!confirm(`Sei sicuro di voler impostare questa schedina come "${nuovoStato}"?`)) {
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/cambia-stato-schedina/${schedinaId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ stato: nuovoStato })
+                });
+
+                const result = await res.json();
+                
+                if (res.ok) {
+                    alert('Stato schedina aggiornato con successo!');
+                    // Aggiorna il credito se è stato modificato
+                    const creditoRes = await fetch('/api/credito');
+                    const creditoData = await creditoRes.json();
+                    if (creditoData.credito !== undefined) {
+                        document.getElementById('credito-display').textContent = creditoData.credito.toFixed(2) + ' €';
+                    }
+                    // Ricarica la pagina per aggiornare lo stato
+                    location.reload();
+                } else {
+                    alert(result.error || 'Errore durante l\'aggiornamento dello stato!');
+                }
+            } catch (err) {
+                alert('Errore di rete: ' + err.message);
+            }
+        }
+    </script>
+</body>
+</html>
