@@ -592,23 +592,78 @@ def schedine():
     
     return render_template("schedine.html", schedine=schedine_list, credito=credito)
 
-@app.route("/api/events")
-def api_events():
-    """API endpoint per ottenere gli eventi sportivi da MongoDB"""
+@app.route("/api/leagues", methods=["GET", "POST", "OPTIONS"])
+def api_leagues():
+    """API endpoint per ottenere nazioni e campionati disponibili"""
     sport = request.args.get("sport", "calcio")
-    limit = int(request.args.get("limit", 100))
     
     try:
         db = client["bet365"]
         col = db[sport]
         
-        # Recupera eventi ordinati per data
-        eventi = list(col.find().sort("start_time_date", 1).limit(limit))
+        # Recupera tutti i campionati unici
+        leagues = col.distinct("league")
         
-        # Aggiungi 1 ora all'orario di ogni evento (orario MongoDB + 1 ora per bet365)
+        # Raggruppa per nazione (estrai nazione dal nome del campionato)
+        nations_leagues = {}
+        for league in sorted(leagues):
+            if not league:
+                continue
+            # Prova a estrarre la nazione dal nome del campionato
+            # Esempi: "Italy - Serie A" -> "Italy", "England - Premier League" -> "England"
+            parts = league.split(" - ")
+            if len(parts) >= 2:
+                nation = parts[0].strip()
+                league_name = " - ".join(parts[1:]).strip()
+            else:
+                nation = "Altri"
+                league_name = league
+            
+            if nation not in nations_leagues:
+                nations_leagues[nation] = []
+            nations_leagues[nation].append({
+                "name": league_name,
+                "full_name": league
+            })
+        
+        return jsonify({
+            "success": True,
+            "nations": nations_leagues
+        })
+    except Exception as e:
+        print(f"ERRORE API leagues: {e}")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "nations": {}
+        }), 500
+
+@app.route("/api/events")
+def api_events():
+    """API endpoint per ottenere gli eventi sportivi da MongoDB"""
+    sport = request.args.get("sport", "calcio")
+    limit = int(request.args.get("limit", 500))
+    league = request.args.get("league", None)  # Filtro opzionale per campionato
+    add_hour = request.args.get("add_hour", "false").lower() == "true"  # Parametro per aggiungere 1 ora
+    
+    try:
+        db = client["bet365"]
+        col = db[sport]
+        
+        # Costruisci query con filtro opzionale per campionato
+        query = {}
+        if league:
+            query["league"] = league
+        
+        # Recupera eventi ordinati per data
+        eventi = list(col.find(query).sort("start_time_date", 1).limit(limit))
+        
+        # Formatta l'orario (aggiungi 1 ora solo se richiesto)
         for ev in eventi:
             if "start_time_date" in ev:
-                ev["start_time_date"] = ev["start_time_date"] + timedelta(hours=1)
+                if add_hour:
+                    # Aggiungi 1 ora per le altre pagine
+                    ev["start_time_date"] = ev["start_time_date"] + timedelta(hours=1)
                 ev["start_time"] = ev["start_time_date"].strftime("%Y-%m-%d %H:%M:%S")
             # Converti ObjectId in stringa per JSON
             if "_id" in ev:
@@ -807,4 +862,8 @@ if __name__ == "__main__":
             {"credito": {"$exists": False}},
             {"$set": {"credito": 1000.0}}
         )
-    app.run(debug=True)
+    
+    # Per Render, usa la porta da variabile d'ambiente o default
+    import os
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
