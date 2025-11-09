@@ -549,6 +549,49 @@ def sitobet():
 @app.route("/kobet")
 def kobet():
     return render_template("kobet.html")
+
+@app.route("/kroosbet")
+@login_required
+def kroosbet():
+    # Inizializza credito se non esiste
+    credito = inizializza_credito_utente(current_user.id)
+    return render_template("kroosbet.html", credito=credito)
+
+def inizializza_credito_utente(user_id):
+    """Inizializza il credito dell'utente se non esiste"""
+    user = users_col.find_one({"_id": ObjectId(user_id)})
+    if user and "credito" not in user:
+        # Imposta credito iniziale di 1000€
+        users_col.update_one({"_id": ObjectId(user_id)}, {"$set": {"credito": 1000.0}})
+        return 1000.0
+    return user.get("credito", 1000.0) if user else 1000.0
+
+@app.route("/schedine")
+@login_required
+def schedine():
+    """Pagina per visualizzare le schedine salvate"""
+    # Inizializza credito se non esiste
+    credito = inizializza_credito_utente(current_user.id)
+    
+    schedine_col = client["gestionale"]["schedine"]
+    # Recupera solo le schedine dell'utente corrente, ordinate per data crescente
+    schedine_list = list(schedine_col.find({"user_id": current_user.id}).sort("data", 1))
+    
+    # Converti ObjectId in stringa per il template e inizializza stato se mancante
+    for s in schedine_list:
+        schedina_id_obj = s["_id"]  # Salva ObjectId originale prima della conversione
+        s["_id"] = str(s["_id"])
+        if isinstance(s.get("data"), datetime):
+            s["data_str"] = s["data"].strftime("%d/%m/%Y %H:%M")
+        else:
+            s["data_str"] = "Data non disponibile"
+        # Inizializza stato se mancante
+        if "stato" not in s:
+            s["stato"] = "in_corso"
+            schedine_col.update_one({"_id": schedina_id_obj}, {"$set": {"stato": "in_corso"}})
+    
+    return render_template("schedine.html", schedine=schedine_list, credito=credito)
+
 @app.route("/api/events")
 def api_events():
     """API endpoint per ottenere gli eventi sportivi da MongoDB"""
@@ -583,6 +626,160 @@ def api_events():
             "error": str(e),
             "results": []
         }), 500
+
+@app.route("/api/salva-schedina", methods=["POST"])
+@login_required
+def salva_schedina():
+    """Endpoint per salvare una schedina e scalare il credito"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"success": False, "error": "Dati mancanti"}), 400
+        
+        importo = float(data.get("importo", 0))
+        if importo <= 0:
+            return jsonify({"success": False, "error": "Importo non valido"}), 400
+        
+        # Inizializza credito se non esiste
+        credito_attuale = inizializza_credito_utente(current_user.id)
+        
+        # Verifica che ci sia credito sufficiente
+        if credito_attuale < importo:
+            return jsonify({
+                "success": False,
+                "error": f"Credito insufficiente. Credito disponibile: {credito_attuale:.2f}€"
+            }), 400
+        
+        # Scala il credito
+        nuovo_credito = credito_attuale - importo
+        users_col.update_one(
+            {"_id": ObjectId(current_user.id)},
+            {"$set": {"credito": nuovo_credito}}
+        )
+        
+        # Salva la schedina nel database
+        schedine_col = client["gestionale"]["schedine"]
+        
+        schedina = {
+            "scommesse": data.get("scommesse", []),
+            "importo": importo,
+            "vincita": float(data.get("vincita", 0)),
+            "data": datetime.now(),
+            "user_id": current_user.id,
+            "stato": "in_corso"  # Stato di default
+        }
+        
+        result = schedine_col.insert_one(schedina)
+        
+        return jsonify({
+            "success": True,
+            "message": "Schedina salvata con successo",
+            "id": str(result.inserted_id),
+            "credito_rimanente": nuovo_credito
+        })
+    except Exception as e:
+        print(f"ERRORE salvataggio schedina: {e}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+@app.route("/api/credito", methods=["GET"])
+@login_required
+def get_credito():
+    """Endpoint per ottenere il credito dell'utente"""
+    credito = inizializza_credito_utente(current_user.id)
+    return jsonify({"credito": credito})
+
+@app.route("/api/cambia-stato-schedina/<schedina_id>", methods=["POST"])
+@login_required
+def cambia_stato_schedina(schedina_id):
+    """Endpoint per cambiare lo stato di una schedina"""
+    try:
+        data = request.get_json()
+        nuovo_stato = data.get("stato")
+        
+        if nuovo_stato not in ["in_corso", "vincente", "perdente", "cancellata"]:
+            return jsonify({"success": False, "error": "Stato non valido"}), 400
+        
+        schedine_col = client["gestionale"]["schedine"]
+        
+        # Verifica che la schedina appartenga all'utente corrente
+        schedina = schedine_col.find_one({"_id": ObjectId(schedina_id), "user_id": current_user.id})
+        if not schedina:
+            return jsonify({"success": False, "error": "Schedina non trovata o non autorizzata"}), 404
+        
+        stato_precedente = schedina.get("stato", "in_corso")
+        importo = schedina.get("importo", 0)
+        vincita = schedina.get("vincita", 0)
+        credito_attuale = inizializza_credito_utente(current_user.id)
+        
+        # Gestione transizioni di stato
+        # Se diventa cancellata: restituisci l'importo
+        if nuovo_stato == "cancellata" and stato_precedente != "cancellata":
+            # Se era vincente, rimuovi anche la vincita che era stata aggiunta
+            if stato_precedente == "vincente":
+                nuovo_credito = credito_attuale - vincita + importo
+            else:
+                # Restituisci solo l'importo
+                nuovo_credito = credito_attuale + importo
+            users_col.update_one(
+                {"_id": ObjectId(current_user.id)},
+                {"$set": {"credito": nuovo_credito}}
+            )
+        
+        # Se era cancellata e ora cambia stato: rimuovi l'importo che era stato restituito
+        elif stato_precedente == "cancellata" and nuovo_stato != "cancellata":
+            nuovo_credito = credito_attuale - importo
+            if nuovo_credito < 0:
+                nuovo_credito = 0
+            users_col.update_one(
+                {"_id": ObjectId(current_user.id)},
+                {"$set": {"credito": nuovo_credito}}
+            )
+            # Se diventa anche vincente, aggiungi la vincita
+            if nuovo_stato == "vincente":
+                nuovo_credito = nuovo_credito + vincita
+                users_col.update_one(
+                    {"_id": ObjectId(current_user.id)},
+                    {"$set": {"credito": nuovo_credito}}
+                )
+        
+        # Se diventa vincente (e non era cancellata)
+        elif nuovo_stato == "vincente" and stato_precedente != "vincente" and stato_precedente != "cancellata":
+            nuovo_credito = credito_attuale + vincita
+            users_col.update_one(
+                {"_id": ObjectId(current_user.id)},
+                {"$set": {"credito": nuovo_credito}}
+            )
+        
+        # Se era vincente e ora cambia stato (ma non diventa cancellata)
+        elif stato_precedente == "vincente" and nuovo_stato != "vincente" and nuovo_stato != "cancellata":
+            nuovo_credito = credito_attuale - vincita
+            if nuovo_credito < 0:
+                nuovo_credito = 0
+            users_col.update_one(
+                {"_id": ObjectId(current_user.id)},
+                {"$set": {"credito": nuovo_credito}}
+            )
+        
+        # Aggiorna lo stato della schedina
+        schedine_col.update_one(
+            {"_id": ObjectId(schedina_id)},
+            {"$set": {"stato": nuovo_stato}}
+        )
+        
+        return jsonify({
+            "success": True,
+            "message": f"Stato schedina aggiornato a {nuovo_stato}",
+            "nuovo_stato": nuovo_stato
+        })
+    except Exception as e:
+        print(f"ERRORE cambio stato schedina: {e}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
         
         
         
@@ -601,6 +798,13 @@ if __name__ == "__main__":
     if users_col.count_documents({"username": "admin"}) == 0:
         users_col.insert_one({
             "username": "admin",
-            "password": generate_password_hash("password123")
+            "password": generate_password_hash("password123"),
+            "credito": 1000.0  # Credito iniziale
         })
+    else:
+        # Inizializza credito per utenti esistenti senza credito
+        users_col.update_many(
+            {"credito": {"$exists": False}},
+            {"$set": {"credito": 1000.0}}
+        )
     app.run(debug=True)
