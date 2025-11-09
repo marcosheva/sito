@@ -303,37 +303,56 @@
 
     // Carica campionati disponibili
     async function loadLeagues() {
-      if (sportSelezionato !== 'calcio') return;
-      
-      const submenu = document.getElementById('calcio-submenu');
-      if (submenu) {
-        submenu.innerHTML = '<div class="text-xs text-gray-400 px-2 py-1">Caricamento campionati...</div>';
+      if (sportSelezionato !== 'calcio') {
+        console.log('loadLeagues: sport non è calcio, esco');
+        return;
       }
       
+      const submenu = document.getElementById('calcio-submenu');
+      if (!submenu) {
+        console.error('loadLeagues: submenu non trovato');
+        return;
+      }
+      
+      // Mostra il submenu se è nascosto
+      submenu.classList.remove('hidden');
+      submenu.innerHTML = '<div class="text-xs text-gray-400 px-2 py-1">Caricamento campionati...</div>';
+      
       try {
+        console.log('loadLeagues: chiamata API con sport=', sportSelezionato);
         const response = await fetch(`/api/leagues?sport=${sportSelezionato}`);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
+        console.log('loadLeagues: risposta API', data);
         
         if (data.success && data.nations) {
           nationsLeagues = data.nations;
+          console.log('loadLeagues: campionati caricati', Object.keys(nationsLeagues).length, 'nazioni');
           renderLeaguesMenu();
         } else {
-          if (submenu) {
-            submenu.innerHTML = '<div class="text-xs text-red-400 px-2 py-1">Errore caricamento campionati</div>';
-          }
+          console.error('loadLeagues: risposta API non valida', data);
+          submenu.innerHTML = '<div class="text-xs text-red-400 px-2 py-1">Errore caricamento campionati</div>';
         }
       } catch (error) {
         console.error('Errore caricamento campionati:', error);
-        if (submenu) {
-          submenu.innerHTML = '<div class="text-xs text-red-400 px-2 py-1">Errore caricamento campionati</div>';
-        }
+        submenu.innerHTML = `<div class="text-xs text-red-400 px-2 py-1">Errore: ${error.message}</div>`;
       }
     }
 
     // Renderizza menu campionati
     function renderLeaguesMenu() {
       const submenu = document.getElementById('calcio-submenu');
-      if (!submenu) return;
+      if (!submenu) {
+        console.error('renderLeaguesMenu: submenu non trovato');
+        return;
+      }
+      
+      // Assicurati che il submenu sia visibile
+      submenu.classList.remove('hidden');
       
       let html = '';
       
@@ -346,18 +365,22 @@
       
       // Ordina nazioni
       const sortedNations = Object.keys(nationsLeagues || {}).sort();
+      console.log('renderLeaguesMenu: nazioni trovate', sortedNations.length);
       
       if (sortedNations.length === 0) {
         html += '<div class="text-xs text-gray-400 px-2 py-1 mt-1">Nessun campionato disponibile</div>';
       } else {
         sortedNations.forEach(nation => {
+          const leagues = nationsLeagues[nation] || [];
+          console.log(`renderLeaguesMenu: nazione ${nation}, ${leagues.length} campionati`);
+          
           html += `
             <div class="mt-2">
               <div class="text-xs font-bold text-gray-500 px-2 py-1">${nation}</div>
               <div class="ml-2 space-y-1">
           `;
           
-          (nationsLeagues[nation] || []).forEach((league, idx) => {
+          leagues.forEach((league, idx) => {
             const isSelected = campionatoSelezionato === league.full_name;
             const safeNation = (nation || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
             html += `
@@ -374,6 +397,7 @@
       }
       
       submenu.innerHTML = html;
+      console.log('renderLeaguesMenu: menu renderizzato');
       
       // Aggiungi event listener a "Tutti i campionati"
       const allItem = submenu.querySelector('.league-item-all');
@@ -1208,6 +1232,14 @@
           sportTitle.textContent = 'CALCIO';
         }
         
+        // Apri automaticamente il submenu calcio e mostra la freccia
+        const submenu = document.getElementById('calcio-submenu');
+        const arrow = document.getElementById('calcio-arrow');
+        if (submenu && arrow) {
+          submenu.classList.remove('hidden');
+          arrow.style.transform = 'rotate(180deg)';
+        }
+        
         // Aggiungi event listener per toggle menu calcio
         const calcioToggle = document.getElementById('calcio-toggle');
         if (calcioToggle) {
@@ -1241,9 +1273,15 @@
         // Imposta mercato 1X2
         selezionaMercato('1X2');
         
-        // Carica partite e campionati
-        loadMatches();
-        loadLeagues();
+        // Carica partite e campionati (carica prima i campionati, poi le partite)
+        console.log('DOMContentLoaded: inizializzazione');
+        loadLeagues().then(() => {
+          console.log('DOMContentLoaded: campionati caricati, ora carico le partite');
+          loadMatches();
+        }).catch(error => {
+          console.error('DOMContentLoaded: errore caricamento campionati', error);
+          loadMatches(); // Carica comunque le partite anche se i campionati falliscono
+        });
       } catch (error) {
         console.error('Errore inizializzazione:', error);
         const matchesBody = document.getElementById('matches-body');
