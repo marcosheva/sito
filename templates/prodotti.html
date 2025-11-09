@@ -149,13 +149,106 @@
             color: white;
         }
 
-        /* Pulsante elimina */
-        td form button {
+        /* Colonna Azioni allineata a destra */
+        td:last-child {
+            text-align: right;
+        }
+
+        /* Contenitore pulsanti azioni */
+        .actions-container {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            align-items: center;
+        }
+
+        /* Pulsanti azioni uniformi - stile base */
+        .action-btn {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            min-width: 90px;
+        }
+
+        .action-btn:hover {
+            background-color: #0056b3;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .action-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Varianti colore per i pulsanti */
+        .action-btn.save-btn {
+            background-color: #28a745;
+        }
+
+        .action-btn.save-btn:hover {
+            background-color: #218838;
+        }
+
+        .action-btn.save-btn:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .action-btn.cancel-btn {
+            background-color: #6c757d;
+        }
+
+        .action-btn.cancel-btn:hover {
+            background-color: #5a6268;
+        }
+
+        .action-btn.edit-btn {
+            background-color: #007BFF;
+        }
+
+        .action-btn.edit-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .action-btn.delete-btn {
             background-color: #dc3545;
         }
 
-        td form button:hover {
+        .action-btn.delete-btn:hover {
             background-color: #c82333;
+        }
+
+        /* Stili per editing inline */
+        .editable-input {
+            width: 100%;
+            padding: 8px;
+            border: 2px solid #007BFF;
+            border-radius: 4px;
+            font-size: 14px;
+            background-color: #fff;
+        }
+
+        .editable-input:focus {
+            outline: none;
+            border-color: #0056b3;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+        }
+
+        .edit-mode {
+            background-color: #fff3cd;
+        }
+
+        .saving {
+            opacity: 0.6;
+            pointer-events: none;
         }
     </style>
 </head>
@@ -178,32 +271,163 @@
         <table>
             <thead>
                 <tr>
+                    <th style="width: 60px;">#</th>
                     <th>Nome</th>
                     <th>Marca</th>
                     <th>Quantità</th>
-                    <th>Azioni</th>
+                    <th style="text-align: right;">Azioni</th>
                 </tr>
             </thead>
             <tbody>
                 {% for p in prodotti %}
-                <tr>
-                    <td>{{ p.nome }}</td>
-                    <td>{{ p.marca }}</td>
-                    <td>{{ p.quantita }}</td>
+                <tr data-id="{{ p._id }}" id="row-{{ p._id }}">
+                    <td style="text-align: center; font-weight: bold;">{{ loop.index }}</td>
                     <td>
-                        <!-- ✏️ Modifica -->
-                        <a href="/prodotti/modifica/{{ p._id }}">Modifica</a>
-
-                        <!-- 🗑️ Elimina -->
-                        <form action="/prodotti/elimina/{{ p._id }}" method="post" style="display:inline;">
-                            <button type="submit">Elimina</button>
-                        </form>
+                        <span class="display-value" data-field="nome">{{ p.nome }}</span>
+                        <input type="text" class="editable-input" value="{{ p.nome }}" data-field="nome" style="display:none;">
+                    </td>
+                    <td>
+                        <span class="display-value" data-field="marca">{{ p.marca }}</span>
+                        <input type="text" class="editable-input" value="{{ p.marca }}" data-field="marca" style="display:none;">
+                    </td>
+                    <td>
+                        <span class="display-value" data-field="quantita">{{ p.quantita }}</span>
+                        <input type="number" class="editable-input" value="{{ p.quantita }}" data-field="quantita" style="display:none;">
+                    </td>
+                    <td>
+                        <div class="actions-container">
+                            <button class="action-btn save-btn" onclick="saveProduct('{{ p._id }}')" style="display:none;">💾 Salva</button>
+                            <button class="action-btn cancel-btn" onclick="cancelEdit('{{ p._id }}')" style="display:none;">❌ Annulla</button>
+                            <button class="action-btn edit-btn" onclick="enableEdit('{{ p._id }}')" style="display:inline-block;">✏️ Modifica</button>
+                            <form action="/prodotti/elimina/{{ p._id }}" method="post" style="display:inline; margin:0;">
+                                <button type="submit" class="action-btn delete-btn">🗑️ Elimina</button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+
+    <script>
+        // Memorizza i valori originali quando si entra in modalità modifica
+        const originalValues = {};
+
+        function enableEdit(productId) {
+            const row = document.getElementById(`row-${productId}`);
+            const inputs = row.querySelectorAll('.editable-input');
+            const displays = row.querySelectorAll('.display-value');
+            const saveBtn = row.querySelector('button[onclick*="saveProduct"]');
+            const cancelBtn = row.querySelector('button[onclick*="cancelEdit"]');
+            const editBtn = row.querySelector('button[onclick*="enableEdit"]');
+
+            // Salva i valori originali
+            originalValues[productId] = {};
+            inputs.forEach(input => {
+                originalValues[productId][input.dataset.field] = input.value;
+            });
+
+            // Mostra input e nascondi display
+            inputs.forEach(input => input.style.display = 'block');
+            displays.forEach(display => display.style.display = 'none');
+
+            // Mostra pulsanti salva/annulla e nascondi modifica
+            saveBtn.style.display = 'inline-block';
+            cancelBtn.style.display = 'inline-block';
+            editBtn.style.display = 'none';
+
+            // Aggiungi classe per evidenziare la riga in modifica
+            row.classList.add('edit-mode');
+        }
+
+        function cancelEdit(productId) {
+            const row = document.getElementById(`row-${productId}`);
+            const inputs = row.querySelectorAll('.editable-input');
+            const displays = row.querySelectorAll('.display-value');
+            const saveBtn = row.querySelector('button[onclick*="saveProduct"]');
+            const cancelBtn = row.querySelector('button[onclick*="cancelEdit"]');
+            const editBtn = row.querySelector('button[onclick*="enableEdit"]');
+
+            // Ripristina i valori originali
+            if (originalValues[productId]) {
+                inputs.forEach(input => {
+                    input.value = originalValues[productId][input.dataset.field];
+                });
+            }
+
+            // Nascondi input e mostra display
+            inputs.forEach(input => input.style.display = 'none');
+            displays.forEach(display => display.style.display = 'inline');
+
+            // Nascondi pulsanti salva/annulla e mostra modifica
+            saveBtn.style.display = 'none';
+            cancelBtn.style.display = 'none';
+            editBtn.style.display = 'inline-block';
+
+            // Rimuovi classe di modifica
+            row.classList.remove('edit-mode');
+        }
+
+        async function saveProduct(productId) {
+            const row = document.getElementById(`row-${productId}`);
+            const inputs = row.querySelectorAll('.editable-input');
+            const displays = row.querySelectorAll('.display-value');
+            const saveBtn = row.querySelector('button[onclick*="saveProduct"]');
+            const cancelBtn = row.querySelector('button[onclick*="cancelEdit"]');
+            const editBtn = row.querySelector('button[onclick*="enableEdit"]');
+
+            // Raccogli i dati
+            const formData = new FormData();
+            inputs.forEach(input => {
+                formData.append(input.dataset.field, input.value);
+            });
+
+            // Disabilita i pulsanti durante il salvataggio
+            row.classList.add('saving');
+            saveBtn.disabled = true;
+            cancelBtn.disabled = true;
+
+            try {
+                const response = await fetch(`/prodotti/modifica/${productId}`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    // Aggiorna i valori visualizzati
+                    inputs.forEach((input, index) => {
+                        displays[index].textContent = input.value;
+                    });
+
+                    // Nascondi input e mostra display
+                    inputs.forEach(input => input.style.display = 'none');
+                    displays.forEach(display => display.style.display = 'inline');
+
+                    // Nascondi pulsanti salva/annulla e mostra modifica
+                    saveBtn.style.display = 'none';
+                    cancelBtn.style.display = 'none';
+                    editBtn.style.display = 'inline-block';
+
+                    // Rimuovi classe di modifica
+                    row.classList.remove('edit-mode');
+
+                    // Mostra messaggio di successo
+                    alert('✅ Prodotto modificato con successo!');
+                } else {
+                    alert('❌ Errore durante il salvataggio. Riprova.');
+                }
+            } catch (error) {
+                console.error('Errore:', error);
+                alert('❌ Errore durante il salvataggio. Riprova.');
+            } finally {
+                // Riabilita i pulsanti
+                row.classList.remove('saving');
+                saveBtn.disabled = false;
+                cancelBtn.disabled = false;
+            }
+        }
+    </script>
 
 </body>
 
