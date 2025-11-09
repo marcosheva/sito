@@ -30,91 +30,101 @@
         <div class="bg-gray-700 rounded px-2 py-1 mt-2">
           <div class="text-xs font-bold mb-1">SPORT</div>
           <div class="flex flex-col space-y-1">
-            <div onclick="selezionaSport('calcio', '⚽', 'CALCIO')" class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="calcio">
-              <div class="flex items-center space-x-2">
-                <span class="text-lg">⚽</span>
-                <span class="text-xs font-bold">CALCIO</span>
+            <div class="sport-item" data-sport="calcio">
+              <div id="calcio-toggle" class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer">
+                <div class="flex items-center space-x-2">
+                  <span class="text-lg">⚽</span>
+                  <span class="text-xs font-bold">CALCIO</span>
+                </div>
+                <div class="flex items-center space-x-1">
+                  <span class="sport-indicator hidden text-yellow-400">✓</span>
+                  <svg id="calcio-arrow" class="w-3 h-3 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
               </div>
-              <span class="sport-indicator hidden text-yellow-400">✓</span>
+              <div id="calcio-submenu" class="hidden ml-4 mt-1 space-y-1">
+                <div class="text-xs text-gray-400 px-2 py-1">Caricamento campionati...</div>
+              </div>
             </div>
-            <div onclick="selezionaSport('tennis', '🎾', 'Tennis')" class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="tennis">
+            <div class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="tennis" data-icon="🎾" data-nome="Tennis">
               <div class="flex items-center space-x-2">
                 <span class="text-lg">🎾</span>
                 <span class="text-xs">Tennis</span>
               </div>
               <span class="sport-indicator hidden text-yellow-400">✓</span>
             </div>
-            <div onclick="selezionaSport('basket', '🏀', 'Basket')" class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="basket">
+            <div class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="basket" data-icon="🏀" data-nome="Basket">
               <div class="flex items-center space-x-2">
                 <span class="text-lg">🏀</span>
                 <span class="text-xs">Basket</span>
               </div>
               <span class="sport-indicator hidden text-yellow-400">✓</span>
             </div>
-            <div onclick="selezionaSport('hockey', '🏒', 'Hockey')" class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="hockey">
+            <div class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="hockey" data-icon="🏒" data-nome="Hockey">
               <div class="flex items-center space-x-2">
                 <span class="text-lg">🏒</span>
                 <span class="text-xs">Hockey</span>
               </div>
               <span class="sport-indicator hidden text-yellow-400">✓</span>
             </div>
-            <div onclick="selezionaSport('rugby', '🏉', 'Rugby')" class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="rugby">
+            <div class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="rugby" data-icon="🏉" data-nome="Rugby">
               <div class="flex items-center space-x-2">
                 <span class="text-lg">🏉</span>
                 <span class="text-xs">Rugby</span>
               </div>
               <span class="sport-indicator hidden text-yellow-400">✓</span>
             </div>
-            <div onclick="selezionaSport('american football', '🏈', 'American Football')" class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="american football">
+            <div class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="american football" data-icon="🏈" data-nome="American Football">
               <div class="flex items-center space-x-2">
                 <span class="text-lg">🏈</span>
                 <span class="text-xs">American Football</span>
               </div>
               <span class="sport-indicator hidden text-yellow-400">✓</span>
             </div>
-            <div onclick="selezionaSport('handball', '🤾', 'Handball')" class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="handball">
+            <div class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="handball" data-icon="🤾" data-nome="Handball">
               <div class="flex items-center space-x-2">
                 <span class="text-lg">🤾</span>
                 <span class="text-xs">Handball</span>
               </div>
               <span class="sport-indicator hidden text-yellow-400">✓</span>
             </div>
-            <div onclick="selezionaSport('volleyball', '🏐', 'Volleyball')" class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="volleyball">
+            <div class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="volleyball" data-icon="🏐" data-nome="Volleyball">
               <div class="flex items-center space-x-2">
                 <span class="text-lg">🏐</span>
                 <span class="text-xs">Volleyball</span>
               </div>
               <span class="sport-indicator hidden text-yellow-400">✓</span>
             </div>
-            <div onclick="selezionaSport('water polo', '🏓', 'Water Polo')" class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="water polo">
+            <div class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="water polo" data-icon="🏓" data-nome="Water Polo">
               <div class="flex items-center space-x-2">
                 <span class="text-lg">🏓</span>
                 <span class="text-xs">Water Polo</span>
               </div>
               <span class="sport-indicator hidden text-yellow-400">✓</span>
             </div>
-            <div onclick="selezionaSport('golf', '🏌️', 'Golf')" class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="golf">
+            <div class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="golf" data-icon="🏌️" data-nome="Golf">
               <div class="flex items-center space-x-2">
                 <span class="text-lg">🏌️</span>
                 <span class="text-xs">Golf</span>
               </div>
               <span class="sport-indicator hidden text-yellow-400">✓</span>
             </div>
-            <div onclick="selezionaSport('pingpong', '🎾', 'Pingpong')" class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="pingpong">
+            <div class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="pingpong" data-icon="🎾" data-nome="Pingpong">
               <div class="flex items-center space-x-2">
                 <span class="text-lg">🎾</span>
                 <span class="text-xs">Pingpong</span>
               </div>
               <span class="sport-indicator hidden text-yellow-400">✓</span>
             </div>
-            <div onclick="selezionaSport('pallamano', '🎾', 'Pallamano')" class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="pallamano">
+            <div class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="pallamano" data-icon="🎾" data-nome="Pallamano">
               <div class="flex items-center space-x-2">
                 <span class="text-lg">🎾</span>
                 <span class="text-xs">Pallamano</span>
               </div>
               <span class="sport-indicator hidden text-yellow-400">✓</span>
             </div>
-            <div onclick="selezionaSport('freccette', '🎾', 'Freccette')" class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="freccette">
+            <div class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="freccette" data-icon="🎾" data-nome="Freccette">
               <div class="flex items-center space-x-2">
                 <span class="text-lg">🎾</span>
                 <span class="text-xs">Freccette</span>
@@ -147,18 +157,18 @@
             
             <!-- Tab Mercati Principali -->
             <div class="flex space-x-2 bg-gray-700 px-2 py-2 border-b border-gray-600 overflow-x-auto">
-              <button onclick="selezionaMercato('1X2')" id="mercato-1X2" class="px-3 py-1 rounded text-xs font-bold bg-yellow-500 text-black hover:bg-yellow-600 mercato-tab whitespace-nowrap">1X2</button>
-              <button onclick="selezionaMercato('Doppia Chance')" id="mercato-Doppia Chance" class="px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap">Doppia Chance</button>
-              <button onclick="selezionaMercato('Over/Under')" id="mercato-Over/Under" class="px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap">Over/Under</button>
-              <button onclick="selezionaMercato('Gol Totali')" id="mercato-Gol Totali" class="px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap">Gol Totali</button>
-              <button onclick="selezionaMercato('Handicap')" id="mercato-Handicap" class="px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap">Handicap</button>
-              <button onclick="selezionaMercato('Ris. Esatto')" id="mercato-Ris. Esatto" class="px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap">Ris. Esatto</button>
-              <button onclick="selezionaMercato('Corner')" id="mercato-Corner" class="px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap">Corner</button>
-              <button onclick="selezionaMercato('Cartellini')" id="mercato-Cartellini" class="px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap">Cartellini</button>
-              <button onclick="selezionaMercato('Primo Gol')" id="mercato-Primo Gol" class="px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap">Primo Gol</button>
-              <button onclick="selezionaMercato('1T')" id="mercato-1T" class="px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap">1T</button>
-              <button onclick="selezionaMercato('2T')" id="mercato-2T" class="px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap">2T</button>
-              <button onclick="selezionaMercato('DNB')" id="mercato-DNB" class="px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap">DNB</button>
+              <button id="mercato-1X2" class="mercato-tab-btn px-3 py-1 rounded text-xs font-bold bg-yellow-500 text-black hover:bg-yellow-600 mercato-tab whitespace-nowrap" data-mercato="1X2">1X2</button>
+              <button id="mercato-Doppia Chance" class="mercato-tab-btn px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Doppia Chance">Doppia Chance</button>
+              <button id="mercato-Over/Under" class="mercato-tab-btn px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Over/Under">Over/Under</button>
+              <button id="mercato-Gol Totali" class="mercato-tab-btn px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Gol Totali">Gol Totali</button>
+              <button id="mercato-Handicap" class="mercato-tab-btn px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Handicap">Handicap</button>
+              <button id="mercato-Ris. Esatto" class="mercato-tab-btn px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Ris. Esatto">Ris. Esatto</button>
+              <button id="mercato-Corner" class="mercato-tab-btn px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Corner">Corner</button>
+              <button id="mercato-Cartellini" class="mercato-tab-btn px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Cartellini">Cartellini</button>
+              <button id="mercato-Primo Gol" class="mercato-tab-btn px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Primo Gol">Primo Gol</button>
+              <button id="mercato-1T" class="mercato-tab-btn px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="1T">1T</button>
+              <button id="mercato-2T" class="mercato-tab-btn px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="2T">2T</button>
+              <button id="mercato-DNB" class="mercato-tab-btn px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="DNB">DNB</button>
             </div>
             
             <div class="overflow-x-auto">
@@ -250,6 +260,10 @@
     let matchesData = [];
     let sportSelezionato = 'calcio';
     let mercatoSelezionato = '1X2';
+    let campionatoSelezionato = null;
+    let nationsLeagues = {};
+    
+    // Non caricare subito, aspetta DOMContentLoaded
     const sportInfo = {
       'calcio': { icon: '⚽', nome: 'CALCIO' },
       'tennis': { icon: '🎾', nome: 'Tennis' },
@@ -269,23 +283,156 @@
       'futsal': { icon: '🎾', nome: 'Futsal' },
     };
 
+    // Toggle menu calcio
+    function toggleCalcioMenu() {
+      const submenu = document.getElementById('calcio-submenu');
+      const arrow = document.getElementById('calcio-arrow');
+      const isHidden = submenu.classList.contains('hidden');
+      
+      if (isHidden) {
+        submenu.classList.remove('hidden');
+        arrow.style.transform = 'rotate(180deg)';
+        if (Object.keys(nationsLeagues).length === 0) {
+          loadLeagues();
+        }
+      } else {
+        submenu.classList.add('hidden');
+        arrow.style.transform = 'rotate(0deg)';
+      }
+    }
+
+    // Carica campionati disponibili
+    async function loadLeagues() {
+      if (sportSelezionato !== 'calcio') return;
+      
+      const submenu = document.getElementById('calcio-submenu');
+      if (submenu) {
+        submenu.innerHTML = '<div class="text-xs text-gray-400 px-2 py-1">Caricamento campionati...</div>';
+      }
+      
+      try {
+        const response = await fetch(`/api/leagues?sport=${sportSelezionato}`);
+        const data = await response.json();
+        
+        if (data.success && data.nations) {
+          nationsLeagues = data.nations;
+          renderLeaguesMenu();
+        } else {
+          if (submenu) {
+            submenu.innerHTML = '<div class="text-xs text-red-400 px-2 py-1">Errore caricamento campionati</div>';
+          }
+        }
+      } catch (error) {
+        console.error('Errore caricamento campionati:', error);
+        if (submenu) {
+          submenu.innerHTML = '<div class="text-xs text-red-400 px-2 py-1">Errore caricamento campionati</div>';
+        }
+      }
+    }
+
+    // Renderizza menu campionati
+    function renderLeaguesMenu() {
+      const submenu = document.getElementById('calcio-submenu');
+      if (!submenu) return;
+      
+      let html = '';
+      
+      // Aggiungi opzione "Tutti i campionati"
+      html += `
+        <div class="league-item-all px-2 py-1 hover:bg-gray-600 rounded cursor-pointer text-xs ${campionatoSelezionato === null ? 'bg-yellow-500 bg-opacity-20 text-yellow-400' : 'text-gray-300'}">
+          📋 Tutti i campionati
+        </div>
+      `;
+      
+      // Ordina nazioni
+      const sortedNations = Object.keys(nationsLeagues || {}).sort();
+      
+      if (sortedNations.length === 0) {
+        html += '<div class="text-xs text-gray-400 px-2 py-1 mt-1">Nessun campionato disponibile</div>';
+      } else {
+        sortedNations.forEach(nation => {
+          html += `
+            <div class="mt-2">
+              <div class="text-xs font-bold text-gray-500 px-2 py-1">${nation}</div>
+              <div class="ml-2 space-y-1">
+          `;
+          
+          (nationsLeagues[nation] || []).forEach((league, idx) => {
+            const isSelected = campionatoSelezionato === league.full_name;
+            const safeNation = (nation || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            html += `
+              <div class="league-item px-2 py-1 hover:bg-gray-600 rounded cursor-pointer text-xs ${isSelected ? 'bg-yellow-500 bg-opacity-20 text-yellow-400' : 'text-gray-300'}" 
+                   data-nation="${safeNation}" 
+                   data-index="${idx}">
+                ${(league.name || league.full_name || 'N/A').replace(/</g, '&lt;').replace(/>/g, '&gt;')}
+              </div>
+            `;
+          });
+          
+          html += `</div></div>`;
+        });
+      }
+      
+      submenu.innerHTML = html;
+      
+      // Aggiungi event listener a "Tutti i campionati"
+      const allItem = submenu.querySelector('.league-item-all');
+      if (allItem) {
+        allItem.addEventListener('click', function() {
+          selezionaCampionato(null);
+        });
+      }
+      
+      // Aggiungi event listener ai campionati
+      submenu.querySelectorAll('.league-item').forEach(item => {
+        item.addEventListener('click', function() {
+          const nation = this.getAttribute('data-nation');
+          const index = parseInt(this.getAttribute('data-index'));
+          selezionaCampionatoByIndex(nation, index);
+        });
+      });
+    }
+
+    // Seleziona campionato
+    function selezionaCampionato(league) {
+      campionatoSelezionato = league;
+      renderLeaguesMenu();
+      loadMatches();
+    }
+
+    // Seleziona campionato per indice (evita problemi con caratteri speciali)
+    function selezionaCampionatoByIndex(nation, index) {
+      if (nationsLeagues[nation] && nationsLeagues[nation][index]) {
+        const league = nationsLeagues[nation][index].full_name;
+        selezionaCampionato(league);
+      }
+    }
+
     // Seleziona sport
     function selezionaSport(sport, icon, nome) {
       sportSelezionato = sport;
+      campionatoSelezionato = null; // Reset filtro campionato
       
       // Aggiorna UI sidebar
       document.querySelectorAll('.sport-item').forEach(item => {
         item.classList.remove('bg-yellow-500', 'bg-opacity-20');
-        item.querySelector('.sport-indicator').classList.add('hidden');
+        const indicator = item.querySelector('.sport-indicator');
+        if (indicator) indicator.classList.add('hidden');
       });
       const selectedItem = document.querySelector(`[data-sport="${sport}"]`);
       if (selectedItem) {
         selectedItem.classList.add('bg-yellow-500', 'bg-opacity-20');
-        selectedItem.querySelector('.sport-indicator').classList.remove('hidden');
+        const indicator = selectedItem.querySelector('.sport-indicator');
+        if (indicator) indicator.classList.remove('hidden');
       }
       
       // Aggiorna titolo
       document.getElementById('sport-title').textContent = nome;
+      
+      // Carica campionati se è calcio
+      if (sport === 'calcio') {
+        loadLeagues();
+      }
       
       // Ricarica i dati
       loadMatches();
@@ -296,7 +443,7 @@
       mercatoSelezionato = mercato;
       
       // Aggiorna UI tab
-      document.querySelectorAll('.mercato-tab').forEach(tab => {
+      document.querySelectorAll('.mercato-tab-btn').forEach(tab => {
         tab.classList.remove('bg-yellow-500', 'text-black');
         tab.classList.add('bg-gray-600', 'text-white');
       });
@@ -307,7 +454,9 @@
       }
       
       // Rerenderizza le partite con il nuovo mercato
-      renderMatches();
+      if (matchesData.length > 0) {
+        renderMatches();
+      }
     }
     
     // Calcola colonne per mercato
@@ -345,10 +494,25 @@
     // Carica i dati delle partite
     async function loadMatches() {
       try {
+        const matchesBody = document.getElementById('matches-body');
+        if (!matchesBody) {
+          console.error('Elemento matches-body non trovato');
+          return;
+        }
+        
         const colonne = getColonnePerMercato(mercatoSelezionato);
         const numCols = 4 + colonne.length;
-        document.getElementById('matches-body').innerHTML = `<tr><td colspan="${numCols}" class="text-center py-4 text-gray-400">Caricamento dati...</td></tr>`;
-        const response = await fetch(`/api/events?sport=${sportSelezionato}&limit=100`);
+        matchesBody.innerHTML = `<tr><td colspan="${numCols}" class="text-center py-4 text-gray-400">Caricamento dati...</td></tr>`;
+        
+        const url = campionatoSelezionato 
+          ? `/api/events?sport=${sportSelezionato}&limit=500&league=${encodeURIComponent(campionatoSelezionato)}`
+          : `/api/events?sport=${sportSelezionato}&limit=500`;
+        
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
         
         if (data.success && data.results) {
@@ -356,188 +520,241 @@
           renderMatches();
         } else {
           const colonne = getColonnePerMercato(mercatoSelezionato);
-        const numCols = 4 + colonne.length;
-          document.getElementById('matches-body').innerHTML = `<tr><td colspan="${numCols}" class="text-center py-4 text-red-400">Nessun dato disponibile</td></tr>`;
+          const numCols = 4 + colonne.length;
+          matchesBody.innerHTML = `<tr><td colspan="${numCols}" class="text-center py-4 text-red-400">Nessun dato disponibile</td></tr>`;
         }
       } catch (error) {
         console.error('Errore caricamento dati:', error);
-        const colonne = getColonnePerMercato(mercatoSelezionato);
-        const numCols = 4 + colonne.length;
-        document.getElementById('matches-body').innerHTML = `<tr><td colspan="${numCols}" class="text-center py-4 text-red-400">Errore nel caricamento dei dati</td></tr>`;
+        const matchesBody = document.getElementById('matches-body');
+        if (matchesBody) {
+          const colonne = getColonnePerMercato(mercatoSelezionato);
+          const numCols = 4 + colonne.length;
+          matchesBody.innerHTML = `<tr><td colspan="${numCols}" class="text-center py-4 text-red-400">Errore nel caricamento dei dati: ${error.message}</td></tr>`;
+        }
       }
     }
 
     // Renderizza le partite
     function renderMatches() {
-      const tbody = document.getElementById('matches-body');
-      const thead = document.getElementById('table-header');
-      
-      if (matchesData.length === 0) {
-        const colonne = getColonnePerMercato(mercatoSelezionato);
-        const numCols = 4 + colonne.length;
-        tbody.innerHTML = `<tr><td colspan="${numCols}" class="text-center py-4 text-gray-400">Nessuna partita disponibile</td></tr>`;
-        return;
-      }
-
-      // Aggiorna header in base al mercato
-      let colonne = getColonnePerMercato(mercatoSelezionato);
-      
-      // Aggiorna header tabella
-      let headerHtml = `
-        <th class="px-2 py-1 border-b border-gray-600 text-center">Id</th>
-        <th class="px-2 py-1 border-b border-gray-600 text-center">Data</th>
-        <th class="px-2 py-1 border-b border-gray-600 text-center">Evento</th>
-      `;
-      colonne.forEach(col => {
-        headerHtml += `<th class="px-1 py-1 border-b border-gray-600">${col}</th>`;
-      });
-      headerHtml += `<th class="px-2 py-1 border-b border-gray-600 text-center">Mercati</th>`;
-      thead.innerHTML = `<tr>${headerHtml}</tr>`;
-
-      let html = '';
-      const grouped = {};
-      
-      matchesData.forEach(ev => {
-        const date = new Date(ev.start_time_date || ev.start_time);
-        const dateStr = date.toLocaleDateString('it-IT');
-        if (!grouped[dateStr]) {
-          grouped[dateStr] = [];
-        }
-        grouped[dateStr].push(ev);
-      });
-
-      Object.keys(grouped).forEach(date => {
-        html += `<tr><td colspan="${4 + colonne.length}" class="bg-gray-900 text-yellow-400 font-bold px-2 py-1 border-b border-gray-700">${date}</td></tr>`;
+      try {
+        const tbody = document.getElementById('matches-body');
+        const thead = document.getElementById('table-header');
         
-        grouped[date].forEach(ev => {
-          const time = new Date(ev.start_time_date || ev.start_time).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
-          const quote_1x2 = ev.quote_1x2 || {};
-          const matchId = ev.match_id || ev._id;
-          const teams = `${ev.home_name || ''} - ${ev.away_name || ''}`;
-          
-          html += `<tr class="bg-gray-800 hover:bg-gray-700">
-            <td class="px-2 py-1 border-b border-gray-700 text-center">${matchId}</td>
-            <td class="px-2 py-1 border-b border-gray-700 text-center">${time}</td>
-            <td class="px-2 py-1 border-b border-gray-700 text-center">${teams}</td>`;
-          
-          // Aggiungi colonne in base al mercato
-          colonne.forEach(col => {
-            let quota = '-';
-            const quote = ev.quote || {};
-            
-            if (mercatoSelezionato === '1X2') {
-              quota = quote_1x2[col] || '-';
-            } else if (mercatoSelezionato === 'Doppia Chance') {
-              quota = quote_1x2[col] || '-';
-            } else if (mercatoSelezionato === 'Over/Under') {
-              const overUnder = quote['match_goals'] || {};
-              if (col === 'Over 2.5') {
-                quota = overUnder['Over 2.5'] || (Array.isArray(overUnder) ? overUnder.find(o => o.name === 'Over 2.5')?.odds : '-') || '-';
-              } else if (col === 'Under 2.5') {
-                quota = overUnder['Under 2.5'] || (Array.isArray(overUnder) ? overUnder.find(o => o.name === 'Under 2.5')?.odds : '-') || '-';
-              }
-            } else if (mercatoSelezionato === 'Gol Totali') {
-              const btts = quote['both_teams_to_score'] || {};
-              if (Array.isArray(btts)) {
-                const item = btts.find(o => (o.name || o.header) === col || (col === 'GG' && (o.name === 'Yes' || o.name === 'Sì')) || (col === 'NG' && (o.name === 'No' || o.name === 'No')));
-                quota = item?.odds || '-';
-              } else {
-                quota = btts[col === 'GG' ? 'Yes' : 'No'] || '-';
-              }
-            } else if (mercatoSelezionato === 'Handicap') {
-              const handicap = quote['asian_lines'] || quote['handicap'] || {};
-              if (Array.isArray(handicap)) {
-                const item = handicap.find(o => o.name === col || o.header === col);
-                quota = item?.odds || '-';
-              } else {
-                quota = handicap[col] || '-';
-              }
-            } else if (mercatoSelezionato === 'Ris. Esatto') {
-              const exact = quote['correct_score'] || {};
-              if (Array.isArray(exact)) {
-                const item = exact.find(o => o.name === col || o.header === col);
-                quota = item?.odds || '-';
-              } else {
-                quota = exact[col] || '-';
-              }
-            } else if (mercatoSelezionato === 'Corner') {
-              const corners = quote['corners'] || {};
-              if (Array.isArray(corners)) {
-                const item = corners.find(o => o.name === col || o.header === col);
-                quota = item?.odds || '-';
-              } else {
-                quota = corners[col] || '-';
-              }
-            } else if (mercatoSelezionato === 'Cartellini') {
-              const cards = quote['cards'] || {};
-              if (Array.isArray(cards)) {
-                const item = cards.find(o => o.name === col || o.header === col);
-                quota = item?.odds || '-';
-              } else {
-                quota = cards[col] || '-';
-              }
-            } else if (mercatoSelezionato === 'Primo Gol') {
-              const firstGoal = quote['first_goal'] || {};
-              if (Array.isArray(firstGoal)) {
-                const item = firstGoal.find(o => o.name === col || o.header === col);
-                quota = item?.odds || '-';
-              } else {
-                quota = firstGoal[col] || '-';
-              }
-            } else if (mercatoSelezionato === '1T') {
-              const ht = quote['half_time'] || {};
-              if (Array.isArray(ht)) {
-                const item = ht.find(o => o.name === col || o.header === col);
-                quota = item?.odds || '-';
-              } else {
-                quota = ht[col] || quote_1x2[col] || '-';
-              }
-            } else if (mercatoSelezionato === '2T') {
-              const sh = quote['second_half'] || {};
-              if (Array.isArray(sh)) {
-                const item = sh.find(o => o.name === col || o.header === col);
-                quota = item?.odds || '-';
-              } else {
-                quota = sh[col] || quote_1x2[col] || '-';
-              }
-            } else if (mercatoSelezionato === 'DNB') {
-              const dnb = quote['draw_no_bet'] || {};
-              if (Array.isArray(dnb)) {
-                const item = dnb.find(o => o.name === col || o.header === col);
-                quota = item?.odds || '-';
-              } else {
-                quota = dnb[col] || quote_1x2[col] || '-';
-              }
-            }
-            
-            const quotaNum = parseFloat(quota);
-            const isSelected = selections.some(s => s.id == matchId && s.categoria === mercatoSelezionato && s.segno === col);
-            
-            html += `
-              <td class="px-1 py-1 border-b border-gray-700">
-                <button onclick="selectQuote('${matchId}', '${mercatoSelezionato}', '${col}', '${quota}', '${teams}')" 
-                        class="w-full border border-gray-600 rounded px-0.5 py-0.5 text-xs ${isSelected ? 'bg-yellow-500 text-black' : 'bg-gray-900 text-white hover:bg-yellow-500 hover:text-black'} ${quotaNum <= 1 ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}"
-                        ${quotaNum <= 1 ? 'disabled' : ''}>
-                  ${quotaNum > 1 ? quota : '-'}
-                </button>
-              </td>`;
-          });
-          
-          // Pulsante mercati dopo le quote
-          html += `
-            <td class="px-2 py-1 border-b border-gray-700 text-center">
-              <button onclick="apriMercati('${matchId}')" 
-                      class="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded">
-                📊
-              </button>
-            </td>
-          `;
-          
-          html += `</tr>`;
-        });
-      });
+        if (!tbody || !thead) {
+          console.error('Elementi tabella non trovati');
+          return;
+        }
+        
+        if (matchesData.length === 0) {
+          const colonne = getColonnePerMercato(mercatoSelezionato);
+          const numCols = 4 + colonne.length;
+          tbody.innerHTML = `<tr><td colspan="${numCols}" class="text-center py-4 text-gray-400">Nessuna partita disponibile</td></tr>`;
+          return;
+        }
 
-      tbody.innerHTML = html;
+        // Aggiorna header in base al mercato
+        let colonne = getColonnePerMercato(mercatoSelezionato);
+        
+        // Aggiorna header tabella
+        let headerHtml = `
+          <th class="px-2 py-1 border-b border-gray-600 text-center">Id</th>
+          <th class="px-2 py-1 border-b border-gray-600 text-center">Data</th>
+          <th class="px-2 py-1 border-b border-gray-600 text-center">Evento</th>
+        `;
+        colonne.forEach(col => {
+          headerHtml += `<th class="px-1 py-1 border-b border-gray-600">${col}</th>`;
+        });
+        headerHtml += `<th class="px-2 py-1 border-b border-gray-600 text-center">Mercati</th>`;
+        thead.innerHTML = `<tr>${headerHtml}</tr>`;
+
+        let html = '';
+        const grouped = {};
+        
+        // Raggruppa per data e poi per campionato
+        matchesData.forEach(ev => {
+          const date = new Date(ev.start_time_date || ev.start_time);
+          const dateStr = date.toLocaleDateString('it-IT');
+          const league = ev.league || 'Altri Campionati';
+          
+          if (!grouped[dateStr]) {
+            grouped[dateStr] = {};
+          }
+          if (!grouped[dateStr][league]) {
+            grouped[dateStr][league] = [];
+          }
+          grouped[dateStr][league].push(ev);
+        });
+
+        Object.keys(grouped).sort().forEach(date => {
+          html += `<tr><td colspan="${4 + colonne.length}" class="bg-gray-900 text-yellow-400 font-bold px-2 py-1 border-b border-gray-700">${date}</td></tr>`;
+          
+          // Per ogni data, mostra i campionati
+          Object.keys(grouped[date]).sort().forEach(league => {
+            html += `<tr><td colspan="${4 + colonne.length}" class="bg-gray-800 text-blue-400 font-semibold px-4 py-1 border-b border-gray-600 text-xs">🏆 ${league}</td></tr>`;
+            
+            grouped[date][league].forEach(ev => {
+              const time = new Date(ev.start_time_date || ev.start_time).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+              const quote_1x2 = ev.quote_1x2 || {};
+              const matchId = ev.match_id || ev._id;
+              const teams = `${ev.home_name || ''} - ${ev.away_name || ''}`;
+              
+              html += `<tr class="bg-gray-800 hover:bg-gray-700">
+                <td class="px-2 py-1 border-b border-gray-700 text-center">${matchId}</td>
+                <td class="px-2 py-1 border-b border-gray-700 text-center">${time}</td>
+                <td class="px-2 py-1 border-b border-gray-700 text-center">${teams}</td>`;
+              
+              // Aggiungi colonne in base al mercato
+              colonne.forEach(col => {
+                let quota = '-';
+                const quote = ev.quote || {};
+                
+                if (mercatoSelezionato === '1X2') {
+                  quota = quote_1x2[col] || '-';
+                } else if (mercatoSelezionato === 'Doppia Chance') {
+                  quota = quote_1x2[col] || '-';
+                } else if (mercatoSelezionato === 'Over/Under') {
+                  const overUnder = quote['match_goals'] || {};
+                  if (col === 'Over 2.5') {
+                    quota = overUnder['Over 2.5'] || (Array.isArray(overUnder) ? overUnder.find(o => o.name === 'Over 2.5')?.odds : '-') || '-';
+                  } else if (col === 'Under 2.5') {
+                    quota = overUnder['Under 2.5'] || (Array.isArray(overUnder) ? overUnder.find(o => o.name === 'Under 2.5')?.odds : '-') || '-';
+                  }
+                } else if (mercatoSelezionato === 'Gol Totali') {
+                  const btts = quote['both_teams_to_score'] || {};
+                  if (Array.isArray(btts)) {
+                    const item = btts.find(o => (o.name || o.header) === col || (col === 'GG' && (o.name === 'Yes' || o.name === 'Sì')) || (col === 'NG' && (o.name === 'No' || o.name === 'No')));
+                    quota = item?.odds || '-';
+                  } else {
+                    quota = btts[col === 'GG' ? 'Yes' : 'No'] || '-';
+                  }
+                } else if (mercatoSelezionato === 'Handicap') {
+                  const handicap = quote['asian_lines'] || quote['handicap'] || {};
+                  if (Array.isArray(handicap)) {
+                    const item = handicap.find(o => o.name === col || o.header === col);
+                    quota = item?.odds || '-';
+                  } else {
+                    quota = handicap[col] || '-';
+                  }
+                } else if (mercatoSelezionato === 'Ris. Esatto') {
+                  const exact = quote['correct_score'] || {};
+                  if (Array.isArray(exact)) {
+                    const item = exact.find(o => o.name === col || o.header === col);
+                    quota = item?.odds || '-';
+                  } else {
+                    quota = exact[col] || '-';
+                  }
+                } else if (mercatoSelezionato === 'Corner') {
+                  const corners = quote['corners'] || {};
+                  if (Array.isArray(corners)) {
+                    const item = corners.find(o => o.name === col || o.header === col);
+                    quota = item?.odds || '-';
+                  } else {
+                    quota = corners[col] || '-';
+                  }
+                } else if (mercatoSelezionato === 'Cartellini') {
+                  const cards = quote['cards'] || {};
+                  if (Array.isArray(cards)) {
+                    const item = cards.find(o => o.name === col || o.header === col);
+                    quota = item?.odds || '-';
+                  } else {
+                    quota = cards[col] || '-';
+                  }
+                } else if (mercatoSelezionato === 'Primo Gol') {
+                  const firstGoal = quote['first_goal'] || {};
+                  if (Array.isArray(firstGoal)) {
+                    const item = firstGoal.find(o => o.name === col || o.header === col);
+                    quota = item?.odds || '-';
+                  } else {
+                    quota = firstGoal[col] || '-';
+                  }
+                } else if (mercatoSelezionato === '1T') {
+                  const ht = quote['half_time'] || {};
+                  if (Array.isArray(ht)) {
+                    const item = ht.find(o => o.name === col || o.header === col);
+                    quota = item?.odds || '-';
+                  } else {
+                    quota = ht[col] || quote_1x2[col] || '-';
+                  }
+                } else if (mercatoSelezionato === '2T') {
+                  const sh = quote['second_half'] || {};
+                  if (Array.isArray(sh)) {
+                    const item = sh.find(o => o.name === col || o.header === col);
+                    quota = item?.odds || '-';
+                  } else {
+                    quota = sh[col] || quote_1x2[col] || '-';
+                  }
+                } else if (mercatoSelezionato === 'DNB') {
+                  const dnb = quote['draw_no_bet'] || {};
+                  if (Array.isArray(dnb)) {
+                    const item = dnb.find(o => o.name === col || o.header === col);
+                    quota = item?.odds || '-';
+                  } else {
+                    quota = dnb[col] || quote_1x2[col] || '-';
+                  }
+                }
+                
+                const quotaNum = parseFloat(quota);
+                const isSelected = selections.some(s => s.id == matchId && s.categoria === mercatoSelezionato && s.segno === col);
+                
+                html += `
+                  <td class="px-1 py-1 border-b border-gray-700">
+                    <button class="quote-btn w-full border border-gray-600 rounded px-0.5 py-0.5 text-xs ${isSelected ? 'bg-yellow-500 text-black' : 'bg-gray-900 text-white hover:bg-yellow-500 hover:text-black'} ${quotaNum <= 1 ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}"
+                            data-match-id="${matchId}"
+                            data-categoria="${mercatoSelezionato}"
+                            data-segno="${col}"
+                            data-quota="${quota}"
+                            data-evento="${(teams || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}"
+                            ${quotaNum <= 1 ? 'disabled' : ''}>
+                      ${quotaNum > 1 ? quota : '-'}
+                    </button>
+                  </td>`;
+              });
+              
+              // Pulsante mercati dopo le quote
+              html += `
+                <td class="px-2 py-1 border-b border-gray-700 text-center">
+                  <button class="mercati-btn px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded"
+                          data-match-id="${matchId}">
+                    📊
+                  </button>
+                </td>
+              `;
+              
+              html += `</tr>`;
+            });
+          });
+        });
+
+        tbody.innerHTML = html;
+        
+        // Aggiungi event listener ai pulsanti quote
+        tbody.querySelectorAll('.quote-btn').forEach(btn => {
+          if (!btn.disabled) {
+            btn.addEventListener('click', function() {
+              const matchId = this.getAttribute('data-match-id');
+              const categoria = this.getAttribute('data-categoria');
+              const segno = this.getAttribute('data-segno');
+              const quota = this.getAttribute('data-quota');
+              const evento = this.getAttribute('data-evento');
+              selectQuote(matchId, categoria, segno, quota, evento);
+            });
+          }
+        });
+        
+        // Aggiungi event listener ai pulsanti mercati
+        tbody.querySelectorAll('.mercati-btn').forEach(btn => {
+          btn.addEventListener('click', function() {
+            const matchId = this.getAttribute('data-match-id');
+            apriMercati(matchId);
+          });
+        });
+      } catch (error) {
+        console.error('Errore renderMatches:', error);
+        const tbody = document.getElementById('matches-body');
+        if (tbody) {
+          tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-red-400">Errore nel rendering delle partite</td></tr>';
+        }
+      }
     }
 
     // Seleziona una quota
@@ -581,7 +798,7 @@
               <div class="font-bold text-yellow-400 text-xs">${sel.id} - ${sel.evento}</div>
               <div class="text-xs">${sel.categoria}: <span class="font-bold">${sel.segno}</span> @ <span class="font-bold">${sel.quota}</span></div>
             </div>
-            <button onclick="removeSelection('${sel.key}')" class="ml-2 text-red-400 hover:text-red-600 font-bold">&times;</button>
+            <button class="remove-selection-btn ml-2 text-red-400 hover:text-red-600 font-bold" data-key="${sel.key}">&times;</button>
           </div>
         `;
       });
@@ -590,6 +807,15 @@
       html += '</div>';
       
       content.innerHTML = html;
+      
+      // Aggiungi event listener ai pulsanti rimuovi
+      content.querySelectorAll('.remove-selection-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const key = this.getAttribute('data-key');
+          removeSelection(key);
+        });
+      });
+      
       updateVincita();
     }
 
@@ -749,13 +975,21 @@
       categorieDisponibili.forEach(cat => {
         const isActive = cat === categoriaSelezionata;
         tabHtml += `
-          <button onclick="selezionaCategoria('${cat}')" 
-                  class="px-3 py-1 rounded text-xs font-bold whitespace-nowrap ${isActive ? 'bg-yellow-500 text-black' : 'bg-gray-600 text-white hover:bg-gray-500'}">
+          <button class="categoria-tab px-3 py-1 rounded text-xs font-bold whitespace-nowrap ${isActive ? 'bg-yellow-500 text-black' : 'bg-gray-600 text-white hover:bg-gray-500'}"
+                  data-categoria="${cat}">
             ${cat}
           </button>
         `;
       });
       tabContainer.innerHTML = tabHtml;
+      
+      // Aggiungi event listener alle tab categorie
+      tabContainer.querySelectorAll('.categoria-tab').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const categoria = this.getAttribute('data-categoria');
+          selezionaCategoria(categoria);
+        });
+      });
       
       // Renderizza contenuto
       renderizzaMercati();
@@ -802,8 +1036,13 @@
           const quotaNum = parseFloat(quota);
           const isSelected = selections.some(s => s.id == matchId && s.categoria === '1X2' && s.segno === segno);
           html += `
-            <button onclick="selectQuoteFromModal('${matchId}', '1X2', '${segno}', '${quota}', '${teams}')" 
-                    class="px-4 py-3 rounded text-sm font-bold ${isSelected ? 'bg-yellow-500 text-black' : 'bg-gray-700 text-white hover:bg-yellow-500 hover:text-black'} ${quotaNum <= 1 ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}">
+            <button class="modal-quote-btn px-4 py-3 rounded text-sm font-bold ${isSelected ? 'bg-yellow-500 text-black' : 'bg-gray-700 text-white hover:bg-yellow-500 hover:text-black'} ${quotaNum <= 1 ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}"
+                    data-match-id="${matchId}"
+                    data-categoria="1X2"
+                    data-segno="${segno}"
+                    data-quota="${quota}"
+                    data-evento="${(teams || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}"
+                    ${quotaNum <= 1 ? 'disabled' : ''}>
               <div class="text-xs mb-1">${segno === '1' ? 'Casa' : segno === 'X' ? 'Pareggio' : 'Ospiti'}</div>
               <div class="text-lg">${quotaNum > 1 ? quota : '-'}</div>
             </button>
@@ -820,8 +1059,13 @@
           const quotaNum = parseFloat(quota);
           const isSelected = selections.some(s => s.id == matchId && s.categoria === 'Doppia Chance' && s.segno === segno);
           html += `
-            <button onclick="selectQuoteFromModal('${matchId}', 'Doppia Chance', '${segno}', '${quota}', '${teams}')" 
-                    class="px-4 py-3 rounded text-sm font-bold ${isSelected ? 'bg-yellow-500 text-black' : 'bg-gray-700 text-white hover:bg-yellow-500 hover:text-black'} ${quotaNum <= 1 ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}">
+            <button class="modal-quote-btn px-4 py-3 rounded text-sm font-bold ${isSelected ? 'bg-yellow-500 text-black' : 'bg-gray-700 text-white hover:bg-yellow-500 hover:text-black'} ${quotaNum <= 1 ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}"
+                    data-match-id="${matchId}"
+                    data-categoria="Doppia Chance"
+                    data-segno="${segno}"
+                    data-quota="${quota}"
+                    data-evento="${(teams || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}"
+                    ${quotaNum <= 1 ? 'disabled' : ''}>
               <div class="text-xs mb-1">${segno}</div>
               <div class="text-lg">${quotaNum > 1 ? quota : '-'}</div>
             </button>
@@ -839,8 +1083,13 @@
             const quotaNum = parseFloat(quota);
             const isSelected = selections.some(s => s.id == matchId && s.categoria === 'O/U' && s.segno === nome);
             html += `
-              <button onclick="selectQuoteFromModal('${matchId}', 'O/U', '${nome}', '${quota}', '${teams}')" 
-                      class="px-4 py-3 rounded text-sm font-bold ${isSelected ? 'bg-yellow-500 text-black' : 'bg-gray-700 text-white hover:bg-yellow-500 hover:text-black'} ${quotaNum <= 1 ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}">
+              <button class="modal-quote-btn px-4 py-3 rounded text-sm font-bold ${isSelected ? 'bg-yellow-500 text-black' : 'bg-gray-700 text-white hover:bg-yellow-500 hover:text-black'} ${quotaNum <= 1 ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}"
+                      data-match-id="${matchId}"
+                      data-categoria="O/U"
+                      data-segno="${(nome || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}"
+                      data-quota="${quota}"
+                      data-evento="${(teams || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}"
+                      ${quotaNum <= 1 ? 'disabled' : ''}>
                 <div class="text-xs mb-1">${nome}</div>
                 <div class="text-lg">${quotaNum > 1 ? quota : '-'}</div>
               </button>
@@ -854,8 +1103,13 @@
             const quotaNum = parseFloat(quota);
             const isSelected = selections.some(s => s.id == matchId && s.categoria === 'O/U' && s.segno === key);
             html += `
-              <button onclick="selectQuoteFromModal('${matchId}', 'O/U', '${key}', '${quota}', '${teams}')" 
-                      class="px-4 py-3 rounded text-sm font-bold ${isSelected ? 'bg-yellow-500 text-black' : 'bg-gray-700 text-white hover:bg-yellow-500 hover:text-black'} ${quotaNum <= 1 ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}">
+              <button class="modal-quote-btn px-4 py-3 rounded text-sm font-bold ${isSelected ? 'bg-yellow-500 text-black' : 'bg-gray-700 text-white hover:bg-yellow-500 hover:text-black'} ${quotaNum <= 1 ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}"
+                      data-match-id="${matchId}"
+                      data-categoria="O/U"
+                      data-segno="${(key || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}"
+                      data-quota="${quota}"
+                      data-evento="${(teams || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}"
+                      ${quotaNum <= 1 ? 'disabled' : ''}>
                 <div class="text-xs mb-1">${key}</div>
                 <div class="text-lg">${quotaNum > 1 ? quota : '-'}</div>
               </button>
@@ -876,8 +1130,13 @@
             const quotaNum = parseFloat(quota);
             const isSelected = selections.some(s => s.id == matchId && s.categoria === categoriaSelezionata && s.segno === nome);
             html += `
-              <button onclick="selectQuoteFromModal('${matchId}', '${categoriaSelezionata}', '${nome}', '${quota}', '${teams}')" 
-                      class="px-4 py-3 rounded text-sm font-bold ${isSelected ? 'bg-yellow-500 text-black' : 'bg-gray-700 text-white hover:bg-yellow-500 hover:text-black'} ${quotaNum <= 1 ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}">
+              <button class="modal-quote-btn px-4 py-3 rounded text-sm font-bold ${isSelected ? 'bg-yellow-500 text-black' : 'bg-gray-700 text-white hover:bg-yellow-500 hover:text-black'} ${quotaNum <= 1 ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}"
+                      data-match-id="${matchId}"
+                      data-categoria="${(categoriaSelezionata || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}"
+                      data-segno="${(nome || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}"
+                      data-quota="${quota}"
+                      data-evento="${(teams || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}"
+                      ${quotaNum <= 1 ? 'disabled' : ''}>
                 <div class="text-xs mb-1">${nome}${handicap}</div>
                 <div class="text-lg">${quotaNum > 1 ? quota : '-'}</div>
               </button>
@@ -890,6 +1149,20 @@
       }
       
       contenuto.innerHTML = html || '<p class="text-gray-400">Nessun mercato disponibile</p>';
+      
+      // Aggiungi event listener ai pulsanti quote nel modal
+      contenuto.querySelectorAll('.modal-quote-btn').forEach(btn => {
+        if (!btn.disabled) {
+          btn.addEventListener('click', function() {
+            const matchId = this.getAttribute('data-match-id');
+            const categoria = this.getAttribute('data-categoria');
+            const segno = this.getAttribute('data-segno');
+            const quota = this.getAttribute('data-quota');
+            const evento = this.getAttribute('data-evento');
+            selectQuoteFromModal(matchId, categoria, segno, quota, evento);
+          });
+        }
+      });
     }
 
     // Refresh mercati
@@ -919,10 +1192,65 @@
       }
     });
 
-    // Inizializza sport selezionato
+    // Inizializza sport selezionato e UI
     window.addEventListener('DOMContentLoaded', () => {
-      selezionaSport('calcio', '⚽', 'CALCIO');
-      selezionaMercato('1X2');
+      try {
+        // Imposta UI per calcio
+        const calcioItem = document.querySelector('[data-sport="calcio"]');
+        if (calcioItem) {
+          calcioItem.classList.add('bg-yellow-500', 'bg-opacity-20');
+          const indicator = calcioItem.querySelector('.sport-indicator');
+          if (indicator) indicator.classList.remove('hidden');
+        }
+        
+        const sportTitle = document.getElementById('sport-title');
+        if (sportTitle) {
+          sportTitle.textContent = 'CALCIO';
+        }
+        
+        // Aggiungi event listener per toggle menu calcio
+        const calcioToggle = document.getElementById('calcio-toggle');
+        if (calcioToggle) {
+          calcioToggle.addEventListener('click', toggleCalcioMenu);
+        }
+        
+        // Aggiungi event listener agli sport
+        document.querySelectorAll('.sport-item[data-sport]').forEach(item => {
+          if (item.id !== 'calcio-toggle' && !item.closest('#calcio-submenu')) {
+            item.addEventListener('click', function() {
+              const sport = this.getAttribute('data-sport');
+              const icon = this.getAttribute('data-icon');
+              const nome = this.getAttribute('data-nome');
+              if (sport && icon && nome) {
+                selezionaSport(sport, icon, nome);
+              }
+            });
+          }
+        });
+        
+        // Aggiungi event listener ai tab mercati
+        document.querySelectorAll('.mercato-tab-btn').forEach(btn => {
+          btn.addEventListener('click', function() {
+            const mercato = this.getAttribute('data-mercato');
+            if (mercato) {
+              selezionaMercato(mercato);
+            }
+          });
+        });
+        
+        // Imposta mercato 1X2
+        selezionaMercato('1X2');
+        
+        // Carica partite e campionati
+        loadMatches();
+        loadLeagues();
+      } catch (error) {
+        console.error('Errore inizializzazione:', error);
+        const matchesBody = document.getElementById('matches-body');
+        if (matchesBody) {
+          matchesBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-red-400">Errore di inizializzazione. Controlla la console.</td></tr>';
+        }
+      }
     });
   </script>
 </body>
