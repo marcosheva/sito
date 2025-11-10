@@ -106,13 +106,6 @@
               </div>
               <span class="sport-indicator hidden text-yellow-400">✓</span>
             </div>
-            <div class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="handball" data-icon="🤾" data-nome="Handball">
-              <div class="flex items-center space-x-2">
-                <span class="text-lg">🤾</span>
-                <span class="text-xs">Handball</span>
-              </div>
-              <span class="sport-indicator hidden text-yellow-400">✓</span>
-            </div>
             <div class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="volleyball" data-icon="🏐" data-nome="Volleyball">
               <div class="flex items-center space-x-2">
                 <span class="text-lg">🏐</span>
@@ -141,6 +134,13 @@
               </div>
               <span class="sport-indicator hidden text-yellow-400">✓</span>
             </div>
+            <div class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="futsal" data-icon="⚽" data-nome="Futsal">
+              <div class="flex items-center space-x-2">
+                <span class="text-lg">⚽</span>
+                <span class="text-xs">Futsal</span>
+              </div>
+              <span class="sport-indicator hidden text-yellow-400">✓</span>
+            </div>
             <div class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="pallamano" data-icon="🎾" data-nome="Pallamano">
               <div class="flex items-center space-x-2">
                 <span class="text-lg">🎾</span>
@@ -152,6 +152,41 @@
               <div class="flex items-center space-x-2">
                 <span class="text-lg">🎾</span>
                 <span class="text-xs">Freccette</span>
+              </div>
+              <span class="sport-indicator hidden text-yellow-400">✓</span>
+            </div>
+            <div class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="boxing" data-icon="🥊" data-nome="Boxing">
+              <div class="flex items-center space-x-2">
+                <span class="text-lg">🥊</span>
+                <span class="text-xs">Boxing</span>
+              </div>
+              <span class="sport-indicator hidden text-yellow-400">✓</span>
+            </div>
+            <div class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="e-sport" data-icon="🎮" data-nome="E-Sport">
+              <div class="flex items-center space-x-2">
+                <span class="text-lg">🎮</span>
+                <span class="text-xs">E-Sport</span>
+              </div>
+              <span class="sport-indicator hidden text-yellow-400">✓</span>
+            </div>
+            <div class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="badminton" data-icon="🏸" data-nome="Badminton">
+              <div class="flex items-center space-x-2">
+                <span class="text-lg">🏸</span>
+                <span class="text-xs">Badminton</span>
+              </div>
+              <span class="sport-indicator hidden text-yellow-400">✓</span>
+            </div>
+            <div class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="cricket" data-icon="🏏" data-nome="Cricket">
+              <div class="flex items-center space-x-2">
+                <span class="text-lg">🏏</span>
+                <span class="text-xs">Cricket</span>
+              </div>
+              <span class="sport-indicator hidden text-yellow-400">✓</span>
+            </div>
+            <div class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="squash" data-icon="🎾" data-nome="Squash">
+              <div class="flex items-center space-x-2">
+                <span class="text-lg">🎾</span>
+                <span class="text-xs">Squash</span>
               </div>
               <span class="sport-indicator hidden text-yellow-400">✓</span>
             </div>
@@ -306,7 +341,6 @@
       'hockey': { icon: '🏒', nome: 'Hockey' },
       'rugby': { icon: '🏉', nome: 'Rugby' },
       'american football': { icon: '🏈', nome: 'American Football' },
-      'handball': { icon: '🤾', nome: 'Handball' },
       'volleyball': { icon: '🏐', nome: 'Volleyball' },
       'water polo': { icon: '🏓', nome: 'Water Polo' },
       'golf': { icon: '🏌️', nome: 'Golf' },
@@ -314,7 +348,26 @@
       'pallamano': { icon: '🎾', nome: 'Pallamano' },
       'freccette': { icon: '🎾', nome: 'Freccette' },
       'futsal': { icon: '🎾', nome: 'Futsal' },
+      'boxing': { icon: '🥊', nome: 'Boxing' },
+      'e-sport': { icon: '🎮', nome: 'E-Sport' },
+      'badminton': { icon: '🏸', nome: 'Badminton' },
+      'cricket': { icon: '🏏', nome: 'Cricket' },
+      'squash': { icon: '🎾', nome: 'Squash' },
     };
+
+    // Mapping sport UI -> MongoDB
+    function getSportForMongo(sport) {
+      const mapping = {
+        'water polo': 'pallanuoto',
+        'waterpolo': 'pallanuoto',
+        'american football': 'football',
+        'e-sport': 'E-Sport',
+        'badminton': 'Badminton',
+        'cricket': 'Cricket',
+        'squash': 'Squash'
+      };
+      return mapping[sport] || sport;
+    }
 
     // Toggle menu calcio
     function toggleCalcioMenu() {
@@ -354,7 +407,8 @@
       try {
         console.log('loadLeagues: chiamata API con sport=', sportSelezionato);
         // Usa URL assoluto per evitare problemi su Render
-        const apiUrl = `${window.location.origin}/api/leagues?sport=${sportSelezionato}`;
+        const sportForMongo = getSportForMongo(sportSelezionato);
+        const apiUrl = `${window.location.origin}/api/leagues?sport=${sportForMongo}`;
         console.log('loadLeagues: URL completo', apiUrl);
         const response = await fetch(apiUrl);
         
@@ -754,8 +808,8 @@
             if (indicator) indicator.classList.add('hidden');
           }
         } else {
-          const indicator = item.querySelector('.sport-indicator');
-          if (indicator) indicator.classList.add('hidden');
+        const indicator = item.querySelector('.sport-indicator');
+        if (indicator) indicator.classList.add('hidden');
         }
       });
       const selectedItem = document.querySelector(`[data-sport="${sport}"]`);
@@ -769,8 +823,8 @@
             if (indicator) indicator.classList.remove('hidden');
           }
         } else {
-          const indicator = selectedItem.querySelector('.sport-indicator');
-          if (indicator) indicator.classList.remove('hidden');
+        const indicator = selectedItem.querySelector('.sport-indicator');
+        if (indicator) indicator.classList.remove('hidden');
         }
       }
       
@@ -981,6 +1035,356 @@
               } else if (col === 'X' && header.toLowerCase() === 'tie') {
                 return odd.odds;
               }
+            }
+          }
+        }
+        
+        return null;
+      }
+      
+      // Per il volley, cerca in game_lines con name "Winner" e header "1" o "2"
+      if (sport === 'volleyball' || sport === 'volley') {
+        const gameLines = quote.main?.sp?.game_lines || quote.game_lines || {};
+        
+        // Se gameLines è direttamente un array
+        if (Array.isArray(gameLines)) {
+          for (const odd of gameLines) {
+            const name = (odd.name || '').toLowerCase().trim();
+            const header = (odd.header || '').trim();
+            if (name === 'winner' && 
+                ((col === '1' && header === '1') || (col === '2' && header === '2'))) {
+              return odd.odds;
+            }
+          }
+        }
+        
+        // Se gameLines ha una proprietà odds che è un array
+        if (Array.isArray(gameLines.odds)) {
+          for (const odd of gameLines.odds) {
+            const name = (odd.name || '').toLowerCase().trim();
+            const header = (odd.header || '').trim();
+            if (name === 'winner' && 
+                ((col === '1' && header === '1') || (col === '2' && header === '2'))) {
+              return odd.odds;
+            }
+          }
+        }
+        
+        return null;
+      }
+      
+      // Per il waterpolo, cerca in game_lines con name "To Win" e header "1" o "2"
+      if (sport === 'water polo' || sport === 'waterpolo') {
+        const gameLines = quote.main?.sp?.game_lines || quote.game_lines || {};
+        
+        // Se gameLines è direttamente un array
+        if (Array.isArray(gameLines)) {
+          for (const odd of gameLines) {
+            const name = (odd.name || '').toLowerCase().trim();
+            const header = (odd.header || '').trim();
+            if (name === 'to win' && 
+                ((col === '1' && header === '1') || (col === '2' && header === '2'))) {
+              return odd.odds;
+            }
+          }
+        }
+        
+        // Se gameLines ha una proprietà odds che è un array
+        if (Array.isArray(gameLines.odds)) {
+          for (const odd of gameLines.odds) {
+            const name = (odd.name || '').toLowerCase().trim();
+            const header = (odd.header || '').trim();
+            if (name === 'to win' && 
+                ((col === '1' && header === '1') || (col === '2' && header === '2'))) {
+              return odd.odds;
+            }
+          }
+        }
+        
+        return null;
+      }
+      
+      // Per la pallamano, cerca in game_lines con name "To Win" e header "1" o "2"
+      if (sport === 'pallamano') {
+        const gameLines = quote.main?.sp?.game_lines || quote.game_lines || {};
+        
+        // Se gameLines è direttamente un array
+        if (Array.isArray(gameLines)) {
+          for (const odd of gameLines) {
+            const name = (odd.name || '').toLowerCase().trim();
+            const header = (odd.header || '').trim();
+            if (name === 'to win' && 
+                ((col === '1' && header === '1') || (col === '2' && header === '2'))) {
+              return odd.odds;
+            }
+          }
+        }
+        
+        // Se gameLines ha una proprietà odds che è un array
+        if (Array.isArray(gameLines.odds)) {
+          for (const odd of gameLines.odds) {
+            const name = (odd.name || '').toLowerCase().trim();
+            const header = (odd.header || '').trim();
+            if (name === 'to win' && 
+                ((col === '1' && header === '1') || (col === '2' && header === '2'))) {
+              return odd.odds;
+            }
+          }
+        }
+        
+        return null;
+      }
+      
+      // Per il football (american football), cerca in game_lines con name "Money Line" e header "1" o "2"
+      if (sport === 'football' || sport === 'american football') {
+        const gameLines = quote.main?.sp?.game_lines || quote.game_lines || {};
+        
+        // Se gameLines è direttamente un array
+        if (Array.isArray(gameLines)) {
+          for (const odd of gameLines) {
+            const name = (odd.name || '').toLowerCase().trim();
+            const header = (odd.header || '').trim();
+            if (name === 'money line' && 
+                ((col === '1' && header === '1') || (col === '2' && header === '2'))) {
+              return odd.odds;
+            }
+          }
+        }
+        
+        // Se gameLines ha una proprietà odds che è un array
+        if (Array.isArray(gameLines.odds)) {
+          for (const odd of gameLines.odds) {
+            const name = (odd.name || '').toLowerCase().trim();
+            const header = (odd.header || '').trim();
+            if (name === 'money line' && 
+                ((col === '1' && header === '1') || (col === '2' && header === '2'))) {
+              return odd.odds;
+            }
+          }
+        }
+        
+        return null;
+      }
+      
+      // Per il rugby, cerca in game_betting_3_way con name "Result" e header "1", "Tie" (per X), o "2"
+      if (sport === 'rugby') {
+        const gameBetting3Way = quote.main?.sp?.game_betting_3_way || quote.game_betting_3_way || {};
+        
+        // Se gameBetting3Way è direttamente un array
+        if (Array.isArray(gameBetting3Way)) {
+          for (const odd of gameBetting3Way) {
+            const name = (odd.name || '').toLowerCase().trim();
+            const header = (odd.header || '').trim();
+            if (name === 'result') {
+              if (col === '1' && header === '1') {
+                return odd.odds;
+              } else if (col === 'X' && header.toLowerCase() === 'tie') {
+                return odd.odds;
+              } else if (col === '2' && header === '2') {
+                return odd.odds;
+              }
+            }
+          }
+        }
+        
+        // Se gameBetting3Way ha una proprietà odds che è un array
+        if (Array.isArray(gameBetting3Way.odds)) {
+          for (const odd of gameBetting3Way.odds) {
+            const name = (odd.name || '').toLowerCase().trim();
+            const header = (odd.header || '').trim();
+            if (name === 'result') {
+              if (col === '1' && header === '1') {
+                return odd.odds;
+              } else if (col === 'X' && header.toLowerCase() === 'tie') {
+                return odd.odds;
+              } else if (col === '2' && header === '2') {
+                return odd.odds;
+              }
+            }
+          }
+        }
+        
+        return null;
+      }
+      
+      // Per il boxing, cerca in to_win_fight con name "1" o "2"
+      if (sport === 'boxing') {
+        const toWinFight = quote.main?.sp?.to_win_fight || quote.to_win_fight || {};
+        
+        // Se toWinFight è direttamente un array
+        if (Array.isArray(toWinFight)) {
+          for (const odd of toWinFight) {
+            const name = (odd.name || '').trim();
+            if ((col === '1' && name === '1') || (col === '2' && name === '2')) {
+              return odd.odds;
+            }
+          }
+        }
+        
+        // Se toWinFight ha una proprietà odds che è un array
+        if (Array.isArray(toWinFight.odds)) {
+          for (const odd of toWinFight.odds) {
+            const name = (odd.name || '').trim();
+            if ((col === '1' && name === '1') || (col === '2' && name === '2')) {
+              return odd.odds;
+            }
+          }
+        }
+        
+        return null;
+      }
+      
+      // Per il futsal, cerca in money_line con name "Result" e header "1", "Tie" (per X), o "2"
+      if (sport === 'futsal') {
+        const moneyLine = quote.main?.sp?.money_line || quote.money_line || {};
+        
+        // Se moneyLine è direttamente un array
+        if (Array.isArray(moneyLine)) {
+          for (const odd of moneyLine) {
+            const name = (odd.name || '').toLowerCase().trim();
+            const header = (odd.header || '').trim();
+            if (name === 'result') {
+              if (col === '1' && header === '1') {
+                return odd.odds;
+              } else if (col === 'X' && header.toLowerCase() === 'tie') {
+                return odd.odds;
+              } else if (col === '2' && header === '2') {
+                return odd.odds;
+              }
+            }
+          }
+        }
+        
+        // Se moneyLine ha una proprietà odds che è un array
+        if (Array.isArray(moneyLine.odds)) {
+          for (const odd of moneyLine.odds) {
+            const name = (odd.name || '').toLowerCase().trim();
+            const header = (odd.header || '').trim();
+            if (name === 'result') {
+              if (col === '1' && header === '1') {
+                return odd.odds;
+              } else if (col === 'X' && header.toLowerCase() === 'tie') {
+                return odd.odds;
+              } else if (col === '2' && header === '2') {
+                return odd.odds;
+              }
+            }
+          }
+        }
+        
+        return null;
+      }
+      
+      // Per l'e-sport, cerca in match_lines con name "To Win" e header "1" o "2"
+      if (sport === 'e-sport' || sport === 'esport') {
+        const matchLines = quote.main?.sp?.match_lines || quote.match_lines || {};
+        
+        // Se matchLines è direttamente un array
+        if (Array.isArray(matchLines)) {
+          for (const odd of matchLines) {
+            const name = (odd.name || '').toLowerCase().trim();
+            const header = (odd.header || '').trim();
+            if (name === 'to win' && 
+                ((col === '1' && header === '1') || (col === '2' && header === '2'))) {
+              return odd.odds;
+            }
+          }
+        }
+        
+        // Se matchLines ha una proprietà odds che è un array
+        if (Array.isArray(matchLines.odds)) {
+          for (const odd of matchLines.odds) {
+            const name = (odd.name || '').toLowerCase().trim();
+            const header = (odd.header || '').trim();
+            if (name === 'to win' && 
+                ((col === '1' && header === '1') || (col === '2' && header === '2'))) {
+              return odd.odds;
+            }
+          }
+        }
+        
+        return null;
+      }
+      
+      // Per il badminton, cerca in match_lines con name "To Win" e header "1" o "2"
+      if (sport === 'badminton') {
+        const matchLines = quote.main?.sp?.match_lines || quote.match_lines || {};
+        
+        // Se matchLines è direttamente un array
+        if (Array.isArray(matchLines)) {
+          for (const odd of matchLines) {
+            const name = (odd.name || '').toLowerCase().trim();
+            const header = (odd.header || '').trim();
+            if (name === 'to win' && 
+                ((col === '1' && header === '1') || (col === '2' && header === '2'))) {
+              return odd.odds;
+            }
+          }
+        }
+        
+        // Se matchLines ha una proprietà odds che è un array
+        if (Array.isArray(matchLines.odds)) {
+          for (const odd of matchLines.odds) {
+            const name = (odd.name || '').toLowerCase().trim();
+            const header = (odd.header || '').trim();
+            if (name === 'to win' && 
+                ((col === '1' && header === '1') || (col === '2' && header === '2'))) {
+              return odd.odds;
+            }
+          }
+        }
+        
+        return null;
+      }
+      
+      // Per il cricket, cerca in to_win_the_match con name "1" o "2"
+      if (sport === 'cricket') {
+        const toWinTheMatch = quote.main?.sp?.to_win_the_match || quote.to_win_the_match || {};
+        
+        // Se toWinTheMatch è direttamente un array
+        if (Array.isArray(toWinTheMatch)) {
+          for (const odd of toWinTheMatch) {
+            const name = (odd.name || '').trim();
+            if ((col === '1' && name === '1') || (col === '2' && name === '2')) {
+              return odd.odds;
+            }
+          }
+        }
+        
+        // Se toWinTheMatch ha una proprietà odds che è un array
+        if (Array.isArray(toWinTheMatch.odds)) {
+          for (const odd of toWinTheMatch.odds) {
+            const name = (odd.name || '').trim();
+            if ((col === '1' && name === '1') || (col === '2' && name === '2')) {
+              return odd.odds;
+            }
+          }
+        }
+        
+        return null;
+      }
+      
+      // Per lo squash, cerca in schedule.sp.main con name "1" o "2"
+      if (sport === 'squash') {
+        const scheduleMain = quote.schedule?.sp?.main || quote.main || {};
+        
+        // Se scheduleMain è direttamente un array
+        if (Array.isArray(scheduleMain)) {
+          for (const odd of scheduleMain) {
+            const name = (odd.name || '').trim();
+            if ((col === '1' && name === '1') || (col === '2' && name === '2')) {
+              return odd.odds;
+            }
+          }
+        }
+        
+        // Fallback: cerca in quote.main.sp.main se esiste
+        const mainSp = quote.main?.sp?.main;
+        if (Array.isArray(mainSp)) {
+          for (const odd of mainSp) {
+            const name = (odd.name || '').trim();
+            if ((col === '1' && name === '1') || (col === '2' && name === '2')) {
+              return odd.odds;
             }
           }
         }
@@ -1239,10 +1643,73 @@
         }
       }
       
+      // Per l'e-sport, mostra solo To Win (1 e 2, senza X)
+      if (sportSelezionato === 'e-sport' || sportSelezionato === 'esport') {
+        if (mercato === 'Principali' || mercato === '1X2') {
+          return ['1', '2'];
+        }
+      }
+      
+      // Per il boxing, mostra solo To Win Fight (1 e 2, senza X)
+      if (sportSelezionato === 'boxing') {
+        if (mercato === 'Principali' || mercato === '1X2') {
+          return ['1', '2'];
+        }
+      }
+      
+      // Per il badminton, mostra solo To Win (1 e 2, senza X)
+      if (sportSelezionato === 'badminton') {
+        if (mercato === 'Principali' || mercato === '1X2') {
+          return ['1', '2'];
+        }
+      }
+      
+      // Per il cricket, mostra solo To Win the Match (1 e 2, senza X)
+      if (sportSelezionato === 'cricket') {
+        if (mercato === 'Principali' || mercato === '1X2') {
+          return ['1', '2'];
+        }
+      }
+      
+      // Per lo squash, mostra solo 1 e 2 (senza X)
+      if (sportSelezionato === 'squash') {
+        if (mercato === 'Principali' || mercato === '1X2') {
+          return ['1', '2'];
+        }
+      }
+      
       // Per il ping pong, mostra solo Money Line (1 e 2, senza X)
       if (sportSelezionato === 'pingpong' || sportSelezionato === 'ping_pong') {
         if (mercato === 'Principali' || mercato === '1X2') {
           return ['1', '2'];
+        }
+      }
+      
+      // Per il volley, mostra solo Winner (1 e 2, senza X)
+      if (sportSelezionato === 'volleyball' || sportSelezionato === 'volley') {
+        if (mercato === 'Principali' || mercato === '1X2') {
+          return ['1', '2'];
+        }
+      }
+      
+      // Per il waterpolo, mostra solo 1 e 2 (senza X)
+      if (sportSelezionato === 'water polo' || sportSelezionato === 'waterpolo') {
+        if (mercato === 'Principali' || mercato === '1X2') {
+          return ['1', '2'];
+        }
+      }
+      
+      // Per la pallamano, mostra solo 1 e 2 (senza X)
+      if (sportSelezionato === 'pallamano') {
+        if (mercato === 'Principali' || mercato === '1X2') {
+          return ['1', '2'];
+        }
+      }
+      
+      // Per il futsal, mostra solo 1X2 (come gli altri sport non-calcio)
+      if (sportSelezionato === 'futsal') {
+        if (mercato === 'Principali' || mercato === '1X2') {
+          return ['1', 'X', '2'];
         }
       }
       
@@ -1328,9 +1795,10 @@
         
         // Usa URL assoluto per evitare problemi su Render
         // Ridotto limite a 200 per performance
+        const sportForMongo = getSportForMongo(sportSelezionato);
         const url = campionatoSelezionato 
-          ? `${window.location.origin}/api/events?sport=${sportSelezionato}&limit=200&league=${encodeURIComponent(campionatoSelezionato)}`
-          : `${window.location.origin}/api/events?sport=${sportSelezionato}&limit=200`;
+          ? `${window.location.origin}/api/events?sport=${sportForMongo}&limit=200&league=${encodeURIComponent(campionatoSelezionato)}`
+          : `${window.location.origin}/api/events?sport=${sportForMongo}&limit=200`;
         
         console.log('loadMatches: URL completo', url);
         const response = await fetch(url);
@@ -1394,9 +1862,9 @@
             headerHtml += `<th class="px-1 py-1 border-b border-gray-600">${col.label}</th>`;
           });
         } else {
-          colonne.forEach(col => {
-            headerHtml += `<th class="px-1 py-1 border-b border-gray-600">${col}</th>`;
-          });
+        colonne.forEach(col => {
+          headerHtml += `<th class="px-1 py-1 border-b border-gray-600">${col}</th>`;
+        });
         }
         headerHtml += `<th class="px-2 py-1 border-b border-gray-600 text-center">Mercati</th>`;
         thead.innerHTML = `<tr>${headerHtml}</tr>`;
@@ -1454,6 +1922,56 @@
                 } else if (sportSelezionato === 'hockey' || sportSelezionato === 'ice_hockey') {
                   // Per l'hockey, estrai le quote 1X2 da 3_way
                   quota = get1X2Quota(quote, colLabel || col, 'hockey') || quote_1x2[colLabel || col] || '-';
+                } else if (sportSelezionato === 'volleyball' || sportSelezionato === 'volley') {
+                  // Per il volley, estrai le quote da game_line con Winner (solo 1 e 2, senza X)
+                  quota = get1X2Quota(quote, colLabel || col, 'volleyball') || quote_1x2[colLabel || col] || '-';
+                } else if (sportSelezionato === 'water polo' || sportSelezionato === 'waterpolo') {
+                  // Per il waterpolo, estrai le quote da game_lines con To Win (solo 1 e 2, senza X)
+                  quota = get1X2Quota(quote, colLabel || col, 'waterpolo') || quote_1x2[colLabel || col] || '-';
+                } else if (sportSelezionato === 'pallamano') {
+                  // Per la pallamano, estrai le quote da game_lines con To Win (solo 1 e 2, senza X)
+                  quota = get1X2Quota(quote, colLabel || col, 'pallamano') || quote_1x2[colLabel || col] || '-';
+                } else if (sportSelezionato === 'football' || sportSelezionato === 'american football') {
+                  // Per il football (american football), estrai le quote da game_lines con Money Line (solo 1 e 2, senza X)
+                  quota = get1X2Quota(quote, colLabel || col, 'football') || quote_1x2[colLabel || col] || '-';
+                } else if (sportSelezionato === 'rugby') {
+                  // Per il rugby, estrai le quote 1X2 da game_betting_3_way con Result
+                  quota = get1X2Quota(quote, colLabel || col, 'rugby') || quote_1x2[colLabel || col] || '-';
+                } else if (sportSelezionato === 'e-sport' || sportSelezionato === 'esport') {
+                  // Per l'e-sport, estrai le quote da match_lines con To Win (solo 1 e 2, senza X)
+                  quota = get1X2Quota(quote, colLabel || col, 'e-sport') || quote_1x2[colLabel || col] || '-';
+                } else if (sportSelezionato === 'boxing') {
+                  // Per il boxing, estrai le quote da to_win_fight (solo 1 e 2, senza X)
+                  quota = get1X2Quota(quote, colLabel || col, 'boxing') || quote_1x2[colLabel || col] || '-';
+                } else if (sportSelezionato === 'badminton') {
+                  // Per il badminton, estrai le quote da match_lines con To Win (solo 1 e 2, senza X)
+                  quota = get1X2Quota(quote, colLabel || col, 'badminton') || quote_1x2[colLabel || col] || '-';
+                } else if (sportSelezionato === 'cricket') {
+                  // Per il cricket, estrai le quote da to_win_the_match (solo 1 e 2, senza X)
+                  quota = get1X2Quota(quote, colLabel || col, 'cricket') || quote_1x2[colLabel || col] || '-';
+                } else if (sportSelezionato === 'squash') {
+                  // Per lo squash, estrai le quote da schedule.sp.main (solo 1 e 2, senza X)
+                  // schedule potrebbe essere a livello root dell'evento, non dentro quote
+                  let squashQuote = get1X2Quota(quote, colLabel || col, 'squash');
+                  if (!squashQuote && ev.schedule?.sp?.main) {
+                    const scheduleMain = ev.schedule.sp.main;
+                    if (Array.isArray(scheduleMain)) {
+                      for (const odd of scheduleMain) {
+                        const name = (odd.name || '').trim();
+                        if ((colLabel || col) === '1' && name === '1') {
+                          squashQuote = odd.odds;
+                          break;
+                        } else if ((colLabel || col) === '2' && name === '2') {
+                          squashQuote = odd.odds;
+                          break;
+                        }
+                      }
+                    }
+                  }
+                  quota = squashQuote || quote_1x2[colLabel || col] || '-';
+                } else if (sportSelezionato === 'futsal') {
+                  // Per il futsal, estrai le quote 1X2 da money_line con Result
+                  quota = get1X2Quota(quote, colLabel || col, 'futsal') || quote_1x2[colLabel || col] || '-';
                 } else if (sportSelezionato === 'pingpong' || sportSelezionato === 'ping_pong') {
                   // Per il ping pong, estrai le quote da match_lines con To Win (solo 1 e 2, senza X)
                   quota = get1X2Quota(quote, colLabel || col, 'pingpong') || quote_1x2[colLabel || col] || '-';
