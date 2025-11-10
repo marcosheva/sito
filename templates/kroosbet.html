@@ -472,10 +472,50 @@
       "Israele": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/il.svg",
       "Paraguay": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/py.svg",
       "Slovenia": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/si.svg",
+      "Colombia": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/co.svg",
+      "Chile": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/cl.svg",
+      "Peru": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/pe.svg",
+      "Uruguay": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/uy.svg",
+      "Bolivia": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/bo.svg",
+      "Romania": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/ro.svg",
+      "Slovakia": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/sk.svg",
+      "Cyprus": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/cy.svg",
+      "Qatar": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/qa.svg",
+      "Saudi": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/sa.svg",
+      "Jordan": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/jo.svg",
+      "Singapore": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/sg.svg",
+      "Ghana": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/gh.svg",
+      "Nigeria": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/ng.svg",
+      "Honduras": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/hn.svg",
+      "Namibia": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/na.svg",
+      "Liberia": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/lr.svg",
+      "Mauritania": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/mr.svg",
+      "Sierra": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/sl.svg",
+      "Ivory": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/ci.svg",
+      "Northern": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/gb-nir.svg",
+      "South": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/za.svg",
+      "Zanzibar": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/tz.svg",
+      "Portugal": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/pt.svg",
+      "Sweden": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/se.svg",
+      "Norway": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/no.svg",
+      "Switzerland": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/ch.svg",
+      "Czechia": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/cz.svg",
+      "Scotland": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/gb-sct.svg",
+      "Belgium": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/be.svg",
+      "Mexico": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/mx.svg",
+      "Japan": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/jp.svg",
+      "USA": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/us.svg",
+      "Türkiye": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/tr.svg",
       "Europe": "🏆",
       "UEFA": "🏆",
       "Sud America": "🌎",
       "Copa": "🏆",
+      "Africa": "🌍",
+      "Asia": "🌏",
+      "Baller League UK": "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+      "Brazil Kings Cup": "🇧🇷",
+      "Esoccer Battle": "🎮",
+      "Esoccer Battle Volta": "🎮",
       "Altri": "🌍"
     };
 
@@ -675,14 +715,32 @@
       // Aggiorna UI sidebar
       document.querySelectorAll('.sport-item').forEach(item => {
         item.classList.remove('bg-yellow-500', 'bg-opacity-20');
-        const indicator = item.querySelector('.sport-indicator');
-        if (indicator) indicator.classList.add('hidden');
+        // Per calcio, cerca dentro calcio-toggle
+        if (item.getAttribute('data-sport') === 'calcio') {
+          const calcioToggle = item.querySelector('#calcio-toggle');
+          if (calcioToggle) {
+            const indicator = calcioToggle.querySelector('.sport-indicator');
+            if (indicator) indicator.classList.add('hidden');
+          }
+        } else {
+          const indicator = item.querySelector('.sport-indicator');
+          if (indicator) indicator.classList.add('hidden');
+        }
       });
       const selectedItem = document.querySelector(`[data-sport="${sport}"]`);
       if (selectedItem) {
         selectedItem.classList.add('bg-yellow-500', 'bg-opacity-20');
-        const indicator = selectedItem.querySelector('.sport-indicator');
-        if (indicator) indicator.classList.remove('hidden');
+        // Per calcio, cerca dentro calcio-toggle
+        if (sport === 'calcio') {
+          const calcioToggle = selectedItem.querySelector('#calcio-toggle');
+          if (calcioToggle) {
+            const indicator = calcioToggle.querySelector('.sport-indicator');
+            if (indicator) indicator.classList.remove('hidden');
+          }
+        } else {
+          const indicator = selectedItem.querySelector('.sport-indicator');
+          if (indicator) indicator.classList.remove('hidden');
+        }
       }
       
       // Aggiorna titolo
@@ -764,9 +822,10 @@
         matchesBody.innerHTML = `<tr><td colspan="${numCols}" class="text-center py-4 text-gray-400">Caricamento dati...</td></tr>`;
         
         // Usa URL assoluto per evitare problemi su Render
+        // Ridotto limite a 200 per performance
         const url = campionatoSelezionato 
-          ? `${window.location.origin}/api/events?sport=${sportSelezionato}&limit=500&league=${encodeURIComponent(campionatoSelezionato)}`
-          : `${window.location.origin}/api/events?sport=${sportSelezionato}&limit=500`;
+          ? `${window.location.origin}/api/events?sport=${sportSelezionato}&limit=200&league=${encodeURIComponent(campionatoSelezionato)}`
+          : `${window.location.origin}/api/events?sport=${sportSelezionato}&limit=200`;
         
         console.log('loadMatches: URL completo', url);
         const response = await fetch(url);
@@ -1529,8 +1588,14 @@
         const calcioItem = document.querySelector('[data-sport="calcio"]');
         if (calcioItem) {
           calcioItem.classList.add('bg-yellow-500', 'bg-opacity-20');
-          const indicator = calcioItem.querySelector('.sport-indicator');
-          if (indicator) indicator.classList.remove('hidden');
+          // Cerca l'indicatore dentro calcio-toggle
+          const calcioToggle = document.getElementById('calcio-toggle');
+          if (calcioToggle) {
+            const indicator = calcioToggle.querySelector('.sport-indicator');
+            if (indicator) {
+              indicator.classList.remove('hidden');
+            }
+          }
         }
         
         const sportTitle = document.getElementById('sport-title');
@@ -1546,10 +1611,19 @@
           arrow.style.transform = 'rotate(180deg)';
         }
         
-        // Aggiungi event listener per toggle menu calcio
+        // Aggiungi event listener per toggle menu calcio e selezione sport
         const calcioToggle = document.getElementById('calcio-toggle');
         if (calcioToggle) {
-          calcioToggle.addEventListener('click', toggleCalcioMenu);
+          calcioToggle.addEventListener('click', function(e) {
+            // Se si clicca sulla freccia, solo toggle menu
+            if (e.target.closest('#calcio-arrow') || e.target.closest('.sport-indicator')) {
+              toggleCalcioMenu();
+            } else {
+              // Altrimenti seleziona calcio
+              selezionaSport('calcio', '⚽', 'CALCIO');
+              toggleCalcioMenu(); // Apri anche il menu
+            }
+          });
         }
         
         // Aggiungi event listener agli sport
@@ -1579,14 +1653,12 @@
         // Imposta mercato 1X2
         selezionaMercato('1X2');
         
-        // Carica partite e campionati (carica prima i campionati, poi le partite)
+        // Carica solo i campionati all'apertura (le partite verranno caricate solo quando si clicca su "Tutti i campionati")
         console.log('DOMContentLoaded: inizializzazione');
         loadLeagues().then(() => {
-          console.log('DOMContentLoaded: campionati caricati, ora carico le partite');
-          loadMatches();
+          console.log('DOMContentLoaded: campionati caricati');
         }).catch(error => {
           console.error('DOMContentLoaded: errore caricamento campionati', error);
-          loadMatches(); // Carica comunque le partite anche se i campionati falliscono
         });
       } catch (error) {
         console.error('Errore inizializzazione:', error);
