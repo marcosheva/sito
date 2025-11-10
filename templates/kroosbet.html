@@ -17,7 +17,7 @@
   <div id="app">
     <div class="flex h-screen bg-gray-900 overflow-hidden">
       <!-- Sidebar Sinistra -->
-      <aside class="w-64 bg-gray-800 text-white h-full p-3 flex flex-col space-y-3 border-r border-gray-700 overflow-y-auto">
+      <aside class="w-96 bg-gray-800 text-white h-full p-3 flex flex-col space-y-3 border-r border-gray-700 overflow-y-auto">
         <div class="font-bold text-sm bg-gray-700 px-3 py-2 rounded">MENU SPORT</div>
         <div class="flex flex-col space-y-2">
           <div class="flex items-center bg-black rounded px-2 py-1">
@@ -210,7 +210,7 @@
       </div>
       
       <!-- Sidebar Destra - Schedina -->
-      <aside class="w-64 bg-gray-800 text-white h-full p-3 flex flex-col space-y-3 border-l border-gray-700">
+      <aside class="w-[500px] bg-gray-800 text-white h-full p-3 flex flex-col space-y-3 border-l border-gray-700">
         <div class="font-bold text-sm bg-gray-700 px-3 py-2 rounded">SCHEDINA</div>
         <div id="schedina-content" class="flex-1 overflow-y-auto">
           <div class="text-xs text-gray-400">Nessuna selezione</div>
@@ -262,6 +262,8 @@
     let mercatoSelezionato = '1X2';
     let campionatoSelezionato = null;
     let nationsLeagues = {};
+    let nazioneSelezionata = null; // Traccia quale nazione è selezionata
+    let expandedNations = new Set(); // Traccia quali nazioni sono espanse
     
     // Non caricare subito, aspetta DOMContentLoaded
     const sportInfo = {
@@ -340,10 +342,58 @@
         
         const data = await response.json();
         console.log('loadLeagues: risposta API', data);
+        console.log('loadLeagues: data.debug esiste?', !!data.debug);
+        console.log('loadLeagues: data.debug =', data.debug);
+        console.log('loadLeagues: chiavi di data =', Object.keys(data));
+        if (data.debug) {
+          console.log('loadLeagues: chiavi di data.debug =', Object.keys(data.debug));
+        }
+        
+        // Mostra info di debug se disponibili
+        if (data.debug) {
+          console.log('=== DEBUG API ===');
+          console.log('DEBUG API completo:', JSON.stringify(data.debug, null, 2));
+          console.log('Nazioni trovate:', data.debug.nations_list);
+          console.log('Campionati in Altri:', data.debug.altri_count);
+          console.log('Campionati in Italia:', data.debug.italia_count);
+          if (data.debug.sample_parsing) {
+            console.log('=== TEST PARSING ===');
+            data.debug.sample_parsing.forEach(test => {
+              console.log(`${test.league}: prima parola="${test.first_word}", in mappatura=${test.in_mapping}, nazione="${test.mapped_nation}"`);
+            });
+          }
+          if (data.debug.mapping_keys_sample) {
+            console.log('Chiavi mappatura (prime 10):', data.debug.mapping_keys_sample);
+          }
+          if (data.debug.test_result) {
+            console.log('=== TEST RISULTATI ===');
+            Object.keys(data.debug.test_result).forEach(league => {
+              const test = data.debug.test_result[league];
+              console.log(`${league}: prima parola="${test.first_word}", in mappatura=${test.in_mapping}, nazione="${test.mapped_nation}"`);
+            });
+          }
+          if (data.debug.test_results) {
+            console.log('=== TEST RISULTATI FINALI ===');
+            Object.keys(data.debug.test_results).forEach(league => {
+              const test = data.debug.test_results[league];
+              console.log(`${league}:`);
+              console.log(`  Prima parola: "${test.first_word}", in mappatura: ${test.in_mapping}`);
+              console.log(`  Nazione attesa: "${test.expected_nation}", League name atteso: "${test.expected_league_name}"`);
+              console.log(`  Nazione trovata: "${test.found_nation}", Trovato nel risultato: ${test.found_in_result}`);
+              if (test.expected_nation !== test.found_nation) {
+                console.warn(`  ⚠️ PROBLEMA: Nazione attesa "${test.expected_nation}" ma trovata "${test.found_nation}"`);
+              }
+            });
+          }
+          console.log('===================');
+        } else {
+          console.warn('⚠️ DEBUG INFO NON DISPONIBILE nella risposta API');
+        }
         
         if (data.success && data.nations) {
           nationsLeagues = data.nations;
           console.log('loadLeagues: campionati caricati', Object.keys(nationsLeagues).length, 'nazioni');
+          console.log('Nazioni disponibili:', Object.keys(nationsLeagues));
           renderLeaguesMenu();
         } else {
           console.error('loadLeagues: risposta API non valida', data);
@@ -355,7 +405,51 @@
       }
     }
 
-    // Renderizza menu campionati
+    // Mappatura bandiere SVG per nazioni
+    const nationFlags = {
+      "Italia": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/it.svg",
+      "Inghilterra": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/eng.svg",
+      "Spagna": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/es.svg",
+      "Francia": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/fr.svg",
+      "Germania": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/de.svg",
+      "Olanda": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/nl.svg",
+      "Paesi Bassi": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/nl.svg",
+      "Portogallo": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/pt.svg",
+      "Belgio": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/be.svg",
+      "Turchia": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/tr.svg",
+      "Grecia": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/gr.svg",
+      "Russia": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/ru.svg",
+      "Polonia": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/pl.svg",
+      "Repubblica Ceca": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/cz.svg",
+      "Svizzera": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/ch.svg",
+      "Austria": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/at.svg",
+      "Scozia": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/gb-sct.svg",
+      "Danimarca": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/dk.svg",
+      "Svezia": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/se.svg",
+      "Norvegia": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/no.svg",
+      "Brasile": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/br.svg",
+      "Argentina": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/ar.svg",
+      "Messico": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/mx.svg",
+      "Stati Uniti": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/us.svg",
+      "Giappone": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/jp.svg",
+      "Cina": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/cn.svg",
+      "Corea del Sud": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/kr.svg",
+      "Australia": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/au.svg",
+      "Bosnia ed Erzegovina": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/ba.svg",
+      "Bosnia & Herzegovina": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/ba.svg",
+      "Bulgaria": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/bg.svg",
+      "Ecuador": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/ec.svg",
+      "Israele": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/il.svg",
+      "Paraguay": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/py.svg",
+      "Slovenia": "https://1276648311.rsc.cdn77.org/alphacode/assets/images/flagssvg/si.svg",
+      "Europe": "🏆",
+      "UEFA": "🏆",
+      "Sud America": "🌎",
+      "Copa": "🏆",
+      "Altri": "🌍"
+    };
+
+    // Renderizza menu campionati con struttura gerarchica: Nazioni -> Campionati
     function renderLeaguesMenu() {
       const submenu = document.getElementById('calcio-submenu');
       if (!submenu) {
@@ -375,8 +469,12 @@
         </div>
       `;
       
-      // Ordina nazioni
-      const sortedNations = Object.keys(nationsLeagues || {}).sort();
+      // Ordina nazioni: prima Italia, poi altre in ordine alfabetico
+      const sortedNations = Object.keys(nationsLeagues || {}).sort((a, b) => {
+        if (a === "Italia") return -1;
+        if (b === "Italia") return 1;
+        return a.localeCompare(b);
+      });
       console.log('renderLeaguesMenu: nazioni trovate', sortedNations.length);
       
       if (sortedNations.length === 0) {
@@ -384,19 +482,70 @@
       } else {
         sortedNations.forEach(nation => {
           const leagues = nationsLeagues[nation] || [];
+          const safeNation = (nation || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+          const nationId = `nation-${safeNation.replace(/[^a-zA-Z0-9]/g, '-')}`;
+          // Cerca la bandiera, con fallback per varianti del nome
+          let flag = nationFlags[nation];
+          if (!flag) {
+            // Prova varianti comuni
+            const variants = {
+              "Netherlands": "Paesi Bassi",
+              "Olanda": "Paesi Bassi",
+              "England": "Inghilterra",
+              "Italy": "Italia",
+              "Spain": "Spagna",
+              "France": "Francia",
+              "Germany": "Germania"
+            };
+            const variant = variants[nation];
+            if (variant) {
+              flag = nationFlags[variant];
+            }
+          }
+          // Se ancora non trovata, usa bandiera generica o emoji
+          if (!flag) {
+            flag = "🏳️";
+          }
           console.log(`renderLeaguesMenu: nazione ${nation}, ${leagues.length} campionati`);
           
+          // Verifica se questa nazione ha un campionato selezionato
+          const hasSelectedLeague = leagues.some(l => l.full_name === campionatoSelezionato);
+          const isNationSelected = nazioneSelezionata === nation || hasSelectedLeague;
+          const isExpanded = expandedNations.has(nationId) || hasSelectedLeague;
+          
+          // Se ha un campionato selezionato, assicurati che sia espansa
+          if (hasSelectedLeague) {
+            expandedNations.add(nationId);
+          }
+          
+          // Determina se la bandiera è un URL (immagine) o un emoji
+          const isImage = flag.startsWith('http');
+          const flagHtml = isImage 
+            ? `<img src="${flag}" alt="${nation}" class="w-5 h-4 object-contain" />`
+            : `<span class="text-lg">${flag}</span>`;
+          
+          // Header nazione con bandiera prima del nome (stile capitanbet)
           html += `
-            <div class="mt-2">
-              <div class="text-xs font-bold text-gray-500 px-2 py-1">${nation}</div>
-              <div class="ml-2 space-y-1">
+            <div class="mt-0.5">
+              <div class="nation-header flex items-center px-2 py-1.5 hover:bg-gray-700 cursor-pointer border-b border-gray-700 ${isNationSelected ? 'bg-orange-600' : 'bg-gray-800'}" 
+                   data-nation-id="${nationId}"
+                   data-nation="${safeNation}">
+                <div class="flex items-center space-x-2 flex-1">
+                  ${flagHtml}
+                  <span class="text-sm font-medium ${isNationSelected ? 'text-white' : 'text-gray-300'}">${nation}</span>
+                </div>
+                <svg class="nation-arrow w-4 h-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </div>
+              <div id="${nationId}" class="nation-leagues ${isExpanded ? '' : 'hidden'} bg-gray-900">
           `;
           
+          // Campionati sotto la nazione
           leagues.forEach((league, idx) => {
             const isSelected = campionatoSelezionato === league.full_name;
-            const safeNation = (nation || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
             html += `
-              <div class="league-item px-2 py-1 hover:bg-gray-600 rounded cursor-pointer text-xs ${isSelected ? 'bg-yellow-500 bg-opacity-20 text-yellow-400' : 'text-gray-300'}" 
+              <div class="league-item px-6 py-1.5 hover:bg-gray-700 cursor-pointer text-sm border-b border-gray-800 ${isSelected ? 'bg-orange-500 bg-opacity-30 text-white' : 'text-gray-300'}" 
                    data-nation="${safeNation}" 
                    data-index="${idx}">
                 ${(league.name || league.full_name || 'N/A').replace(/</g, '&lt;').replace(/>/g, '&gt;')}
@@ -419,19 +568,63 @@
         });
       }
       
+      // Aggiungi event listener agli header nazione
+      submenu.querySelectorAll('.nation-header').forEach(header => {
+        header.addEventListener('click', function() {
+          const nationId = this.getAttribute('data-nation-id');
+          const nation = this.getAttribute('data-nation');
+          nazioneSelezionata = nation;
+          toggleNation(nationId);
+        });
+      });
+      
       // Aggiungi event listener ai campionati
       submenu.querySelectorAll('.league-item').forEach(item => {
-        item.addEventListener('click', function() {
+        item.addEventListener('click', function(e) {
+          e.stopPropagation(); // Evita che il click si propaghi al header nazione
           const nation = this.getAttribute('data-nation');
           const index = parseInt(this.getAttribute('data-index'));
           selezionaCampionatoByIndex(nation, index);
         });
       });
     }
+    
+    // Toggle espansione/collasso nazione
+    function toggleNation(nationId) {
+      const nationDiv = document.getElementById(nationId);
+      const nationHeader = document.querySelector(`[data-nation-id="${nationId}"]`);
+      const arrow = nationHeader?.querySelector('.nation-arrow');
+      
+      if (nationDiv && nationHeader && arrow) {
+        const isHidden = nationDiv.classList.contains('hidden');
+        if (isHidden) {
+          nationDiv.classList.remove('hidden');
+          arrow.classList.add('rotate-180');
+          expandedNations.add(nationId);
+        } else {
+          nationDiv.classList.add('hidden');
+          arrow.classList.remove('rotate-180');
+          expandedNations.delete(nationId);
+        }
+      }
+    }
 
     // Seleziona campionato
     function selezionaCampionato(league) {
       campionatoSelezionato = league;
+      
+      // Trova la nazione del campionato selezionato
+      if (league) {
+        for (const [nation, leagues] of Object.entries(nationsLeagues)) {
+          if (leagues.some(l => l.full_name === league)) {
+            nazioneSelezionata = nation;
+            break;
+          }
+        }
+      } else {
+        nazioneSelezionata = null;
+      }
+      
       renderLeaguesMenu();
       loadMatches();
     }
