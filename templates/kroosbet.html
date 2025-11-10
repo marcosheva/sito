@@ -35,7 +35,7 @@
     
     <div class="flex h-screen bg-gray-900 overflow-hidden pt-12 md:pt-0">
       <!-- Sidebar Sinistra -->
-      <aside id="sidebar-left" class="fixed md:relative inset-y-0 left-0 z-40 w-80 md:w-96 bg-gray-800 text-white h-full md:h-auto p-3 flex flex-col space-y-3 border-r border-gray-700 overflow-y-auto transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
+      <aside id="sidebar-left" class="fixed md:relative inset-y-0 left-0 z-40 w-80 md:w-72 bg-gray-800 text-white h-full md:h-auto p-3 flex flex-col space-y-3 border-r border-gray-700 overflow-y-auto transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
         <!-- Bottone chiudi per mobile -->
         <button id="close-sidebar-left" class="md:hidden absolute top-2 right-2 text-white hover:bg-gray-700 rounded p-1">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -181,7 +181,8 @@
             
             <!-- Tab Mercati Principali -->
             <div class="flex space-x-2 bg-gray-700 px-2 py-2 border-b border-gray-600 overflow-x-auto">
-              <button id="mercato-1X2" class="mercato-tab-btn px-3 py-1 rounded text-xs font-bold bg-yellow-500 text-black hover:bg-yellow-600 mercato-tab whitespace-nowrap" data-mercato="1X2">1X2</button>
+              <button id="mercato-Principali" class="mercato-tab-btn px-3 py-1 rounded text-xs font-bold bg-yellow-500 text-black hover:bg-yellow-600 mercato-tab whitespace-nowrap" data-mercato="Principali">Principali</button>
+              <button id="mercato-1X2" class="mercato-tab-btn px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="1X2">1X2</button>
               <button id="mercato-Doppia Chance" class="mercato-tab-btn px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Doppia Chance">Doppia Chance</button>
               <button id="mercato-Over/Under" class="mercato-tab-btn px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Over/Under">Over/Under</button>
               <button id="mercato-Gol Totali" class="mercato-tab-btn px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Gol Totali">Gol Totali</button>
@@ -234,7 +235,7 @@
       </div>
       
       <!-- Sidebar Destra - Schedina -->
-      <aside id="sidebar-right" class="fixed md:relative inset-y-0 right-0 z-40 w-80 md:w-[500px] bg-gray-800 text-white h-full md:h-auto p-3 flex flex-col space-y-3 border-l border-gray-700 transform translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
+      <aside id="sidebar-right" class="fixed md:relative inset-y-0 right-0 z-40 w-80 md:w-80 bg-gray-800 text-white h-full md:h-auto p-3 flex flex-col space-y-3 border-l border-gray-700 transform translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
         <!-- Bottone chiudi per mobile -->
         <button id="close-sidebar-right" class="md:hidden absolute top-2 right-2 text-white hover:bg-gray-700 rounded p-1">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -289,7 +290,7 @@
     let selections = [];
     let matchesData = [];
     let sportSelezionato = 'calcio';
-    let mercatoSelezionato = '1X2';
+    let mercatoSelezionato = 'Principali';
     let campionatoSelezionato = null;
     let nationsLeagues = {};
     let nazioneSelezionata = null; // Traccia quale nazione è selezionata
@@ -712,6 +713,36 @@
       sportSelezionato = sport;
       campionatoSelezionato = null; // Reset filtro campionato
       
+      // Per gli altri sport (non calcio), imposta mercato a 1X2
+      if (sport !== 'calcio') {
+        mercatoSelezionato = '1X2';
+        // Aggiorna UI tab
+        document.querySelectorAll('.mercato-tab-btn').forEach(tab => {
+          tab.classList.remove('bg-yellow-500', 'text-black');
+          tab.classList.add('bg-gray-600', 'text-white');
+        });
+        const tab1X2 = document.getElementById('mercato-1X2');
+        if (tab1X2) {
+          tab1X2.classList.remove('bg-gray-600', 'text-white');
+          tab1X2.classList.add('bg-yellow-500', 'text-black');
+        }
+      } else {
+        // Per calcio, imposta a Principali se non già impostato
+        if (mercatoSelezionato !== 'Principali') {
+          mercatoSelezionato = 'Principali';
+          // Aggiorna UI tab
+          document.querySelectorAll('.mercato-tab-btn').forEach(tab => {
+            tab.classList.remove('bg-yellow-500', 'text-black');
+            tab.classList.add('bg-gray-600', 'text-white');
+          });
+          const tabPrincipali = document.getElementById('mercato-Principali');
+          if (tabPrincipali) {
+            tabPrincipali.classList.remove('bg-gray-600', 'text-white');
+            tabPrincipali.classList.add('bg-yellow-500', 'text-black');
+          }
+        }
+      }
+      
       // Aggiorna UI sidebar
       document.querySelectorAll('.sport-item').forEach(item => {
         item.classList.remove('bg-yellow-500', 'bg-opacity-20');
@@ -777,9 +808,483 @@
     }
     
     // Calcola colonne per mercato
+    // Helper per estrarre quota Doppia Chance
+    function getDoubleChanceQuota(quote, col, homeName, awayName) {
+      if (!quote) return null;
+      
+      // Cerca in main.sp.double_chance
+      const doubleChance = quote.main?.sp?.double_chance || quote.double_chance || {};
+      
+      // Se doubleChance è direttamente un array
+      if (Array.isArray(doubleChance)) {
+        for (const odd of doubleChance) {
+          const name = (odd.name || '').toLowerCase();
+          const homeLower = (homeName || '').toLowerCase();
+          const awayLower = (awayName || '').toLowerCase();
+          
+          // Mappa le combinazioni
+          if (col === '1X') {
+            if (name.includes('draw')) {
+              if (homeLower && name.includes(homeLower) && (!awayLower || !name.includes(awayLower))) {
+                return odd.odds;
+              }
+              if (name.includes('home') && !name.includes('away')) {
+                return odd.odds;
+              }
+            }
+            if (homeLower && name.includes(homeLower) && name.includes('or') && name.includes('draw') && 
+                (!awayLower || !name.includes(awayLower))) {
+              return odd.odds;
+            }
+          } else if (col === 'X2') {
+            if (name.includes('draw')) {
+              if (awayLower && name.includes(awayLower) && (!homeLower || !name.includes(homeLower))) {
+                return odd.odds;
+              }
+              if (name.includes('away') && !name.includes('home')) {
+                return odd.odds;
+              }
+            }
+            if (awayLower && name.includes(awayLower) && name.includes('or') && name.includes('draw') && 
+                (!homeLower || !name.includes(homeLower))) {
+              return odd.odds;
+            }
+          } else if (col === '12') {
+            if (!name.includes('draw')) {
+              if (homeLower && awayLower && name.includes(homeLower) && name.includes(awayLower)) {
+                return odd.odds;
+              }
+              if (name.includes('home') && name.includes('away')) {
+                return odd.odds;
+              }
+            }
+          }
+        }
+      }
+      
+      // Se doubleChance ha una proprietà odds che è un array
+      if (Array.isArray(doubleChance.odds)) {
+        for (const odd of doubleChance.odds) {
+          const name = (odd.name || '').toLowerCase();
+          const homeLower = (homeName || '').toLowerCase();
+          const awayLower = (awayName || '').toLowerCase();
+          
+          // Mappa le combinazioni
+          if (col === '1X') {
+            // Home or Draw - cerca "home or draw" o "nome_squadra_casa or draw"
+            // Pattern: "Fiorentina or Draw" (NON "Draw or Juventus")
+            if (name.includes('draw')) {
+              // Se contiene "draw", deve contenere il nome della squadra di casa E NON quello ospite
+              if (homeLower && name.includes(homeLower) && (!awayLower || !name.includes(awayLower))) {
+                return odd.odds;
+              }
+              // Oppure pattern generico "home or draw" o "draw or home" (senza "away")
+              if (name.includes('home') && !name.includes('away')) {
+                return odd.odds;
+              }
+            }
+            // Pattern "nome_squadra_casa or draw" (senza "draw" all'inizio e senza nome squadra ospite)
+            if (homeLower && name.includes(homeLower) && name.includes('or') && name.includes('draw') && 
+                (!awayLower || !name.includes(awayLower))) {
+              return odd.odds;
+            }
+          } else if (col === 'X2') {
+            // Draw or Away - cerca "draw or away" o "draw or nome_squadra_ospite"
+            // Pattern: "Draw or Juventus" (NON "Fiorentina or Draw")
+            if (name.includes('draw')) {
+              // Se contiene "draw", deve contenere il nome della squadra ospite E NON quello di casa
+              if (awayLower && name.includes(awayLower) && (!homeLower || !name.includes(homeLower))) {
+                return odd.odds;
+              }
+              // Oppure pattern generico "draw or away" o "away or draw" (senza "home")
+              if (name.includes('away') && !name.includes('home')) {
+                return odd.odds;
+              }
+            }
+            // Pattern "draw or nome_squadra_ospite" (senza nome squadra di casa)
+            if (awayLower && name.includes(awayLower) && name.includes('or') && name.includes('draw') && 
+                (!homeLower || !name.includes(homeLower))) {
+              return odd.odds;
+            }
+          } else if (col === '12') {
+            // Home or Away - cerca "home or away" o "nome_squadra1 or nome_squadra2" (senza draw)
+            // Pattern: "Fiorentina or Juventus" o "Home or Away"
+            if (!name.includes('draw')) {
+              // Deve contenere entrambi i nomi delle squadre
+              if (homeLower && awayLower && name.includes(homeLower) && name.includes(awayLower)) {
+                return odd.odds;
+              }
+              // Oppure pattern generico "home or away" o "away or home"
+              if (name.includes('home') && name.includes('away')) {
+                return odd.odds;
+              }
+            }
+          }
+        }
+      }
+      
+      // Fallback: cerca direttamente per nome
+      if (doubleChance[col]) {
+        return doubleChance[col];
+      }
+      
+      return null;
+    }
+
+    // Helper per formattare quota con 2 decimali
+    function formattaQuota(quota) {
+      if (quota === '-' || quota === null || quota === undefined) {
+        return '-';
+      }
+      const num = parseFloat(quota);
+      if (isNaN(num)) {
+        return quota; // Restituisci il valore originale se non è un numero
+      }
+      return num.toFixed(2);
+    }
+
+    // Helper per estrarre quota 1X2 dal JSON (per basket e altri sport)
+    function get1X2Quota(quote, col, sport) {
+      if (!quote) return null;
+      
+      // Per l'hockey, cerca in 3_way con name "Money Line" e header "1", "2" o "Tie" (per X)
+      if (sport === 'hockey' || sport === 'ice_hockey') {
+        const threeWay = quote.main?.sp?.['3_way'] || quote['3_way'] || {};
+        
+        // Se threeWay è direttamente un array
+        if (Array.isArray(threeWay)) {
+          for (const odd of threeWay) {
+            const name = (odd.name || '').toLowerCase().trim();
+            const header = (odd.header || '').trim();
+            if (name === 'money line') {
+              if (col === '1' && header === '1') {
+                return odd.odds;
+              } else if (col === '2' && header === '2') {
+                return odd.odds;
+              } else if (col === 'X' && header.toLowerCase() === 'tie') {
+                return odd.odds;
+              }
+            }
+          }
+        }
+        
+        // Se threeWay ha una proprietà odds che è un array
+        if (Array.isArray(threeWay.odds)) {
+          for (const odd of threeWay.odds) {
+            const name = (odd.name || '').toLowerCase().trim();
+            const header = (odd.header || '').trim();
+            if (name === 'money line') {
+              if (col === '1' && header === '1') {
+                return odd.odds;
+              } else if (col === '2' && header === '2') {
+                return odd.odds;
+              } else if (col === 'X' && header.toLowerCase() === 'tie') {
+                return odd.odds;
+              }
+            }
+          }
+        }
+        
+        return null;
+      }
+      
+      // Per il ping pong, cerca in match_lines con name "To Win" e header "1" o "2"
+      if (sport === 'pingpong' || sport === 'ping_pong') {
+        const matchLines = quote.main?.sp?.match_lines || quote.match_lines || {};
+        
+        // Se matchLines è direttamente un array
+        if (Array.isArray(matchLines)) {
+          for (const odd of matchLines) {
+            const name = (odd.name || '').toLowerCase().trim();
+            const header = (odd.header || '').trim();
+            if (name === 'to win' && 
+                ((col === '1' && header === '1') || (col === '2' && header === '2'))) {
+              return odd.odds;
+            }
+          }
+        }
+        
+        // Se matchLines ha una proprietà odds che è un array
+        if (Array.isArray(matchLines.odds)) {
+          for (const odd of matchLines.odds) {
+            const name = (odd.name || '').toLowerCase().trim();
+            const header = (odd.header || '').trim();
+            if (name === 'to win' && 
+                ((col === '1' && header === '1') || (col === '2' && header === '2'))) {
+              return odd.odds;
+            }
+          }
+        }
+        
+        return null;
+      }
+      
+      // Per il basket, cerca in game_lines con name "Money Line" e header "1" o "2"
+      if (sport === 'basket') {
+        // Per la X, restituisci sempre 10
+        if (col === 'X') {
+          return '10';
+        }
+        
+        const gameLines = quote.main?.sp?.game_lines || quote.game_lines || {};
+        
+        // Se gameLines è direttamente un array
+        if (Array.isArray(gameLines)) {
+          for (const odd of gameLines) {
+            const name = (odd.name || '').toLowerCase().trim();
+            const header = (odd.header || '').trim();
+            if (name === 'money line' && 
+                ((col === '1' && header === '1') || (col === '2' && header === '2'))) {
+              return odd.odds;
+            }
+          }
+        }
+        
+        // Se gameLines ha una proprietà odds che è un array
+        if (Array.isArray(gameLines.odds)) {
+          for (const odd of gameLines.odds) {
+            const name = (odd.name || '').toLowerCase().trim();
+            const header = (odd.header || '').trim();
+            if (name === 'money line' && 
+                ((col === '1' && header === '1') || (col === '2' && header === '2'))) {
+              return odd.odds;
+            }
+          }
+        }
+        
+        // Fallback: cerca anche in game_lines_3_way
+        const gameLines3Way = quote.main?.sp?.game_lines_3_way || quote.game_lines_3_way || {};
+        
+        if (Array.isArray(gameLines3Way)) {
+          for (const odd of gameLines3Way) {
+            const name = (odd.name || odd.header || '').toLowerCase().trim();
+            if ((col === '1' && (name === '1' || name === 'home' || name === 'casa')) ||
+                (col === '2' && (name === '2' || name === 'away' || name === 'trasferta' || name === 'ospiti'))) {
+              return odd.odds;
+            }
+          }
+        }
+        
+        if (Array.isArray(gameLines3Way.odds)) {
+          for (const odd of gameLines3Way.odds) {
+            const name = (odd.name || odd.header || '').toLowerCase().trim();
+            if ((col === '1' && (name === '1' || name === 'home' || name === 'casa')) ||
+                (col === '2' && (name === '2' || name === 'away' || name === 'trasferta' || name === 'ospiti'))) {
+              return odd.odds;
+            }
+          }
+        }
+        
+        return null;
+      }
+      
+      // Per gli altri sport, cerca in game_lines_3_way
+      const gameLines3Way = quote.main?.sp?.game_lines_3_way || quote.game_lines_3_way || {};
+      
+      // Se gameLines3Way è direttamente un array
+      if (Array.isArray(gameLines3Way)) {
+        for (const odd of gameLines3Way) {
+          const name = (odd.name || odd.header || '').toLowerCase().trim();
+          if ((col === '1' && (name === '1' || name === 'home' || name === 'casa')) ||
+              (col === '2' && (name === '2' || name === 'away' || name === 'trasferta' || name === 'ospiti')) ||
+              (col === 'X' && (name === 'x' || name === 'draw' || name === 'pareggio'))) {
+            return odd.odds;
+          }
+        }
+      }
+      
+      // Se gameLines3Way ha una proprietà odds che è un array
+      if (Array.isArray(gameLines3Way.odds)) {
+        for (const odd of gameLines3Way.odds) {
+          const name = (odd.name || odd.header || '').toLowerCase().trim();
+          if ((col === '1' && (name === '1' || name === 'home' || name === 'casa')) ||
+              (col === '2' && (name === '2' || name === 'away' || name === 'trasferta' || name === 'ospiti')) ||
+              (col === 'X' && (name === 'x' || name === 'draw' || name === 'pareggio'))) {
+            return odd.odds;
+          }
+        }
+      }
+      
+      // Cerca in main.sp.full_time_result
+      const fullTimeResult = quote.main?.sp?.full_time_result || quote.full_time_result || {};
+      
+      // Se fullTimeResult è direttamente un array
+      if (Array.isArray(fullTimeResult)) {
+        for (const odd of fullTimeResult) {
+          const name = (odd.name || odd.header || '').toLowerCase().trim();
+          if ((col === '1' && (name === '1' || name === 'home' || name === 'casa')) ||
+              (col === '2' && (name === '2' || name === 'away' || name === 'trasferta' || name === 'ospiti')) ||
+              (col === 'X' && (name === 'x' || name === 'draw' || name === 'pareggio'))) {
+            return odd.odds;
+          }
+        }
+      }
+      
+      // Se fullTimeResult ha una proprietà odds che è un array
+      if (Array.isArray(fullTimeResult.odds)) {
+        for (const odd of fullTimeResult.odds) {
+          const name = (odd.name || odd.header || '').toLowerCase().trim();
+          if ((col === '1' && (name === '1' || name === 'home' || name === 'casa')) ||
+              (col === '2' && (name === '2' || name === 'away' || name === 'trasferta' || name === 'ospiti')) ||
+              (col === 'X' && (name === 'x' || name === 'draw' || name === 'pareggio'))) {
+            return odd.odds;
+          }
+        }
+      }
+      
+      // Cerca anche in match_winner o to_win_match
+      const matchWinner = quote.main?.sp?.match_winner || quote.match_winner || quote.to_win_match || {};
+      
+      if (Array.isArray(matchWinner)) {
+        for (const odd of matchWinner) {
+          const name = (odd.name || odd.header || '').toLowerCase().trim();
+          if ((col === '1' && (name === '1' || name === 'home' || name === 'casa')) ||
+              (col === '2' && (name === '2' || name === 'away' || name === 'trasferta' || name === 'ospiti'))) {
+            return odd.odds;
+          }
+        }
+      }
+      
+      if (Array.isArray(matchWinner.odds)) {
+        for (const odd of matchWinner.odds) {
+          const name = (odd.name || odd.header || '').toLowerCase().trim();
+          if ((col === '1' && (name === '1' || name === 'home' || name === 'casa')) ||
+              (col === '2' && (name === '2' || name === 'away' || name === 'trasferta' || name === 'ospiti'))) {
+            return odd.odds;
+          }
+        }
+      }
+      
+      return null;
+    }
+
+    // Helper per estrarre quota Over/Under
+    function getOverUnderQuota(quote, col) {
+      if (!quote) return null;
+      
+      // Estrai il valore (es. "2.5" da "Over 2.5" o "Under 2.5")
+      const match = col.match(/(Over|Under)\s*(\d+\.?\d*)/i);
+      if (!match) return null;
+      
+      const type = match[1].toLowerCase(); // "over" o "under"
+      const value = match[2]; // "2.5", "1.5", etc.
+      
+      // Prima cerca in goals_over_under (solitamente per 2.5)
+      const goalsOU = quote.main?.sp?.goals_over_under || quote.goals_over_under || {};
+      
+      // Se goalsOU è direttamente un array
+      if (Array.isArray(goalsOU)) {
+        const item = goalsOU.find(o => {
+          const oName = String(o.name || '').trim();
+          const oHeader = (o.header || '').toLowerCase().trim();
+          return oName === value && oHeader === type;
+        });
+        if (item && item.odds) return item.odds;
+      }
+      
+      // Se goalsOU ha una proprietà odds che è un array
+      if (Array.isArray(goalsOU.odds)) {
+        const item = goalsOU.odds.find(o => {
+          const oName = String(o.name || '').trim();
+          const oHeader = (o.header || '').toLowerCase().trim();
+          return oName === value && oHeader === type;
+        });
+        if (item && item.odds) return item.odds;
+      }
+      
+      // Poi cerca in alternative_total_goals (per tutti i valori inclusi 2.5 se non trovato sopra)
+      const altGoals = quote.main?.sp?.alternative_total_goals || quote.alternative_total_goals || {};
+      
+      // Se altGoals è direttamente un array
+      if (Array.isArray(altGoals)) {
+        const item = altGoals.find(o => {
+          const oName = String(o.name || '').trim();
+          const oHeader = (o.header || '').toLowerCase().trim();
+          return oName === value && oHeader === type;
+        });
+        if (item && item.odds) return item.odds;
+      }
+      
+      // Se altGoals ha una proprietà odds che è un array
+      if (Array.isArray(altGoals.odds)) {
+        const item = altGoals.odds.find(o => {
+          const oName = String(o.name || '').trim();
+          const oHeader = (o.header || '').toLowerCase().trim();
+          return oName === value && oHeader === type;
+        });
+        if (item && item.odds) return item.odds;
+      }
+      
+      // Fallback: cerca in match_goals
+      const matchGoals = quote.match_goals || {};
+      if (matchGoals[col]) {
+        return matchGoals[col];
+      }
+      
+      return null;
+    }
+
     function getColonnePerMercato(mercato) {
+      // Per il basket, mostra 1X2 (1, X, 2) da game_lines_3_way
+      if (sportSelezionato === 'basket') {
+        if (mercato === 'Principali' || mercato === '1X2') {
+          return ['1', 'X', '2'];
+        }
+      }
+      
+      // Per il tennis, mostra solo Money Line (1 e 2, senza X)
+      if (sportSelezionato === 'tennis') {
+        if (mercato === 'Principali' || mercato === '1X2') {
+          return ['1', '2'];
+        }
+      }
+      
+      // Per il ping pong, mostra solo Money Line (1 e 2, senza X)
+      if (sportSelezionato === 'pingpong' || sportSelezionato === 'ping_pong') {
+        if (mercato === 'Principali' || mercato === '1X2') {
+          return ['1', '2'];
+        }
+      }
+      
+      // Per gli altri sport (non calcio), mostra solo 1X2
+      if (sportSelezionato !== 'calcio' && mercato === 'Principali') {
+        return ['1', 'X', '2'];
+      }
+      
       switch(mercato) {
+        case 'Principali':
+          // Solo per calcio: 1X2 (3) + DC (3) + GG/NG (2) + Over/Under 1.5 e 2.5 (4) = 12 colonne
+          return [
+            // 1X2
+            { type: '1X2', label: '1' },
+            { type: '1X2', label: 'X' },
+            { type: '1X2', label: '2' },
+            // Doppia Chance
+            { type: 'Doppia Chance', label: '1X' },
+            { type: 'Doppia Chance', label: '12' },
+            { type: 'Doppia Chance', label: 'X2' },
+            // Gol Totali
+            { type: 'Gol Totali', label: 'GG' },
+            { type: 'Gol Totali', label: 'NG' },
+            // Over/Under
+            { type: 'Over/Under', label: 'Over 1.5' },
+            { type: 'Over/Under', label: 'Under 1.5' },
+            { type: 'Over/Under', label: 'Over 2.5' },
+            { type: 'Over/Under', label: 'Under 2.5' }
+          ];
         case '1X2':
+          // Per il basket, restituisce già ['1', 'X', '2'] sopra
+          if (sportSelezionato === 'basket') {
+            return ['1', 'X', '2'];
+          }
+          // Per il tennis, solo Money Line (1 e 2, senza X)
+          if (sportSelezionato === 'tennis') {
+            return ['1', '2'];
+          }
+          // Per il ping pong, solo Money Line (1 e 2, senza X)
+          if (sportSelezionato === 'pingpong' || sportSelezionato === 'ping_pong') {
+            return ['1', '2'];
+          }
           return ['1', 'X', '2'];
         case 'Doppia Chance':
           return ['1X', '12', 'X2'];
@@ -818,7 +1323,7 @@
         }
         
         const colonne = getColonnePerMercato(mercatoSelezionato);
-        const numCols = 4 + colonne.length;
+        const numCols = 4 + (Array.isArray(colonne) && colonne[0]?.type ? colonne.length : colonne.length);
         matchesBody.innerHTML = `<tr><td colspan="${numCols}" class="text-center py-4 text-gray-400">Caricamento dati...</td></tr>`;
         
         // Usa URL assoluto per evitare problemi su Render
@@ -840,7 +1345,7 @@
           renderMatches();
         } else {
           const colonne = getColonnePerMercato(mercatoSelezionato);
-          const numCols = 4 + colonne.length;
+          const numCols = 4 + (Array.isArray(colonne) && colonne[0]?.type ? colonne.length : colonne.length);
           matchesBody.innerHTML = `<tr><td colspan="${numCols}" class="text-center py-4 text-red-400">Nessun dato disponibile</td></tr>`;
         }
       } catch (error) {
@@ -848,7 +1353,7 @@
         const matchesBody = document.getElementById('matches-body');
         if (matchesBody) {
           const colonne = getColonnePerMercato(mercatoSelezionato);
-          const numCols = 4 + colonne.length;
+          const numCols = 4 + (Array.isArray(colonne) && colonne[0]?.type ? colonne.length : colonne.length);
           matchesBody.innerHTML = `<tr><td colspan="${numCols}" class="text-center py-4 text-red-400">Errore nel caricamento dei dati: ${error.message}</td></tr>`;
         }
       }
@@ -867,13 +1372,14 @@
         
         if (matchesData.length === 0) {
           const colonne = getColonnePerMercato(mercatoSelezionato);
-          const numCols = 4 + colonne.length;
+          const numCols = 4 + (Array.isArray(colonne) && colonne[0]?.type ? colonne.length : colonne.length);
           tbody.innerHTML = `<tr><td colspan="${numCols}" class="text-center py-4 text-gray-400">Nessuna partita disponibile</td></tr>`;
           return;
         }
 
         // Aggiorna header in base al mercato
         let colonne = getColonnePerMercato(mercatoSelezionato);
+        const isPrincipali = Array.isArray(colonne) && colonne[0]?.type;
         
         // Aggiorna header tabella
         let headerHtml = `
@@ -881,9 +1387,17 @@
           <th class="px-2 py-1 border-b border-gray-600 text-center">Data</th>
           <th class="px-2 py-1 border-b border-gray-600 text-center">Evento</th>
         `;
-        colonne.forEach(col => {
-          headerHtml += `<th class="px-1 py-1 border-b border-gray-600">${col}</th>`;
-        });
+        
+        // Se colonne è un array di oggetti (Principali), usa label, altrimenti usa direttamente la stringa
+        if (isPrincipali) {
+          colonne.forEach(col => {
+            headerHtml += `<th class="px-1 py-1 border-b border-gray-600">${col.label}</th>`;
+          });
+        } else {
+          colonne.forEach(col => {
+            headerHtml += `<th class="px-1 py-1 border-b border-gray-600">${col}</th>`;
+          });
+        }
         headerHtml += `<th class="px-2 py-1 border-b border-gray-600 text-center">Mercati</th>`;
         thead.innerHTML = `<tr>${headerHtml}</tr>`;
 
@@ -906,11 +1420,12 @@
         });
 
         Object.keys(grouped).sort().forEach(date => {
-          html += `<tr><td colspan="${4 + colonne.length}" class="bg-gray-900 text-yellow-400 font-bold px-2 py-1 border-b border-gray-700">${date}</td></tr>`;
+          const numCols = 4 + colonne.length;
+          html += `<tr><td colspan="${numCols}" class="bg-gray-900 text-yellow-400 font-bold px-2 py-1 border-b border-gray-700">${date}</td></tr>`;
           
           // Per ogni data, mostra i campionati
           Object.keys(grouped[date]).sort().forEach(league => {
-            html += `<tr><td colspan="${4 + colonne.length}" class="bg-gray-800 text-blue-400 font-semibold px-4 py-1 border-b border-gray-600 text-xs">🏆 ${league}</td></tr>`;
+            html += `<tr><td colspan="${numCols}" class="bg-gray-800 text-blue-400 font-semibold px-4 py-1 border-b border-gray-600 text-xs">🏆 ${league}</td></tr>`;
             
             grouped[date][league].forEach(ev => {
               const time = new Date(ev.start_time_date || ev.start_time).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
@@ -927,17 +1442,57 @@
               colonne.forEach(col => {
                 let quota = '-';
                 const quote = ev.quote || {};
+                const colLabel = isPrincipali ? col.label : col;
+                const colType = isPrincipali ? col.type : mercatoSelezionato;
                 
-                if (mercatoSelezionato === '1X2') {
+                // Per il basket, estrai le quote 1X2 da game_lines con Money Line
+                if (sportSelezionato === 'basket') {
+                  quota = get1X2Quota(quote, colLabel || col, 'basket') || quote_1x2[colLabel || col] || '-';
+                } else if (sportSelezionato === 'tennis') {
+                  // Per il tennis, estrai le quote Money Line (solo 1 e 2, senza X)
+                  quota = get1X2Quota(quote, colLabel || col, 'tennis') || quote_1x2[colLabel || col] || '-';
+                } else if (sportSelezionato === 'hockey' || sportSelezionato === 'ice_hockey') {
+                  // Per l'hockey, estrai le quote 1X2 da 3_way
+                  quota = get1X2Quota(quote, colLabel || col, 'hockey') || quote_1x2[colLabel || col] || '-';
+                } else if (sportSelezionato === 'pingpong' || sportSelezionato === 'ping_pong') {
+                  // Per il ping pong, estrai le quote da match_lines con To Win (solo 1 e 2, senza X)
+                  quota = get1X2Quota(quote, colLabel || col, 'pingpong') || quote_1x2[colLabel || col] || '-';
+                } else if (isPrincipali) {
+                  // Gestione Principali: usa colType per determinare il mercato
+                  if (colType === '1X2') {
+                    quota = quote_1x2[colLabel] || '-';
+                  } else if (colType === 'Doppia Chance') {
+                    const homeName = ev.home_name || '';
+                    const awayName = ev.away_name || '';
+                    quota = getDoubleChanceQuota(quote, colLabel, homeName, awayName) || '-';
+                  } else if (colType === 'Over/Under') {
+                    quota = getOverUnderQuota(quote, colLabel) || '-';
+                  } else if (colType === 'Gol Totali') {
+                    const btts = quote['both_teams_to_score'] || {};
+                    if (Array.isArray(btts)) {
+                      const item = btts.find(o => (o.name || o.header) === colLabel || (colLabel === 'GG' && (o.name === 'Yes' || o.name === 'Sì')) || (colLabel === 'NG' && (o.name === 'No' || o.name === 'No')));
+                      quota = item?.odds || '-';
+                    } else {
+                      quota = btts[colLabel === 'GG' ? 'Yes' : 'No'] || '-';
+                    }
+                  }
+                } else if (mercatoSelezionato === '1X2') {
                   quota = quote_1x2[col] || '-';
                 } else if (mercatoSelezionato === 'Doppia Chance') {
-                  quota = quote_1x2[col] || '-';
+                  // Usa la funzione helper per estrarre la quota Doppia Chance
+                  const homeName = ev.home_name || '';
+                  const awayName = ev.away_name || '';
+                  quota = getDoubleChanceQuota(quote, col, homeName, awayName) || '-';
+                  // Debug temporaneo
+                  if (quota === '-' && quote) {
+                    console.log('DC non trovata:', { col, homeName, awayName, quote: JSON.stringify(quote).substring(0, 200) });
+                  }
                 } else if (mercatoSelezionato === 'Over/Under') {
-                  const overUnder = quote['match_goals'] || {};
-                  if (col === 'Over 2.5') {
-                    quota = overUnder['Over 2.5'] || (Array.isArray(overUnder) ? overUnder.find(o => o.name === 'Over 2.5')?.odds : '-') || '-';
-                  } else if (col === 'Under 2.5') {
-                    quota = overUnder['Under 2.5'] || (Array.isArray(overUnder) ? overUnder.find(o => o.name === 'Under 2.5')?.odds : '-') || '-';
+                  // Usa la funzione helper per estrarre la quota Over/Under
+                  quota = getOverUnderQuota(quote, col) || '-';
+                  // Debug temporaneo
+                  if (quota === '-' && quote) {
+                    console.log('OU non trovata:', { col, quote: JSON.stringify(quote).substring(0, 200) });
                   }
                 } else if (mercatoSelezionato === 'Gol Totali') {
                   const btts = quote['both_teams_to_score'] || {};
@@ -1014,18 +1569,21 @@
                 }
                 
                 const quotaNum = parseFloat(quota);
-                const isSelected = selections.some(s => s.id == matchId && s.categoria === mercatoSelezionato && s.segno === col);
+                const categoria = isPrincipali ? colType : mercatoSelezionato;
+                const segno = isPrincipali ? colLabel : col;
+                const isSelected = selections.some(s => s.id == matchId && s.categoria === categoria && s.segno === segno);
+                const quotaFormattata = quotaNum > 1 ? formattaQuota(quota) : '-';
                 
                 html += `
                   <td class="px-1 py-1 border-b border-gray-700">
                     <button class="quote-btn w-full border border-gray-600 rounded px-0.5 py-0.5 text-xs ${isSelected ? 'bg-yellow-500 text-black' : 'bg-gray-900 text-white hover:bg-yellow-500 hover:text-black'} ${quotaNum <= 1 ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}"
                             data-match-id="${matchId}"
-                            data-categoria="${mercatoSelezionato}"
-                            data-segno="${col}"
+                            data-categoria="${categoria}"
+                            data-segno="${segno}"
                             data-quota="${quota}"
                             data-evento="${(teams || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}"
                             ${quotaNum <= 1 ? 'disabled' : ''}>
-                      ${quotaNum > 1 ? quota : '-'}
+                      ${quotaFormattata}
                     </button>
                   </td>`;
               });
@@ -1116,7 +1674,7 @@
           <div class="flex items-center justify-between bg-gray-900 rounded px-2 py-1 mb-1">
             <div>
               <div class="font-bold text-yellow-400 text-xs">${sel.id} - ${sel.evento}</div>
-              <div class="text-xs">${sel.categoria}: <span class="font-bold">${sel.segno}</span> @ <span class="font-bold">${sel.quota}</span></div>
+              <div class="text-xs">${sel.categoria}: <span class="font-bold">${sel.segno}</span> @ <span class="font-bold">${formattaQuota(sel.quota)}</span></div>
             </div>
             <button class="remove-selection-btn ml-2 text-red-400 hover:text-red-600 font-bold" data-key="${sel.key}">&times;</button>
           </div>
@@ -1364,7 +1922,7 @@
                     data-evento="${(teams || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}"
                     ${quotaNum <= 1 ? 'disabled' : ''}>
               <div class="text-xs mb-1">${segno === '1' ? 'Casa' : segno === 'X' ? 'Pareggio' : 'Ospiti'}</div>
-              <div class="text-lg">${quotaNum > 1 ? quota : '-'}</div>
+              <div class="text-lg">${quotaNum > 1 ? formattaQuota(quota) : '-'}</div>
             </button>
           `;
         });
@@ -1387,7 +1945,7 @@
                     data-evento="${(teams || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}"
                     ${quotaNum <= 1 ? 'disabled' : ''}>
               <div class="text-xs mb-1">${segno}</div>
-              <div class="text-lg">${quotaNum > 1 ? quota : '-'}</div>
+              <div class="text-lg">${quotaNum > 1 ? formattaQuota(quota) : '-'}</div>
             </button>
           `;
         });
@@ -1411,7 +1969,7 @@
                       data-evento="${(teams || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}"
                       ${quotaNum <= 1 ? 'disabled' : ''}>
                 <div class="text-xs mb-1">${nome}</div>
-                <div class="text-lg">${quotaNum > 1 ? quota : '-'}</div>
+                <div class="text-lg">${quotaNum > 1 ? formattaQuota(quota) : '-'}</div>
               </button>
             `;
           });
@@ -1431,7 +1989,7 @@
                       data-evento="${(teams || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}"
                       ${quotaNum <= 1 ? 'disabled' : ''}>
                 <div class="text-xs mb-1">${key}</div>
-                <div class="text-lg">${quotaNum > 1 ? quota : '-'}</div>
+                <div class="text-lg">${quotaNum > 1 ? formattaQuota(quota) : '-'}</div>
               </button>
             `;
           });
@@ -1458,7 +2016,7 @@
                       data-evento="${(teams || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;')}"
                       ${quotaNum <= 1 ? 'disabled' : ''}>
                 <div class="text-xs mb-1">${nome}${handicap}</div>
-                <div class="text-lg">${quotaNum > 1 ? quota : '-'}</div>
+                <div class="text-lg">${quotaNum > 1 ? formattaQuota(quota) : '-'}</div>
               </button>
             `;
           });
