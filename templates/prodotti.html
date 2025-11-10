@@ -263,6 +263,7 @@
         <form action="/prodotti/aggiungi" method="post">
             <input type="text" name="nome" placeholder="Nome prodotto" required>
             <input type="text" name="marca" placeholder="Marca prodotto" required>
+            <input type="text" name="formato" placeholder="Formato (es. 1 litro, 500 grammi, ecc.)" required>
             <input type="number" name="quantita" placeholder="Quantità" required>
             <button type="submit">➕ Aggiungi Prodotto</button>
         </form>
@@ -274,6 +275,7 @@
                     <th style="width: 60px;">#</th>
                     <th>Nome</th>
                     <th>Marca</th>
+                    <th>Formato</th>
                     <th>Quantità</th>
                     <th style="text-align: right;">Azioni</th>
                 </tr>
@@ -289,6 +291,10 @@
                     <td>
                         <span class="display-value" data-field="marca">{{ p.marca }}</span>
                         <input type="text" class="editable-input" value="{{ p.marca }}" data-field="marca" style="display:none;">
+                    </td>
+                    <td>
+                        <span class="display-value" data-field="formato">{{ p.formato if p.formato else '-' }}</span>
+                        <input type="text" class="editable-input" value="{{ p.formato if p.formato else '' }}" data-field="formato" style="display:none;">
                     </td>
                     <td>
                         <span class="display-value" data-field="quantita">{{ p.quantita }}</span>
