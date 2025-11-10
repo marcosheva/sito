@@ -597,6 +597,29 @@ def api_leagues():
     """API endpoint per ottenere nazioni e campionati disponibili"""
     sport = request.args.get("sport", "calcio")
     
+    # Mappatura nazioni (inglese -> italiano) - solo per traduzione
+    nation_mapping = {
+        "Italy": "Italia",
+        "Argentina": "Argentina",
+        "Australia": "Australia",
+        "Austria": "Austria",
+        "Brazil": "Brasile",
+        "Bulgaria": "Bulgaria",
+        "China": "Cina",
+        "Denmark": "Danimarca",
+        "Ecuador": "Ecuador",
+        "England": "Inghilterra",
+        "France": "Francia",
+        "Germany": "Germania",
+        "Greece": "Grecia",
+        "Israel": "Israele",
+        "Netherlands": "Paesi Bassi",
+        "Paraguay": "Paraguay",
+        "Poland": "Polonia",
+        "Slovenia": "Slovenia",
+        "Spain": "Spagna"
+    }
+    
     try:
         db = client["bet365"]
         col = db[sport]
@@ -604,19 +627,39 @@ def api_leagues():
         # Recupera tutti i campionati unici
         leagues = col.distinct("league")
         
-        # Raggruppa per nazione (estrai nazione dal nome del campionato)
+        # SEMPLICE: prima parola = nazione, resto = nome campionato
         nations_leagues = {}
         for league in sorted(leagues):
             if not league:
                 continue
-            # Prova a estrarre la nazione dal nome del campionato
-            # Esempi: "Italy - Serie A" -> "Italy", "England - Premier League" -> "England"
-            parts = league.split(" - ")
-            if len(parts) >= 2:
-                nation = parts[0].strip()
-                league_name = " - ".join(parts[1:]).strip()
+            
+            # Se c'è " - ", usa quello come separatore
+            if " - " in league:
+                parts = league.split(" - ", 1)
+                nation_raw = parts[0].strip()
+                league_name = parts[1].strip() if len(parts) > 1 else ""
             else:
-                nation = "Altri"
+                # Altrimenti: prima parola = nazione, resto = campionato
+                words = league.split()
+                if len(words) < 2:
+                    # Se ha solo una parola, usa quella come nazione e nome vuoto
+                    nation_raw = words[0] if words else "Altri"
+                    league_name = ""
+                else:
+                    # Caso speciale: "Bosnia & Herzegovina"
+                    if words[0] == "Bosnia" and len(words) >= 3 and words[1] == "&":
+                        nation_raw = "Bosnia & Herzegovina"
+                        league_name = " ".join(words[3:])
+                    else:
+                        # Prima parola = nazione, resto = campionato
+                        nation_raw = words[0]
+                        league_name = " ".join(words[1:])
+            
+            # Applica mappatura per traduzione (se esiste)
+            nation = nation_mapping.get(nation_raw, nation_raw)
+            
+            # Se il nome del campionato è vuoto, usa il full_name
+            if not league_name:
                 league_name = league
             
             if nation not in nations_leagues:
@@ -626,12 +669,19 @@ def api_leagues():
                 "full_name": league
             })
         
+        # Rimuovi "Altri" se esiste e ha campionati
+        if "Altri" in nations_leagues:
+            del nations_leagues["Altri"]
+        
+        # Ordina: prima Italia, poi altre alfabeticamente
+        sorted_nations = sorted(nations_leagues.keys(), key=lambda x: (x != "Italia", x))
+        ordered_nations = {nation: nations_leagues[nation] for nation in sorted_nations}
+        
         return jsonify({
             "success": True,
-            "nations": nations_leagues
+            "nations": ordered_nations
         })
     except Exception as e:
-        print(f"ERRORE API leagues: {e}")
         return jsonify({
             "success": False,
             "error": str(e),
