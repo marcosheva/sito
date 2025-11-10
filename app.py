@@ -77,8 +77,9 @@ def aggiungi_prodotto():
     col = client["libreria"]["prodotti"]
     nome = request.form["nome"]
     marca = request.form["marca"]
+    formato = request.form.get("formato", "")
     quantita = int(request.form["quantita"])
-    col.insert_one({"nome": nome, "marca": marca, "quantita": quantita})
+    col.insert_one({"nome": nome, "marca": marca, "formato": formato, "quantita": quantita})
     flash("✅ Prodotto aggiunto!", "success")
     return redirect(url_for("prodotti"))
 
@@ -100,8 +101,9 @@ def salva_modifica_prodotto(id):
     col = client["libreria"]["prodotti"]
     nome = request.form.get("nome", "")
     marca = request.form.get("marca", "")
+    formato = request.form.get("formato", "")
     quantita = int(request.form.get("quantita", 0) or 0)
-    col.update_one({"_id": ObjectId(id)}, {"$set": {"nome": nome, "marca": marca, "quantita": quantita}})
+    col.update_one({"_id": ObjectId(id)}, {"$set": {"nome": nome, "marca": marca, "formato": formato, "quantita": quantita}})
     flash("✏️ Prodotto modificato!", "info")
     return redirect(url_for("prodotti"))
 @app.route("/libri")
