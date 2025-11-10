@@ -15,9 +15,33 @@
 </head>
 <body>
   <div id="app">
-    <div class="flex h-screen bg-gray-900 overflow-hidden">
+    <!-- Menu Hamburger per Mobile -->
+    <div class="md:hidden fixed top-0 left-0 right-0 z-50 bg-gray-800 p-2 flex justify-between items-center border-b border-gray-700">
+      <button id="mobile-menu-left" class="text-white p-2 hover:bg-gray-700 rounded">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+      </button>
+      <span class="text-white font-bold">Kroosbet</span>
+      <button id="mobile-menu-right" class="text-white p-2 hover:bg-gray-700 rounded">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+        </svg>
+      </button>
+    </div>
+    
+    <!-- Overlay per mobile -->
+    <div id="mobile-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden"></div>
+    
+    <div class="flex h-screen bg-gray-900 overflow-hidden pt-12 md:pt-0">
       <!-- Sidebar Sinistra -->
-      <aside class="w-96 bg-gray-800 text-white h-full p-3 flex flex-col space-y-3 border-r border-gray-700 overflow-y-auto">
+      <aside id="sidebar-left" class="fixed md:relative inset-y-0 left-0 z-40 w-80 md:w-96 bg-gray-800 text-white h-full md:h-auto p-3 flex flex-col space-y-3 border-r border-gray-700 overflow-y-auto transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
+        <!-- Bottone chiudi per mobile -->
+        <button id="close-sidebar-left" class="md:hidden absolute top-2 right-2 text-white hover:bg-gray-700 rounded p-1">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
         <div class="font-bold text-sm bg-gray-700 px-3 py-2 rounded">MENU SPORT</div>
         <div class="flex flex-col space-y-2">
           <div class="flex items-center bg-black rounded px-2 py-1">
@@ -210,7 +234,13 @@
       </div>
       
       <!-- Sidebar Destra - Schedina -->
-      <aside class="w-[500px] bg-gray-800 text-white h-full p-3 flex flex-col space-y-3 border-l border-gray-700">
+      <aside id="sidebar-right" class="fixed md:relative inset-y-0 right-0 z-40 w-80 md:w-[500px] bg-gray-800 text-white h-full md:h-auto p-3 flex flex-col space-y-3 border-l border-gray-700 transform translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
+        <!-- Bottone chiudi per mobile -->
+        <button id="close-sidebar-right" class="md:hidden absolute top-2 right-2 text-white hover:bg-gray-700 rounded p-1">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
         <div class="font-bold text-sm bg-gray-700 px-3 py-2 rounded">SCHEDINA</div>
         <div id="schedina-content" class="flex-1 overflow-y-auto">
           <div class="text-xs text-gray-400">Nessuna selezione</div>
@@ -1423,8 +1453,77 @@
       }
     });
 
+    // Gestione menu mobile
+    function toggleSidebar(sidebarId, overlayId) {
+      const sidebar = document.getElementById(sidebarId);
+      const overlay = document.getElementById(overlayId);
+      
+      if (!sidebar || !overlay) return;
+      
+      if (sidebar.classList.contains('-translate-x-full') || sidebar.classList.contains('translate-x-full')) {
+        // Apri sidebar
+        sidebar.classList.remove('-translate-x-full', 'translate-x-full');
+        overlay.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      } else {
+        // Chiudi sidebar
+        if (sidebarId === 'sidebar-left') {
+          sidebar.classList.add('-translate-x-full');
+        } else {
+          sidebar.classList.add('translate-x-full');
+        }
+        overlay.classList.add('hidden');
+        document.body.style.overflow = '';
+      }
+    }
+    
+    function closeSidebar(sidebarId, overlayId) {
+      const sidebar = document.getElementById(sidebarId);
+      const overlay = document.getElementById(overlayId);
+      
+      if (!sidebar || !overlay) return;
+      
+      if (sidebarId === 'sidebar-left') {
+        sidebar.classList.add('-translate-x-full');
+      } else {
+        sidebar.classList.add('translate-x-full');
+      }
+      overlay.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
     // Inizializza sport selezionato e UI
     window.addEventListener('DOMContentLoaded', () => {
+      // Event listeners per menu mobile
+      const mobileMenuLeft = document.getElementById('mobile-menu-left');
+      const mobileMenuRight = document.getElementById('mobile-menu-right');
+      const closeSidebarLeft = document.getElementById('close-sidebar-left');
+      const closeSidebarRight = document.getElementById('close-sidebar-right');
+      const overlay = document.getElementById('mobile-overlay');
+      
+      if (mobileMenuLeft) {
+        mobileMenuLeft.addEventListener('click', () => toggleSidebar('sidebar-left', 'mobile-overlay'));
+      }
+      
+      if (mobileMenuRight) {
+        mobileMenuRight.addEventListener('click', () => toggleSidebar('sidebar-right', 'mobile-overlay'));
+      }
+      
+      if (closeSidebarLeft) {
+        closeSidebarLeft.addEventListener('click', () => closeSidebar('sidebar-left', 'mobile-overlay'));
+      }
+      
+      if (closeSidebarRight) {
+        closeSidebarRight.addEventListener('click', () => closeSidebar('sidebar-right', 'mobile-overlay'));
+      }
+      
+      if (overlay) {
+        overlay.addEventListener('click', () => {
+          closeSidebar('sidebar-left', 'mobile-overlay');
+          closeSidebar('sidebar-right', 'mobile-overlay');
+        });
+      }
+      
       try {
         // Imposta UI per calcio
         const calcioItem = document.querySelector('[data-sport="calcio"]');
