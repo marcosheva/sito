@@ -734,6 +734,67 @@ def api_events():
             "results": []
         }), 500
 
+@app.route("/api/search", methods=["GET"])
+def api_search():
+    """API endpoint per cercare eventi direttamente nel database (più veloce)"""
+    sport = request.args.get("sport", "calcio")
+    query = request.args.get("q", "").strip()
+    limit = int(request.args.get("limit", 50))  # Limite più basso per la ricerca
+    
+    if not query:
+        return jsonify({
+            "success": False,
+            "error": "Query vuota",
+            "results": []
+        }), 400
+    
+    try:
+        db = client["bet365"]
+        col = db[sport]
+        
+        # Crea query MongoDB per cercare in vari campi
+        search_query = {
+            "$or": [
+                {"match_id": {"$regex": query, "$options": "i"}},
+                {"home_name": {"$regex": query, "$options": "i"}},
+                {"away_name": {"$regex": query, "$options": "i"}},
+                {"league": {"$regex": query, "$options": "i"}},
+                {"numero_corsa": {"$regex": query, "$options": "i"}}
+            ]
+        }
+        
+        # Cerca anche per match esatto dell'ID (se è un numero)
+        if query.isdigit():
+            search_query["$or"].append({"match_id": query})
+            try:
+                search_query["$or"].append({"match_id": int(query)})
+            except ValueError:
+                pass
+        
+        # Recupera eventi ordinati per data
+        eventi = list(col.find(search_query).sort("start_time_date", 1).limit(limit))
+        
+        # Formatta l'orario
+        for ev in eventi:
+            if "start_time_date" in ev:
+                ev["start_time"] = ev["start_time_date"].strftime("%Y-%m-%d %H:%M:%S")
+            # Converti ObjectId in stringa per JSON
+            if "_id" in ev:
+                ev["_id"] = str(ev["_id"])
+        
+        return jsonify({
+            "success": True,
+            "results": eventi,
+            "count": len(eventi)
+        })
+    except Exception as e:
+        print(f"ERRORE API search: {e}")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "results": []
+        }), 500
+
 @app.route("/api/salva-schedina", methods=["POST"])
 @login_required
 def salva_schedina():
