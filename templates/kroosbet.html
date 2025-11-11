@@ -364,7 +364,8 @@
                   <button id="mercato-Rigori" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Rigori">Rigori</button>
                   <button id="mercato-Speciali Gol" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Speciali Gol">Speciali Gol</button>
                   <button id="mercato-Metodo 1° gol" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Metodo 1° gol">Metodo 1° gol</button>
-                  <button id="mercato-Sosituzioni" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Sosituzioni">Sosituzioni</button>
+                  <button id="mercato-Tempo 1°sub" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Tempo 1°sub">Tempo 1°sub</button>
+                  <button id="mercato-Team 1° sub" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Team 1° sub">Team 1° sub</button>
                   <button id="mercato-VAR Si/No" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="VAR Si/No">VAR Si/No</button>
                   <button id="mercato-Corner" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Corner">Corner</button>
                 </div>
@@ -518,7 +519,7 @@
       const mapping = {
         'water polo': 'pallanuoto',
         'waterpolo': 'pallanuoto',
-        'american football': 'football',        
+        'american football': 'football',
         'e-sport': 'E-Sport',
         'badminton': 'Badminton',
         'cricket': 'Cricket',
@@ -1029,11 +1030,31 @@
     
     // Calcola colonne per mercato
     // Helper per estrarre quota Doppia Chance
-    function getDoubleChanceQuota(quote, col, homeName, awayName) {
+    function getDoubleChanceQuota(quote, col, homeName, awayName, isFirstHalf = false, isSecondHalf = false) {
       if (!quote) return null;
       
-      // Cerca in main.sp.double_chance
-      const doubleChance = quote.main?.sp?.double_chance || quote.double_chance || {};
+      let doubleChance = {};
+      
+      // Per DC 1T, cerca in half_time_double_chance
+      if (isFirstHalf) {
+        doubleChance = quote.half_time_double_chance || 
+                      quote.half?.sp?.half_time_double_chance ||
+                      quote.main?.sp?.half_time_double_chance ||
+                      quote.others?.find(o => o.sp?.half_time_double_chance)?.sp?.half_time_double_chance ||
+                      {};
+      } 
+      // Per DC 2T, cerca in 2nd_half_double_chance
+      else if (isSecondHalf) {
+        doubleChance = quote['2nd_half_double_chance'] || 
+                      quote.half?.sp?.['2nd_half_double_chance'] ||
+                      quote.goals?.sp?.['2nd_half_double_chance'] ||
+                      quote.others?.find(o => o.sp?.['2nd_half_double_chance'])?.sp?.['2nd_half_double_chance'] ||
+                      {};
+      }
+      // Per DC normale, cerca in main.sp.double_chance
+      else {
+        doubleChance = quote.main?.sp?.double_chance || quote.double_chance || {};
+      }
       
       // Se doubleChance è direttamente un array
       if (Array.isArray(doubleChance)) {
@@ -1746,7 +1767,523 @@
     }
 
     // Helper per estrarre quota Over/Under
-    function getOverUnderQuota(quote, col) {
+    // Funzione per estrarre quote O/U Casa/Ospite
+    function getTeamOverUnderQuota(quote, col, isFirstHalf = false) {
+      if (!quote) return null;
+      
+      // Estrai squadra (Casa o Ospite) e tipo (Over/Under) e valore
+      const match = col.match(/(Casa|Ospite)\s+(Over|Under)\s+(\d+\.?\d*)/i);
+      if (!match) return null;
+      
+      const team = match[1].toLowerCase(); // "casa" o "ospite"
+      const type = match[2].toLowerCase(); // "over" o "under"
+      const value = match[3]; // "0.5", "1.5", etc.
+      
+      const isHome = team === 'casa';
+      const isAway = team === 'ospite';
+      
+      // 🔹 Cerca PRIMA direttamente in team_total_goals (se presente)
+      if (!isFirstHalf && quote.team_total_goals && Array.isArray(quote.team_total_goals)) {
+        const item = quote.team_total_goals.find(o => {
+          const oName = String(o.name || '').trim();
+          const oHeader = String(o.header || '').trim();
+          const oHandicap = String(o.handicap || '').trim();
+          
+          // Verifica che sia per la squadra corretta (1 = casa, 2 = ospite)
+          const teamMatch = (isHome && (oName === '1' || oHeader === '1')) || 
+                           (isAway && (oName === '2' || oHeader === '2'));
+          
+          // Verifica che l'handicap corrisponda (es. "Over 0.5", "Under 1.5")
+          const handicapMatch = oHandicap && (
+            (type === 'over' && oHandicap.toLowerCase().startsWith('over') && oHandicap.includes(value)) ||
+            (type === 'under' && oHandicap.toLowerCase().startsWith('under') && oHandicap.includes(value))
+          );
+          
+          return teamMatch && handicapMatch;
+        });
+        if (item && item.odds) return item.odds;
+      }
+      
+      // 🔹 Cerca anche in 1st_half_team_total_goals per il primo tempo
+      if (isFirstHalf) {
+        // Cerca in quote['1st_half_team_total_goals']
+        if (quote['1st_half_team_total_goals'] && Array.isArray(quote['1st_half_team_total_goals'])) {
+          const item = quote['1st_half_team_total_goals'].find(o => {
+            const oName = String(o.name || '').trim();
+            const oHeader = String(o.header || '').trim();
+            const oHandicap = String(o.handicap || '').trim();
+            
+            const teamMatch = (isHome && (oName === '1' || oHeader === '1')) || 
+                             (isAway && (oName === '2' || oHeader === '2'));
+            
+            const handicapMatch = oHandicap && (
+              (type === 'over' && oHandicap.toLowerCase().startsWith('over') && oHandicap.includes(value)) ||
+              (type === 'under' && oHandicap.toLowerCase().startsWith('under') && oHandicap.includes(value))
+            );
+            
+            return teamMatch && handicapMatch;
+          });
+          if (item && item.odds) return item.odds;
+        }
+        
+        // Cerca anche in goals.sp.1st_half_team_total_goals
+        const goals1stHalfTeam = quote.goals?.sp?.['1st_half_team_total_goals'] || {};
+        if (Array.isArray(goals1stHalfTeam)) {
+          const item = goals1stHalfTeam.find(o => {
+            const oName = String(o.name || '').trim();
+            const oHeader = String(o.header || '').trim();
+            const oHandicap = String(o.handicap || '').trim();
+            
+            const teamMatch = (isHome && (oName === '1' || oHeader === '1')) || 
+                             (isAway && (oName === '2' || oHeader === '2'));
+            
+            const handicapMatch = oHandicap && (
+              (type === 'over' && oHandicap.toLowerCase().startsWith('over') && oHandicap.includes(value)) ||
+              (type === 'under' && oHandicap.toLowerCase().startsWith('under') && oHandicap.includes(value))
+            );
+            
+            return teamMatch && handicapMatch;
+          });
+          if (item && item.odds) return item.odds;
+        } else if (goals1stHalfTeam.odds && Array.isArray(goals1stHalfTeam.odds)) {
+          const item = goals1stHalfTeam.odds.find(o => {
+            const oName = String(o.name || '').trim();
+            const oHeader = String(o.header || '').trim();
+            const oHandicap = String(o.handicap || '').trim();
+            
+            const teamMatch = (isHome && (oName === '1' || oHeader === '1')) || 
+                             (isAway && (oName === '2' || oHeader === '2'));
+            
+            const handicapMatch = oHandicap && (
+              (type === 'over' && oHandicap.toLowerCase().startsWith('over') && oHandicap.includes(value)) ||
+              (type === 'under' && oHandicap.toLowerCase().startsWith('under') && oHandicap.includes(value))
+            );
+            
+            return teamMatch && handicapMatch;
+          });
+          if (item && item.odds) return item.odds;
+        }
+        
+        // Cerca anche in half.sp.1st_half_team_total_goals
+        const half1stHalfTeam = quote.half?.sp?.['1st_half_team_total_goals'] || {};
+        if (Array.isArray(half1stHalfTeam)) {
+          const item = half1stHalfTeam.find(o => {
+            const oName = String(o.name || '').trim();
+            const oHeader = String(o.header || '').trim();
+            const oHandicap = String(o.handicap || '').trim();
+            
+            const teamMatch = (isHome && (oName === '1' || oHeader === '1')) || 
+                             (isAway && (oName === '2' || oHeader === '2'));
+            
+            const handicapMatch = oHandicap && (
+              (type === 'over' && oHandicap.toLowerCase().startsWith('over') && oHandicap.includes(value)) ||
+              (type === 'under' && oHandicap.toLowerCase().startsWith('under') && oHandicap.includes(value))
+            );
+            
+            return teamMatch && handicapMatch;
+          });
+          if (item && item.odds) return item.odds;
+        } else if (half1stHalfTeam.odds && Array.isArray(half1stHalfTeam.odds)) {
+          const item = half1stHalfTeam.odds.find(o => {
+            const oName = String(o.name || '').trim();
+            const oHeader = String(o.header || '').trim();
+            const oHandicap = String(o.handicap || '').trim();
+            
+            const teamMatch = (isHome && (oName === '1' || oHeader === '1')) || 
+                             (isAway && (oName === '2' || oHeader === '2'));
+            
+            const handicapMatch = oHandicap && (
+              (type === 'over' && oHandicap.toLowerCase().startsWith('over') && oHandicap.includes(value)) ||
+              (type === 'under' && oHandicap.toLowerCase().startsWith('under') && oHandicap.includes(value))
+            );
+            
+            return teamMatch && handicapMatch;
+          });
+          if (item && item.odds) return item.odds;
+        }
+        
+        // Cerca anche in chiavi specifiche per home/away team 1st half
+        const specificKeys = isHome 
+          ? ['1st_half_home_team_total_goals', 'home_team_1st_half_goals', '1st_half_home_team_goals', 
+             'home_team_1st_half_goals_over_under', '1st_half_home_team_goals_over_under']
+          : ['1st_half_away_team_total_goals', 'away_team_1st_half_goals', '1st_half_away_team_goals',
+             'away_team_1st_half_goals_over_under', '1st_half_away_team_goals_over_under'];
+        
+        for (const key of specificKeys) {
+          // Cerca direttamente in quote[key]
+          if (quote[key] && Array.isArray(quote[key])) {
+            const item = quote[key].find(o => {
+              const oName = String(o.name || '').trim();
+              const oHeader = String(o.header || '').toLowerCase().trim();
+              return (oName === value || oName.replace(',', '.') === value) && oHeader === type;
+            });
+            if (item && item.odds) return item.odds;
+          }
+          
+          // Cerca in goals.sp[key]
+          const goalsData = quote.goals?.sp?.[key] || {};
+          if (Array.isArray(goalsData)) {
+            const item = goalsData.find(o => {
+              const oName = String(o.name || '').trim();
+              const oHeader = String(o.header || '').toLowerCase().trim();
+              return (oName === value || oName.replace(',', '.') === value) && oHeader === type;
+            });
+            if (item && item.odds) return item.odds;
+          } else if (goalsData.odds && Array.isArray(goalsData.odds)) {
+            const item = goalsData.odds.find(o => {
+              const oName = String(o.name || '').trim();
+              const oHeader = String(o.header || '').toLowerCase().trim();
+              return (oName === value || oName.replace(',', '.') === value) && oHeader === type;
+            });
+            if (item && item.odds) return item.odds;
+          }
+          
+          // Cerca in half.sp[key]
+          const halfData = quote.half?.sp?.[key] || {};
+          if (Array.isArray(halfData)) {
+            const item = halfData.find(o => {
+              const oName = String(o.name || '').trim();
+              const oHeader = String(o.header || '').toLowerCase().trim();
+              return (oName === value || oName.replace(',', '.') === value) && oHeader === type;
+            });
+            if (item && item.odds) return item.odds;
+          } else if (halfData.odds && Array.isArray(halfData.odds)) {
+            const item = halfData.odds.find(o => {
+              const oName = String(o.name || '').trim();
+              const oHeader = String(o.header || '').toLowerCase().trim();
+              return (oName === value || oName.replace(',', '.') === value) && oHeader === type;
+            });
+            if (item && item.odds) return item.odds;
+          }
+        }
+      }
+      
+      // Lista di possibili chiavi da cercare
+      const possibleKeys = [];
+      
+      if (!isFirstHalf) {
+        // Per match completo
+        if (isHome) {
+          possibleKeys.push('home_team_total_goals', 'home_team_goals', 'home_team_over_under', 'home_team_goals_over_under',
+                           'team_total_goals', 'home_team_goal_line', 'home_team_alternative_goal_line');
+        } else {
+          possibleKeys.push('away_team_total_goals', 'away_team_goals', 'away_team_over_under', 'away_team_goals_over_under',
+                           'team_total_goals', 'away_team_goal_line', 'away_team_alternative_goal_line');
+        }
+      } else {
+        // Per primo tempo
+        if (isHome) {
+          possibleKeys.push('1st_half_home_team_total_goals', 'home_team_1st_half_goals', '1st_half_home_team_goals', 
+                           'home_team_1st_half_goals_over_under', '1st_half_home_team_goals_over_under',
+                           '1st_half_team_total_goals', 'home_team_1st_half_goal_line');
+        } else {
+          possibleKeys.push('1st_half_away_team_total_goals', 'away_team_1st_half_goals', '1st_half_away_team_goals',
+                           'away_team_1st_half_goals_over_under', '1st_half_away_team_goals_over_under',
+                           '1st_half_team_total_goals', 'away_team_1st_half_goal_line');
+        }
+      }
+      
+      // Cerca direttamente nel quote object
+      for (const key of possibleKeys) {
+        if (quote[key] && Array.isArray(quote[key])) {
+          const item = quote[key].find(o => {
+            const oName = String(o.name || '').trim();
+            const oHeader = String(o.header || '').trim();
+            const oHandicap = String(o.handicap || '').trim();
+            
+            // Per team_total_goals, la struttura è: name/header = "1" o "2" (squadra), handicap = "Over 0.5", "Under 0.5", ecc.
+            if (key === 'team_total_goals' || key === '1st_half_team_total_goals') {
+              // Verifica che sia per la squadra corretta (1 = casa, 2 = ospite)
+              const teamMatch = (isHome && (oName === '1' || oHeader === '1')) || 
+                               (isAway && (oName === '2' || oHeader === '2'));
+              
+              // Verifica che l'handicap corrisponda (es. "Over 0.5", "Under 1.5")
+              const handicapMatch = oHandicap && (
+                (type === 'over' && oHandicap.toLowerCase().startsWith('over') && oHandicap.includes(value)) ||
+                (type === 'under' && oHandicap.toLowerCase().startsWith('under') && oHandicap.includes(value))
+              );
+              
+              return teamMatch && handicapMatch;
+            }
+            
+            // Per altre chiavi, usa la logica normale
+            return (oName === value || oName.replace(',', '.') === value) && oHeader === type;
+          });
+          if (item && item.odds) return item.odds;
+        }
+      }
+      
+      // Cerca in goals.sp
+      for (const key of possibleKeys) {
+        const goalsData = quote.goals?.sp?.[key] || {};
+        if (Array.isArray(goalsData)) {
+          const item = goalsData.find(o => {
+            const oName = String(o.name || '').trim();
+            const oHeader = String(o.header || '').trim();
+            const oHandicap = String(o.handicap || '').trim();
+            
+            // Per team_total_goals, usa la struttura speciale
+            if (key === 'team_total_goals' || key === '1st_half_team_total_goals') {
+              const teamMatch = (isHome && (oName === '1' || oHeader === '1')) || 
+                               (isAway && (oName === '2' || oHeader === '2'));
+              const handicapMatch = oHandicap && (
+                (type === 'over' && oHandicap.toLowerCase().startsWith('over') && oHandicap.includes(value)) ||
+                (type === 'under' && oHandicap.toLowerCase().startsWith('under') && oHandicap.includes(value))
+              );
+              return teamMatch && handicapMatch;
+            }
+            
+            return (oName === value || oName.replace(',', '.') === value) && oHeader === type;
+          });
+          if (item && item.odds) return item.odds;
+        } else if (goalsData.odds && Array.isArray(goalsData.odds)) {
+          const item = goalsData.odds.find(o => {
+            const oName = String(o.name || '').trim();
+            const oHeader = String(o.header || '').trim();
+            const oHandicap = String(o.handicap || '').trim();
+            
+            if (key === 'team_total_goals' || key === '1st_half_team_total_goals') {
+              const teamMatch = (isHome && (oName === '1' || oHeader === '1')) || 
+                               (isAway && (oName === '2' || oHeader === '2'));
+              const handicapMatch = oHandicap && (
+                (type === 'over' && oHandicap.toLowerCase().startsWith('over') && oHandicap.includes(value)) ||
+                (type === 'under' && oHandicap.toLowerCase().startsWith('under') && oHandicap.includes(value))
+              );
+              return teamMatch && handicapMatch;
+            }
+            
+            return (oName === value || oName.replace(',', '.') === value) && oHeader === type;
+          });
+          if (item && item.odds) return item.odds;
+        }
+      }
+      
+      // Cerca in main.sp
+      for (const key of possibleKeys) {
+        const mainData = quote.main?.sp?.[key] || {};
+        if (Array.isArray(mainData)) {
+          const item = mainData.find(o => {
+            const oName = String(o.name || '').trim();
+            const oHeader = String(o.header || '').trim();
+            const oHandicap = String(o.handicap || '').trim();
+            
+            if (key === 'team_total_goals' || key === '1st_half_team_total_goals') {
+              const teamMatch = (isHome && (oName === '1' || oHeader === '1')) || 
+                               (isAway && (oName === '2' || oHeader === '2'));
+              const handicapMatch = oHandicap && (
+                (type === 'over' && oHandicap.toLowerCase().startsWith('over') && oHandicap.includes(value)) ||
+                (type === 'under' && oHandicap.toLowerCase().startsWith('under') && oHandicap.includes(value))
+              );
+              return teamMatch && handicapMatch;
+            }
+            
+            return (oName === value || oName.replace(',', '.') === value) && oHeader === type;
+          });
+          if (item && item.odds) return item.odds;
+        } else if (mainData.odds && Array.isArray(mainData.odds)) {
+          const item = mainData.odds.find(o => {
+            const oName = String(o.name || '').trim();
+            const oHeader = String(o.header || '').trim();
+            const oHandicap = String(o.handicap || '').trim();
+            
+            if (key === 'team_total_goals' || key === '1st_half_team_total_goals') {
+              const teamMatch = (isHome && (oName === '1' || oHeader === '1')) || 
+                               (isAway && (oName === '2' || oHeader === '2'));
+              const handicapMatch = oHandicap && (
+                (type === 'over' && oHandicap.toLowerCase().startsWith('over') && oHandicap.includes(value)) ||
+                (type === 'under' && oHandicap.toLowerCase().startsWith('under') && oHandicap.includes(value))
+              );
+              return teamMatch && handicapMatch;
+            }
+            
+            return (oName === value || oName.replace(',', '.') === value) && oHeader === type;
+          });
+          if (item && item.odds) return item.odds;
+        }
+      }
+      
+      // Cerca in others[x].sp - Itera su tutti gli others e cerca in tutte le chiavi possibili
+      if (quote.others && Array.isArray(quote.others)) {
+        for (const other of quote.others) {
+          if (other.sp) {
+            for (const key of possibleKeys) {
+              if (other.sp[key]) {
+                const teamData = other.sp[key];
+                if (Array.isArray(teamData)) {
+                  const item = teamData.find(o => {
+                    const oName = String(o.name || '').trim();
+                    const oHeader = String(o.header || '').trim();
+                    const oHandicap = String(o.handicap || '').trim();
+                    
+                    if (key === 'team_total_goals' || key === '1st_half_team_total_goals') {
+                      const teamMatch = (isHome && (oName === '1' || oHeader === '1')) || 
+                                       (isAway && (oName === '2' || oHeader === '2'));
+                      const handicapMatch = oHandicap && (
+                        (type === 'over' && oHandicap.toLowerCase().startsWith('over') && oHandicap.includes(value)) ||
+                        (type === 'under' && oHandicap.toLowerCase().startsWith('under') && oHandicap.includes(value))
+                      );
+                      return teamMatch && handicapMatch;
+                    }
+                    
+                    return (oName === value || oName.replace(',', '.') === value) && oHeader === type;
+                  });
+                  if (item && item.odds) return item.odds;
+                } else if (teamData.odds && Array.isArray(teamData.odds)) {
+                  const item = teamData.odds.find(o => {
+                    const oName = String(o.name || '').trim();
+                    const oHeader = String(o.header || '').trim();
+                    const oHandicap = String(o.handicap || '').trim();
+                    
+                    if (key === 'team_total_goals' || key === '1st_half_team_total_goals') {
+                      const teamMatch = (isHome && (oName === '1' || oHeader === '1')) || 
+                                       (isAway && (oName === '2' || oHeader === '2'));
+                      const handicapMatch = oHandicap && (
+                        (type === 'over' && oHandicap.toLowerCase().startsWith('over') && oHandicap.includes(value)) ||
+                        (type === 'under' && oHandicap.toLowerCase().startsWith('under') && oHandicap.includes(value))
+                      );
+                      return teamMatch && handicapMatch;
+                    }
+                    
+                    return (oName === value || oName.replace(',', '.') === value) && oHeader === type;
+                  });
+                  if (item && item.odds) return item.odds;
+                }
+              }
+            }
+            
+            // 🔹 Cerca PRIMA in others[x].sp per chiavi specifiche del primo tempo
+            if (isFirstHalf) {
+              // Cerca in others[x].sp.1st_half_team_total_goals
+              if (other.sp['1st_half_team_total_goals'] && Array.isArray(other.sp['1st_half_team_total_goals'])) {
+                const item = other.sp['1st_half_team_total_goals'].find(o => {
+                  const oName = String(o.name || '').trim();
+                  const oHeader = String(o.header || '').trim();
+                  const oHandicap = String(o.handicap || '').trim();
+                  
+                  const teamMatch = (isHome && (oName === '1' || oHeader === '1')) || 
+                                   (isAway && (oName === '2' || oHeader === '2'));
+                  
+                  const handicapMatch = oHandicap && (
+                    (type === 'over' && oHandicap.toLowerCase().startsWith('over') && oHandicap.includes(value)) ||
+                    (type === 'under' && oHandicap.toLowerCase().startsWith('under') && oHandicap.includes(value))
+                  );
+                  
+                  return teamMatch && handicapMatch;
+                });
+                if (item && item.odds) return item.odds;
+              }
+              
+              // Cerca anche in chiavi specifiche per home/away team 1st half in others[x].sp
+              const specificKeysOthers = isHome 
+                ? ['1st_half_home_team_total_goals', 'home_team_1st_half_goals', '1st_half_home_team_goals', 
+                   'home_team_1st_half_goals_over_under', '1st_half_home_team_goals_over_under']
+                : ['1st_half_away_team_total_goals', 'away_team_1st_half_goals', '1st_half_away_team_goals',
+                   'away_team_1st_half_goals_over_under', '1st_half_away_team_goals_over_under'];
+              
+              for (const key of specificKeysOthers) {
+                if (other.sp[key]) {
+                  const teamData = other.sp[key];
+                  if (Array.isArray(teamData)) {
+                    const item = teamData.find(o => {
+                      const oName = String(o.name || '').trim();
+                      const oHeader = String(o.header || '').toLowerCase().trim();
+                      return (oName === value || oName.replace(',', '.') === value) && oHeader === type;
+                    });
+                    if (item && item.odds) return item.odds;
+                  } else if (teamData && teamData.odds && Array.isArray(teamData.odds)) {
+                    const item = teamData.odds.find(o => {
+                      const oName = String(o.name || '').trim();
+                      const oHeader = String(o.header || '').toLowerCase().trim();
+                      return (oName === value || oName.replace(',', '.') === value) && oHeader === type;
+                    });
+                    if (item && item.odds) return item.odds;
+                  }
+                }
+              }
+            }
+            
+            // Cerca anche in tutte le chiavi che contengono "home" o "away" e "goals"
+            for (const spKey in other.sp) {
+              if (typeof spKey === 'string') {
+                const keyLower = spKey.toLowerCase();
+                const isTeamKey = (isHome && (keyLower.includes('home') || keyLower.includes('casa'))) ||
+                                 (isAway && (keyLower.includes('away') || keyLower.includes('ospite')));
+                const hasGoals = keyLower.includes('goal');
+                const hasOverUnder = keyLower.includes('over') || keyLower.includes('under') || keyLower.includes('total');
+                const hasFirstHalf = keyLower.includes('1st_half') || keyLower.includes('first_half') || keyLower.includes('1st') || keyLower.includes('half');
+                
+                // Per il primo tempo, cerca chiavi che contengono "1st_half" o "first_half"
+                // Per il match completo, cerca chiavi che NON contengono "1st_half" o "2nd_half"
+                const isFirstHalfKey = hasFirstHalf && !keyLower.includes('2nd_half') && !keyLower.includes('second_half');
+                const isFullMatchKey = !hasFirstHalf && !keyLower.includes('2nd_half') && !keyLower.includes('second_half');
+                
+                const timeMatch = isFirstHalf ? isFirstHalfKey : isFullMatchKey;
+                
+                if (isTeamKey && hasGoals && (hasOverUnder || !isFirstHalf) && timeMatch) {
+                  const teamData = other.sp[spKey];
+                  
+                  // Se è team_total_goals o 1st_half_team_total_goals, usa la struttura speciale
+                  if (spKey === 'team_total_goals' || spKey === '1st_half_team_total_goals') {
+                    if (Array.isArray(teamData)) {
+                      const item = teamData.find(o => {
+                        const oName = String(o.name || '').trim();
+                        const oHeader = String(o.header || '').trim();
+                        const oHandicap = String(o.handicap || '').trim();
+                        
+                        const teamMatch = (isHome && (oName === '1' || oHeader === '1')) || 
+                                         (isAway && (oName === '2' || oHeader === '2'));
+                        const handicapMatch = oHandicap && (
+                          (type === 'over' && oHandicap.toLowerCase().startsWith('over') && oHandicap.includes(value)) ||
+                          (type === 'under' && oHandicap.toLowerCase().startsWith('under') && oHandicap.includes(value))
+                        );
+                        return teamMatch && handicapMatch;
+                      });
+                      if (item && item.odds) return item.odds;
+                    } else if (teamData && teamData.odds && Array.isArray(teamData.odds)) {
+                      const item = teamData.odds.find(o => {
+                        const oName = String(o.name || '').trim();
+                        const oHeader = String(o.header || '').trim();
+                        const oHandicap = String(o.handicap || '').trim();
+                        
+                        const teamMatch = (isHome && (oName === '1' || oHeader === '1')) || 
+                                         (isAway && (oName === '2' || oHeader === '2'));
+                        const handicapMatch = oHandicap && (
+                          (type === 'over' && oHandicap.toLowerCase().startsWith('over') && oHandicap.includes(value)) ||
+                          (type === 'under' && oHandicap.toLowerCase().startsWith('under') && oHandicap.includes(value))
+                        );
+                        return teamMatch && handicapMatch;
+                      });
+                      if (item && item.odds) return item.odds;
+                    }
+                  } else {
+                    // Per altre chiavi, usa la logica normale
+                    if (Array.isArray(teamData)) {
+                      const item = teamData.find(o => {
+                        const oName = String(o.name || '').trim();
+                        const oHeader = (o.header || '').toLowerCase().trim();
+                        return (oName === value || oName.replace(',', '.') === value) && oHeader === type;
+                      });
+                      if (item && item.odds) return item.odds;
+                    } else if (teamData && teamData.odds && Array.isArray(teamData.odds)) {
+                      const item = teamData.odds.find(o => {
+                        const oName = String(o.name || '').trim();
+                        const oHeader = (o.header || '').toLowerCase().trim();
+                        return (oName === value || oName.replace(',', '.') === value) && oHeader === type;
+                      });
+                      if (item && item.odds) return item.odds;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      return null;
+    }
+    
+    function getOverUnderQuota(quote, col, isFirstHalf = false, isSecondHalf = false) {
       if (!quote) return null;
       
       // Estrai il valore (es. "2.5" da "Over 2.5" o "Under 2.5")
@@ -1756,10 +2293,194 @@
       const type = match[1].toLowerCase(); // "over" o "under"
       const value = match[2]; // "2.5", "1.5", etc.
       
-      // Prima cerca in goals.sp.goals_over_under (percorso principale)
+      // Per O/U 2T, cerca prima in 2nd_half_goals_over_under (percorso MongoDB diretto da bet365.py)
+      if (isSecondHalf) {
+        // Prima cerca in quote.2nd_half_goals_over_under (percorso MongoDB diretto)
+        if (quote['2nd_half_goals_over_under'] && Array.isArray(quote['2nd_half_goals_over_under'])) {
+          const item = quote['2nd_half_goals_over_under'].find(o => {
+            const oName = String(o.name || '').trim();
+            const oHeader = (o.header || '').toLowerCase().trim();
+            return oName === value && oHeader === type;
+          });
+          if (item && item.odds) return item.odds;
+        }
+        
+        // Cerca anche in quote.2nd_half_goals (percorso MongoDB diretto)
+        if (quote['2nd_half_goals'] && Array.isArray(quote['2nd_half_goals'])) {
+          const item = quote['2nd_half_goals'].find(o => {
+            const oName = String(o.name || '').trim();
+            const oHeader = (o.header || '').toLowerCase().trim();
+            return oName === value && oHeader === type;
+          });
+          if (item && item.odds) return item.odds;
+        }
+        
+        // Cerca anche in quote.2nd_half_goals_range (percorso MongoDB)
+        if (quote['2nd_half_goals_range'] && Array.isArray(quote['2nd_half_goals_range'])) {
+          const item = quote['2nd_half_goals_range'].find(o => {
+            const oName = String(o.name || '').trim();
+            const oHeader = (o.header || '').toLowerCase().trim();
+            return oName === value && oHeader === type;
+          });
+          if (item && item.odds) return item.odds;
+        }
+        
+        // Cerca anche in others[x].sp.2nd_half_goals (percorso finale come in soccer.py)
+        if (quote.others && Array.isArray(quote.others)) {
+          for (const other of quote.others) {
+            // Cerca in 2nd_half_goals (percorso finale)
+            if (other.sp && other.sp['2nd_half_goals']) {
+              const secondHalfGoals = other.sp['2nd_half_goals'];
+              if (Array.isArray(secondHalfGoals)) {
+                const item = secondHalfGoals.find(o => {
+                  const oName = String(o.name || '').trim();
+                  const oHeader = (o.header || '').toLowerCase().trim();
+                  return oName === value && oHeader === type;
+                });
+                if (item && item.odds) return item.odds;
+              }
+            }
+          }
+        }
+        
+        // Cerca anche in goals.sp.2nd_half_goals
+        const goalsSecondHalf = quote.goals?.sp?.['2nd_half_goals'] || {};
+        if (Array.isArray(goalsSecondHalf)) {
+          const item = goalsSecondHalf.find(o => {
+            const oName = String(o.name || '').trim();
+            const oHeader = (o.header || '').toLowerCase().trim();
+            return oName === value && oHeader === type;
+          });
+          if (item && item.odds) return item.odds;
+        }
+      }
+      
+      // Per O/U 1T, cerca prima in 1st_half_goals_over_under (percorso MongoDB diretto da bet365.py)
+      if (isFirstHalf) {
+        // Prima cerca in quote.1st_half_goals_over_under (percorso MongoDB diretto)
+        if (quote['1st_half_goals_over_under'] && Array.isArray(quote['1st_half_goals_over_under'])) {
+          const item = quote['1st_half_goals_over_under'].find(o => {
+            const oName = String(o.name || '').trim();
+            const oHeader = (o.header || '').toLowerCase().trim();
+            return oName === value && oHeader === type;
+          });
+          if (item && item.odds) return item.odds;
+        }
+        
+        // Cerca anche in quote.first_half_goals (percorso MongoDB diretto)
+        if (quote['first_half_goals'] && Array.isArray(quote['first_half_goals'])) {
+          const item = quote['first_half_goals'].find(o => {
+            const oName = String(o.name || '').trim();
+            const oHeader = (o.header || '').toLowerCase().trim();
+            return oName === value && oHeader === type;
+          });
+          if (item && item.odds) return item.odds;
+        }
+        
+        // Cerca anche in quote.1st_half_goals (variante)
+        if (quote['1st_half_goals'] && Array.isArray(quote['1st_half_goals'])) {
+          const item = quote['1st_half_goals'].find(o => {
+            const oName = String(o.name || '').trim();
+            const oHeader = (o.header || '').toLowerCase().trim();
+            return oName === value && oHeader === type;
+          });
+          if (item && item.odds) return item.odds;
+        }
+        
+        // Cerca anche in quote.1st_half_goals_range (percorso MongoDB)
+        if (quote['1st_half_goals_range'] && Array.isArray(quote['1st_half_goals_range'])) {
+          const item = quote['1st_half_goals_range'].find(o => {
+            const oName = String(o.name || '').trim();
+            const oHeader = (o.header || '').toLowerCase().trim();
+            return oName === value && oHeader === type;
+          });
+          if (item && item.odds) return item.odds;
+        }
+        
+        // Cerca anche in others[x].sp.first_half_goals (percorso finale come in soccer.py)
+        if (quote.others && Array.isArray(quote.others)) {
+          for (const other of quote.others) {
+            // Cerca in first_half_goals (percorso finale)
+            if (other.sp && other.sp['first_half_goals']) {
+              const firstHalfGoals = other.sp['first_half_goals'];
+              if (Array.isArray(firstHalfGoals)) {
+                const item = firstHalfGoals.find(o => {
+                  const oName = String(o.name || '').trim();
+                  const oHeader = (o.header || '').toLowerCase().trim();
+                  return oName === value && oHeader === type;
+                });
+                if (item && item.odds) return item.odds;
+              }
+            }
+            
+            // Cerca anche in 1st_half_goals (variante)
+            if (other.sp && other.sp['1st_half_goals']) {
+              const firstHalfGoals = other.sp['1st_half_goals'];
+              if (Array.isArray(firstHalfGoals)) {
+                const item = firstHalfGoals.find(o => {
+                  const oName = String(o.name || '').trim();
+                  const oHeader = (o.header || '').toLowerCase().trim();
+                  return oName === value && oHeader === type;
+                });
+                if (item && item.odds) return item.odds;
+              }
+            }
+            
+            // Cerca anche in alternative_1st_half_goal_line
+            if (other.sp && other.sp['alternative_1st_half_goal_line']) {
+              const alt1stHalf = other.sp['alternative_1st_half_goal_line'];
+              if (alt1stHalf.odds && Array.isArray(alt1stHalf.odds)) {
+                const item = alt1stHalf.odds.find(o => {
+                  const oName = String(o.name || '').trim();
+                  const oHeader = (o.header || '').toLowerCase().trim();
+                  // Cerca solo per 0.5, 1.5, 2.5, 3.5 (gestisce anche formati con virgola)
+                  const normalizedName = oName.replace(',', '.');
+                  return normalizedName === value && oHeader === type;
+                });
+                if (item && item.odds) return item.odds;
+              }
+            }
+          }
+        }
+        
+        // Cerca anche in goals.sp.first_half_goals
+        const goalsFirstHalf = quote.goals?.sp?.first_half_goals || {};
+        if (Array.isArray(goalsFirstHalf)) {
+          const item = goalsFirstHalf.find(o => {
+            const oName = String(o.name || '').trim();
+            const oHeader = (o.header || '').toLowerCase().trim();
+            return oName === value && oHeader === type;
+          });
+          if (item && item.odds) return item.odds;
+        }
+        
+        // Cerca anche in goals.sp.alternative_1st_half_goal_line
+        const alt1stHalfGoals = quote.goals?.sp?.alternative_1st_half_goal_line || {};
+        if (alt1stHalfGoals.odds && Array.isArray(alt1stHalfGoals.odds)) {
+          const item = alt1stHalfGoals.odds.find(o => {
+            const oName = String(o.name || '').trim();
+            const oHeader = (o.header || '').toLowerCase().trim();
+            // Cerca solo per 0.5, 1.5, 2.5, 3.5 (gestisce anche formati con virgola)
+            const normalizedName = oName.replace(',', '.');
+            return normalizedName === value && oHeader === type;
+          });
+          if (item && item.odds) return item.odds;
+        }
+      }
+      
+      // Prima cerca in quote.goals_over_under (percorso MongoDB diretto)
+      if (quote.goals_over_under && Array.isArray(quote.goals_over_under)) {
+        const item = quote.goals_over_under.find(o => {
+          const oName = String(o.name || '').trim();
+          const oHeader = (o.header || '').toLowerCase().trim();
+          return oName === value && oHeader === type;
+        });
+        if (item && item.odds) return item.odds;
+      }
+      
+      // Cerca anche in goals.sp.goals_over_under (percorso principale)
       const goalsOU = quote.goals?.sp?.goals_over_under || 
-                     quote.main?.sp?.goals_over_under || 
-                     quote.goals_over_under || {};
+                     quote.main?.sp?.goals_over_under || {};
       
       if (Array.isArray(goalsOU)) {
         const item = goalsOU.find(o => {
@@ -2240,31 +2961,6 @@
       return null;
     }
 
-    // Helper per estrarre quote Sosituzioni
-    function getSubstitutionsQuota(quote, col) {
-      if (!quote) return null;
-      
-      const match = col.match(/(Over|Under)\s*(\d+\.?\d*)/i);
-      if (!match) return null;
-      
-      const type = match[1].toLowerCase();
-      const value = match[2];
-      
-      const substitutions = quote.main?.sp?.substitutions || 
-                           quote.others?.find(o => o.sp?.substitutions)?.sp?.substitutions || {};
-      
-      if (Array.isArray(substitutions)) {
-        const item = substitutions.find(o => {
-          const oName = String(o.name || '').trim();
-          const oHeader = (o.header || '').toLowerCase().trim();
-          return oName === value && oHeader === type;
-        });
-        if (item && item.odds) return item.odds;
-      }
-      
-      return null;
-    }
-
     // Helper per estrarre quote Segna (Goalscorers)
     function getGoalscorersQuota(quote, col, headerType = 'Anytime') {
       if (!quote) return null;
@@ -2398,19 +3094,327 @@
       return null;
     }
 
-    // Helper per estrarre quote Speciali Gol
+    // Helper per estrarre quote Tempo 1°sub (valori fissi)
+    function getTempoPrimoSubQuota(quote, col) {
+      if (!quote) return null;
+      
+      const colLower = col.toLowerCase();
+      
+      // Valori fissi per Tempo 1°sub
+      const tempoSubQuotes = {
+        '1° tempo': '3.5',
+        '1 tempo': '3.5',
+        '2° tempo': '1.9',
+        '2 tempo': '1.9',
+        'break': '2.2',
+        'no sub': '100'
+      };
+      
+      // Cerca corrispondenza (anche parziale)
+      for (const [key, value] of Object.entries(tempoSubQuotes)) {
+        if (colLower.includes(key) || key.includes(colLower)) {
+          return value;
+        }
+      }
+      
+      return null;
+    }
+
+    // Helper per estrarre quote Team 1° sub (valori fissi)
+    function getTeamPrimoSubQuota(quote, col) {
+      if (!quote) return null;
+      
+      const colLower = col.toLowerCase();
+      
+      // Valori fissi per Team 1° sub
+      const teamSubQuotes = {
+        'casa': '1.8',
+        'ospite': '1.8',
+        'altro': '3'
+      };
+      
+      // Cerca corrispondenza (anche parziale)
+      for (const [key, value] of Object.entries(teamSubQuotes)) {
+        if (colLower.includes(key) || key.includes(colLower)) {
+          return value;
+        }
+      }
+      
+      return null;
+    }
+
+    // Helper per estrarre quote 1X2 1T (primo tempo)
+    function get1X2FirstHalfQuota(quote, col) {
+      if (!quote) return null;
+      
+      // Mappa colonna a valori possibili
+      const colMap = {
+        '1': ['1', 'Home'],
+        'X': ['X', 'Draw', 'Tie'],
+        '2': ['2', 'Away']
+      };
+      
+      const searchValues = colMap[col] || [col];
+      
+      // Cerca in half_time_result (percorso diretto MongoDB)
+      if (quote.half_time_result && Array.isArray(quote.half_time_result)) {
+        for (const val of searchValues) {
+          const item = quote.half_time_result.find(o => {
+            const oName = String(o.name || '').trim();
+            const oHeader = String(o.header || '').trim();
+            return oName === val || oHeader === val || 
+                   (col === '1' && (oName === '1' || oHeader === '1')) ||
+                   (col === 'X' && (oName.toLowerCase() === 'draw' || oName.toLowerCase() === 'tie' || oHeader.toLowerCase() === 'draw' || oHeader.toLowerCase() === 'tie')) ||
+                   (col === '2' && (oName === '2' || oHeader === '2'));
+          });
+          if (item && item.odds) return item.odds;
+        }
+      }
+      
+      // Cerca in half.sp.half_time_result
+      if (quote.half?.sp?.half_time_result) {
+        const halfTimeResult = quote.half.sp.half_time_result;
+        if (Array.isArray(halfTimeResult)) {
+          for (const val of searchValues) {
+            const item = halfTimeResult.find(o => {
+              const oName = String(o.name || '').trim();
+              const oHeader = String(o.header || '').trim();
+              return oName === val || oHeader === val || 
+                     (col === '1' && (oName === '1' || oHeader === '1')) ||
+                     (col === 'X' && (oName.toLowerCase() === 'draw' || oName.toLowerCase() === 'tie' || oHeader.toLowerCase() === 'draw' || oHeader.toLowerCase() === 'tie')) ||
+                     (col === '2' && (oName === '2' || oHeader === '2'));
+            });
+            if (item && item.odds) return item.odds;
+          }
+        } else if (halfTimeResult.odds && Array.isArray(halfTimeResult.odds)) {
+          for (const val of searchValues) {
+            const item = halfTimeResult.odds.find(o => {
+              const oName = String(o.name || '').trim();
+              const oHeader = String(o.header || '').trim();
+              return oName === val || oHeader === val || 
+                     (col === '1' && (oName === '1' || oHeader === '1')) ||
+                     (col === 'X' && (oName.toLowerCase() === 'draw' || oName.toLowerCase() === 'tie' || oHeader.toLowerCase() === 'draw' || oHeader.toLowerCase() === 'tie')) ||
+                     (col === '2' && (oName === '2' || oHeader === '2'));
+            });
+            if (item && item.odds) return item.odds;
+          }
+        }
+      }
+      
+      // Cerca in main.sp.half_time_result
+      if (quote.main?.sp?.half_time_result) {
+        const mainHalfTime = quote.main.sp.half_time_result;
+        if (Array.isArray(mainHalfTime)) {
+          for (const val of searchValues) {
+            const item = mainHalfTime.find(o => {
+              const oName = String(o.name || '').trim();
+              const oHeader = String(o.header || '').trim();
+              return oName === val || oHeader === val || 
+                     (col === '1' && (oName === '1' || oHeader === '1')) ||
+                     (col === 'X' && (oName.toLowerCase() === 'draw' || oName.toLowerCase() === 'tie' || oHeader.toLowerCase() === 'draw' || oHeader.toLowerCase() === 'tie')) ||
+                     (col === '2' && (oName === '2' || oHeader === '2'));
+            });
+            if (item && item.odds) return item.odds;
+          }
+        } else if (mainHalfTime.odds && Array.isArray(mainHalfTime.odds)) {
+          for (const val of searchValues) {
+            const item = mainHalfTime.odds.find(o => {
+              const oName = String(o.name || '').trim();
+              const oHeader = String(o.header || '').trim();
+              return oName === val || oHeader === val || 
+                     (col === '1' && (oName === '1' || oHeader === '1')) ||
+                     (col === 'X' && (oName.toLowerCase() === 'draw' || oName.toLowerCase() === 'tie' || oHeader.toLowerCase() === 'draw' || oHeader.toLowerCase() === 'tie')) ||
+                     (col === '2' && (oName === '2' || oHeader === '2'));
+            });
+            if (item && item.odds) return item.odds;
+          }
+        }
+      }
+      
+      // Cerca in others[x].sp.half_time_result
+      if (quote.others && Array.isArray(quote.others)) {
+        for (const other of quote.others) {
+          if (other.sp && other.sp.half_time_result) {
+            const otherHalfTime = other.sp.half_time_result;
+            if (Array.isArray(otherHalfTime)) {
+              for (const val of searchValues) {
+                const item = otherHalfTime.find(o => {
+                  const oName = String(o.name || '').trim();
+                  const oHeader = String(o.header || '').trim();
+                  return oName === val || oHeader === val || 
+                         (col === '1' && (oName === '1' || oHeader === '1')) ||
+                         (col === 'X' && (oName.toLowerCase() === 'draw' || oName.toLowerCase() === 'tie' || oHeader.toLowerCase() === 'draw' || oHeader.toLowerCase() === 'tie')) ||
+                         (col === '2' && (oName === '2' || oHeader === '2'));
+                });
+                if (item && item.odds) return item.odds;
+              }
+            } else if (otherHalfTime.odds && Array.isArray(otherHalfTime.odds)) {
+              for (const val of searchValues) {
+                const item = otherHalfTime.odds.find(o => {
+                  const oName = String(o.name || '').trim();
+                  const oHeader = String(o.header || '').trim();
+                  return oName === val || oHeader === val || 
+                         (col === '1' && (oName === '1' || oHeader === '1')) ||
+                         (col === 'X' && (oName.toLowerCase() === 'draw' || oName.toLowerCase() === 'tie' || oHeader.toLowerCase() === 'draw' || oHeader.toLowerCase() === 'tie')) ||
+                         (col === '2' && (oName === '2' || oHeader === '2'));
+                });
+                if (item && item.odds) return item.odds;
+              }
+            }
+          }
+        }
+      }
+      
+      return null;
+    }
+
+    // Helper per estrarre quote 1X2 2T (secondo tempo)
+    function get1X2SecondHalfQuota(quote, col) {
+      if (!quote) return null;
+      
+      // Mappa colonna a valori possibili
+      const colMap = {
+        '1': ['1', 'Home'],
+        'X': ['X', 'Draw', 'Tie'],
+        '2': ['2', 'Away']
+      };
+      
+      const searchValues = colMap[col] || [col];
+      
+      // Cerca in 2nd_half_result (percorso diretto MongoDB)
+      if (quote['2nd_half_result'] && Array.isArray(quote['2nd_half_result'])) {
+        for (const val of searchValues) {
+          const item = quote['2nd_half_result'].find(o => {
+            const oName = String(o.name || '').trim();
+            const oHeader = String(o.header || '').trim();
+            return oName === val || oHeader === val || 
+                   (col === '1' && (oName === '1' || oHeader === '1')) ||
+                   (col === 'X' && (oName.toLowerCase() === 'draw' || oName.toLowerCase() === 'tie' || oHeader.toLowerCase() === 'draw' || oHeader.toLowerCase() === 'tie')) ||
+                   (col === '2' && (oName === '2' || oHeader === '2'));
+          });
+          if (item && item.odds) return item.odds;
+        }
+      }
+      
+      // Cerca in half.sp.2nd_half_result
+      if (quote.half?.sp?.['2nd_half_result']) {
+        const secondHalfResult = quote.half.sp['2nd_half_result'];
+        if (Array.isArray(secondHalfResult)) {
+          for (const val of searchValues) {
+            const item = secondHalfResult.find(o => {
+              const oName = String(o.name || '').trim();
+              const oHeader = String(o.header || '').trim();
+              return oName === val || oHeader === val || 
+                     (col === '1' && (oName === '1' || oHeader === '1')) ||
+                     (col === 'X' && (oName.toLowerCase() === 'draw' || oName.toLowerCase() === 'tie' || oHeader.toLowerCase() === 'draw' || oHeader.toLowerCase() === 'tie')) ||
+                     (col === '2' && (oName === '2' || oHeader === '2'));
+            });
+            if (item && item.odds) return item.odds;
+          }
+        } else if (secondHalfResult.odds && Array.isArray(secondHalfResult.odds)) {
+          for (const val of searchValues) {
+            const item = secondHalfResult.odds.find(o => {
+              const oName = String(o.name || '').trim();
+              const oHeader = String(o.header || '').trim();
+              return oName === val || oHeader === val || 
+                     (col === '1' && (oName === '1' || oHeader === '1')) ||
+                     (col === 'X' && (oName.toLowerCase() === 'draw' || oName.toLowerCase() === 'tie' || oHeader.toLowerCase() === 'draw' || oHeader.toLowerCase() === 'tie')) ||
+                     (col === '2' && (oName === '2' || oHeader === '2'));
+            });
+            if (item && item.odds) return item.odds;
+          }
+        }
+      }
+      
+      // Cerca in goals.sp.2nd_half_result
+      if (quote.goals?.sp?.['2nd_half_result']) {
+        const goalsSecondHalf = quote.goals.sp['2nd_half_result'];
+        if (Array.isArray(goalsSecondHalf)) {
+          for (const val of searchValues) {
+            const item = goalsSecondHalf.find(o => {
+              const oName = String(o.name || '').trim();
+              const oHeader = String(o.header || '').trim();
+              return oName === val || oHeader === val || 
+                     (col === '1' && (oName === '1' || oHeader === '1')) ||
+                     (col === 'X' && (oName.toLowerCase() === 'draw' || oName.toLowerCase() === 'tie' || oHeader.toLowerCase() === 'draw' || oHeader.toLowerCase() === 'tie')) ||
+                     (col === '2' && (oName === '2' || oHeader === '2'));
+            });
+            if (item && item.odds) return item.odds;
+          }
+        } else if (goalsSecondHalf.odds && Array.isArray(goalsSecondHalf.odds)) {
+          for (const val of searchValues) {
+            const item = goalsSecondHalf.odds.find(o => {
+              const oName = String(o.name || '').trim();
+              const oHeader = String(o.header || '').trim();
+              return oName === val || oHeader === val || 
+                     (col === '1' && (oName === '1' || oHeader === '1')) ||
+                     (col === 'X' && (oName.toLowerCase() === 'draw' || oName.toLowerCase() === 'tie' || oHeader.toLowerCase() === 'draw' || oHeader.toLowerCase() === 'tie')) ||
+                     (col === '2' && (oName === '2' || oHeader === '2'));
+            });
+            if (item && item.odds) return item.odds;
+          }
+        }
+      }
+      
+      // Cerca in others[x].sp.2nd_half_result
+      if (quote.others && Array.isArray(quote.others)) {
+        for (const other of quote.others) {
+          if (other.sp && other.sp['2nd_half_result']) {
+            const otherSecondHalf = other.sp['2nd_half_result'];
+            if (Array.isArray(otherSecondHalf)) {
+              for (const val of searchValues) {
+                const item = otherSecondHalf.find(o => {
+                  const oName = String(o.name || '').trim();
+                  const oHeader = String(o.header || '').trim();
+                  return oName === val || oHeader === val || 
+                         (col === '1' && (oName === '1' || oHeader === '1')) ||
+                         (col === 'X' && (oName.toLowerCase() === 'draw' || oName.toLowerCase() === 'tie' || oHeader.toLowerCase() === 'draw' || oHeader.toLowerCase() === 'tie')) ||
+                         (col === '2' && (oName === '2' || oHeader === '2'));
+                });
+                if (item && item.odds) return item.odds;
+              }
+            } else if (otherSecondHalf.odds && Array.isArray(otherSecondHalf.odds)) {
+              for (const val of searchValues) {
+                const item = otherSecondHalf.odds.find(o => {
+                  const oName = String(o.name || '').trim();
+                  const oHeader = String(o.header || '').trim();
+                  return oName === val || oHeader === val || 
+                         (col === '1' && (oName === '1' || oHeader === '1')) ||
+                         (col === 'X' && (oName.toLowerCase() === 'draw' || oName.toLowerCase() === 'tie' || oHeader.toLowerCase() === 'draw' || oHeader.toLowerCase() === 'tie')) ||
+                         (col === '2' && (oName === '2' || oHeader === '2'));
+                });
+                if (item && item.odds) return item.odds;
+              }
+            }
+          }
+        }
+      }
+      
+      return null;
+    }
+
+    // Helper per estrarre quote Speciali Gol (valori fissi)
     function getSpecialGoalsQuota(quote, col) {
       if (!quote) return null;
       
-      const specials = quote.main?.sp?.specials || 
-                      quote.others?.find(o => o.sp?.specials)?.sp?.specials || {};
+      const colLower = col.toLowerCase();
       
-      if (Array.isArray(specials)) {
-        const item = specials.find(o => {
-          const oName = String(o.name || '').trim();
-          return oName.toLowerCase().includes(col.toLowerCase());
-        });
-        if (item && item.odds) return item.odds;
+      // Valori fissi per Speciali Gol
+      const specialQuotes = {
+        'autorete': '9',
+        'sub segna': '2.5',
+        'gol da corner': '30',
+        'gol di testa': '3',
+        'pali': '1.8',
+        'gol oltre il 90°': '4',
+        'gol oltre il 90': '4'
+      };
+      
+      // Cerca corrispondenza (anche parziale)
+      for (const [key, value] of Object.entries(specialQuotes)) {
+        if (colLower.includes(key) || key.includes(colLower)) {
+          return value;
+        }
       }
       
       return null;
@@ -2572,13 +3576,15 @@
         case 'Over/Under':
           return ['Over 0.5', 'Under 0.5', 'Over 1.5', 'Under 1.5', 'Over 2.5', 'Under 2.5', 'Over 3.5', 'Under 3.5', 'Over 4.5', 'Under 4.5', 'Over 5.5', 'Under 5.5', 'Over 6.5', 'Under 6.5'];
         case 'O/U 1T':
-          return ['Over 0.5', 'Under 0.5', 'Over 1.5', 'Under 1.5', 'Over 2.5', 'Under 2.5'];
+          return ['Over 0.5', 'Under 0.5', 'Over 1.5', 'Under 1.5', 'Over 2.5', 'Under 2.5','Over 3.5','Under 3.5'];
         case 'O/U 2T':
-          return ['Over 0.5', 'Under 0.5', 'Over 1.5', 'Under 1.5', 'Over 2.5', 'Under 2.5'];
+          return ['Over 0.5', 'Under 0.5', 'Over 1.5', 'Under 1.5', 'Over 2.5', 'Under 2.5','Over 3.5','Under 3.5'];
         case 'O/U C/O':
-          return ['Over 0.5', 'Under 0.5', 'Over 1.5', 'Under 1.5', 'Over 2.5', 'Under 2.5', 'Over 3.5', 'Under 3.5'];
+          return ['Casa Over 0.5', 'Casa Under 0.5', 'Casa Over 1.5', 'Casa Under 1.5', 'Casa Over 2.5', 'Casa Under 2.5', 'Casa Over 3.5', 'Casa Under 3.5', 
+                  'Ospite Over 0.5', 'Ospite Under 0.5', 'Ospite Over 1.5', 'Ospite Under 1.5', 'Ospite Over 2.5', 'Ospite Under 2.5', 'Ospite Over 3.5', 'Ospite Under 3.5'];
         case 'O/U 1T C/O':
-          return ['Over 0.5', 'Under 0.5', 'Over 1.5', 'Under 1.5', 'Over 2.5', 'Under 2.5'];
+          return ['Casa Over 0.5', 'Casa Under 0.5', 'Casa Over 1.5', 'Casa Under 1.5', 'Casa Over 2.5', 'Casa Under 2.5', 'Casa Over 3.5', 'Casa Under 3.5',
+                  'Ospite Over 0.5', 'Ospite Under 0.5', 'Ospite Over 1.5', 'Ospite Under 1.5', 'Ospite Over 2.5', 'Ospite Under 2.5', 'Ospite Over 3.5', 'Ospite Under 3.5'];
         case 'Gol Totali':
           return ['GG', 'NG'];
         case 'GG/NG 1T':
@@ -2680,11 +3686,13 @@
         case 'Rigori':
           return ['Sì', 'No'];
         case 'Speciali Gol':
-          return ['Speciali'];
+          return ['Autorete', 'Sub segna', 'Gol da corner', 'Gol di testa', 'Pali', 'Gol oltre il 90°'];
         case 'Metodo 1° gol':
           return ['Tiro', 'Testa', 'Rigore', 'Punizione', 'Autogol'];
-        case 'Sosituzioni':
-          return ['Over', 'Under'];
+        case 'Tempo 1°sub':
+          return ['1° tempo', '2° tempo', 'Break', 'No sub'];
+        case 'Team 1° sub':
+          return ['Casa', 'Ospite', 'Altro'];
         case 'VAR Si/No':
           return ['Sì', 'No'];
         case 'Corner':
@@ -3140,10 +4148,14 @@
                   quota = getPariDispariQuota(quote, col, false, false) || '-';
                 } else if (mercatoSelezionato === 'Parz./Fin.') {
                   quota = getParzialeFinaleQuota(quote, col) || '-';
-                } else if (mercatoSelezionato === 'DC 1T' || mercatoSelezionato === 'DC 2T') {
+                } else if (mercatoSelezionato === 'DC 1T') {
                   const homeName = ev.home_name || '';
                   const awayName = ev.away_name || '';
-                  quota = getDoubleChanceQuota(quote, col, homeName, awayName) || '-';
+                  quota = getDoubleChanceQuota(quote, col, homeName, awayName, true, false) || '-';
+                } else if (mercatoSelezionato === 'DC 2T') {
+                  const homeName = ev.home_name || '';
+                  const awayName = ev.away_name || '';
+                  quota = getDoubleChanceQuota(quote, col, homeName, awayName, false, true) || '-';
                 } else if (mercatoSelezionato === '1X2 5 min' || mercatoSelezionato === '1X2 10 min' || mercatoSelezionato === '1X2 15 min' || 
                           mercatoSelezionato === '1X2 25 min' || mercatoSelezionato === '1X2 30 min') {
                   quota = quote_1x2[col] || '-';
@@ -3168,29 +4180,25 @@
                 } else if (mercatoSelezionato === 'Tempo+Gol' || mercatoSelezionato === 'T+G (C/O)') {
                   quota = getTimeAndGoalQuota(quote, col) || '-';
                 } else if (mercatoSelezionato === '1T') {
-                  const ht = quote.half?.sp?.half_time_result || quote.half_time || {};
-                  if (Array.isArray(ht)) {
-                    const item = ht.find(o => o.name === col || o.header === col);
-                    quota = item?.odds || '-';
-                  } else {
-                    quota = ht[col] || quote_1x2[col] || '-';
-                  }
+                  quota = get1X2FirstHalfQuota(quote, col) || '-';
                 } else if (mercatoSelezionato === '2T') {
-                  const sh = quote.half?.sp?.second_half_result || quote.second_half || {};
-                  if (Array.isArray(sh)) {
-                    const item = sh.find(o => o.name === col || o.header === col);
-                    quota = item?.odds || '-';
-                  } else {
-                    quota = sh[col] || quote_1x2[col] || '-';
-                  }
-                } else if (mercatoSelezionato === 'O/U 1T' || mercatoSelezionato === 'O/U 2T' || mercatoSelezionato === 'O/U C/O' || mercatoSelezionato === 'O/U 1T C/O') {
-                  quota = getOverUnderQuota(quote, col) || '-';
+                  quota = get1X2SecondHalfQuota(quote, col) || '-';
+                } else if (mercatoSelezionato === 'O/U 1T') {
+                  quota = getOverUnderQuota(quote, col, true, false) || '-';
+                } else if (mercatoSelezionato === 'O/U 2T') {
+                  quota = getOverUnderQuota(quote, col, false, true) || '-';
+                } else if (mercatoSelezionato === 'O/U C/O') {
+                  quota = getTeamOverUnderQuota(quote, col, false) || '-';
+                } else if (mercatoSelezionato === 'O/U 1T C/O') {
+                  quota = getTeamOverUnderQuota(quote, col, true) || '-';
                 } else if (mercatoSelezionato === 'Corner') {
                   quota = getCornerQuota(quote, col) || '-';
                 } else if (mercatoSelezionato === 'Cart. Allen.') {
                   quota = getCardsQuota(quote, col) || '-';
-                } else if (mercatoSelezionato === 'Sosituzioni') {
-                  quota = getSubstitutionsQuota(quote, col) || '-';
+                } else if (mercatoSelezionato === 'Tempo 1°sub') {
+                  quota = getTempoPrimoSubQuota(quote, col) || '-';
+                } else if (mercatoSelezionato === 'Team 1° sub') {
+                  quota = getTeamPrimoSubQuota(quote, col) || '-';
                 } else if (mercatoSelezionato === 'VAR Si/No') {
                   quota = getVARQuota(quote, col) || '-';
                 } else if (mercatoSelezionato === 'Rigori') {
@@ -3208,6 +4216,186 @@
                   quota = getHalfWithMostGoalsQuota(quote, col) || '-';
                 } else if (mercatoSelezionato === 'Vincono Rib.') {
                   quota = getComebackQuota(quote, col) || '-';
+                } else {
+                  // 🔹 Fallback: cerca direttamente nel quote object usando il nome del mercato
+                  // Converte il nome del mercato da italiano a chiave database (snake_case)
+                  const mercatoKey = convertiMercatoToKey(mercatoSelezionato);
+                  
+                  if (mercatoKey && quote[mercatoKey] && Array.isArray(quote[mercatoKey])) {
+                    // Cerca la quota nell'array usando name, header o col
+                    const item = quote[mercatoKey].find(o => {
+                      const oName = String(o.name || '').trim();
+                      const oHeader = String(o.header || '').trim();
+                      const colStr = String(col || '').trim();
+                      return oName === colStr || oHeader === colStr || 
+                             oName.toLowerCase() === colStr.toLowerCase() || 
+                             oHeader.toLowerCase() === colStr.toLowerCase();
+                    });
+                    if (item && item.odds) {
+                      quota = item.odds;
+                    }
+                  }
+                  
+                  // Se ancora non trovato, cerca anche in goals.sp, main.sp, half.sp, others
+                  if (quota === '-') {
+                    // Cerca in goals.sp
+                    if (quote.goals?.sp?.[mercatoKey]) {
+                      const goalsData = quote.goals.sp[mercatoKey];
+                      if (Array.isArray(goalsData)) {
+                        const item = goalsData.find(o => {
+                          const oName = String(o.name || '').trim();
+                          const oHeader = String(o.header || '').trim();
+                          const colStr = String(col || '').trim();
+                          return oName === colStr || oHeader === colStr || 
+                                 oName.toLowerCase() === colStr.toLowerCase() || 
+                                 oHeader.toLowerCase() === colStr.toLowerCase();
+                        });
+                        if (item && item.odds) {
+                          quota = item.odds;
+                        }
+                      } else if (goalsData.odds && Array.isArray(goalsData.odds)) {
+                        const item = goalsData.odds.find(o => {
+                          const oName = String(o.name || '').trim();
+                          const oHeader = String(o.header || '').trim();
+                          const colStr = String(col || '').trim();
+                          return oName === colStr || oHeader === colStr || 
+                                 oName.toLowerCase() === colStr.toLowerCase() || 
+                                 oHeader.toLowerCase() === colStr.toLowerCase();
+                        });
+                        if (item && item.odds) {
+                          quota = item.odds;
+                        }
+                      }
+                    }
+                    
+                    // Cerca in main.sp
+                    if (quota === '-' && quote.main?.sp?.[mercatoKey]) {
+                      const mainData = quote.main.sp[mercatoKey];
+                      if (Array.isArray(mainData)) {
+                        const item = mainData.find(o => {
+                          const oName = String(o.name || '').trim();
+                          const oHeader = String(o.header || '').trim();
+                          const colStr = String(col || '').trim();
+                          return oName === colStr || oHeader === colStr || 
+                                 oName.toLowerCase() === colStr.toLowerCase() || 
+                                 oHeader.toLowerCase() === colStr.toLowerCase();
+                        });
+                        if (item && item.odds) {
+                          quota = item.odds;
+                        }
+                      } else if (mainData.odds && Array.isArray(mainData.odds)) {
+                        const item = mainData.odds.find(o => {
+                          const oName = String(o.name || '').trim();
+                          const oHeader = String(o.header || '').trim();
+                          const colStr = String(col || '').trim();
+                          return oName === colStr || oHeader === colStr || 
+                                 oName.toLowerCase() === colStr.toLowerCase() || 
+                                 oHeader.toLowerCase() === colStr.toLowerCase();
+                        });
+                        if (item && item.odds) {
+                          quota = item.odds;
+                        }
+                      }
+                    }
+                    
+                    // Cerca in half.sp
+                    if (quota === '-' && quote.half?.sp?.[mercatoKey]) {
+                      const halfData = quote.half.sp[mercatoKey];
+                      if (Array.isArray(halfData)) {
+                        const item = halfData.find(o => {
+                          const oName = String(o.name || '').trim();
+                          const oHeader = String(o.header || '').trim();
+                          const colStr = String(col || '').trim();
+                          return oName === colStr || oHeader === colStr || 
+                                 oName.toLowerCase() === colStr.toLowerCase() || 
+                                 oHeader.toLowerCase() === colStr.toLowerCase();
+                        });
+                        if (item && item.odds) {
+                          quota = item.odds;
+                        }
+                      } else if (halfData.odds && Array.isArray(halfData.odds)) {
+                        const item = halfData.odds.find(o => {
+                          const oName = String(o.name || '').trim();
+                          const oHeader = String(o.header || '').trim();
+                          const colStr = String(col || '').trim();
+                          return oName === colStr || oHeader === colStr || 
+                                 oName.toLowerCase() === colStr.toLowerCase() || 
+                                 oHeader.toLowerCase() === colStr.toLowerCase();
+                        });
+                        if (item && item.odds) {
+                          quota = item.odds;
+                        }
+                      }
+                    }
+                    
+                    // Cerca in others
+                    if (quota === '-' && quote.others && Array.isArray(quote.others)) {
+                      for (const other of quote.others) {
+                        if (other.sp && other.sp[mercatoKey]) {
+                          const otherData = other.sp[mercatoKey];
+                          if (Array.isArray(otherData)) {
+                            const item = otherData.find(o => {
+                              const oName = String(o.name || '').trim();
+                              const oHeader = String(o.header || '').trim();
+                              const colStr = String(col || '').trim();
+                              return oName === colStr || oHeader === colStr || 
+                                     oName.toLowerCase() === colStr.toLowerCase() || 
+                                     oHeader.toLowerCase() === colStr.toLowerCase();
+                            });
+                            if (item && item.odds) {
+                              quota = item.odds;
+                              break;
+                            }
+                          } else if (otherData.odds && Array.isArray(otherData.odds)) {
+                            const item = otherData.odds.find(o => {
+                              const oName = String(o.name || '').trim();
+                              const oHeader = String(o.header || '').trim();
+                              const colStr = String(col || '').trim();
+                              return oName === colStr || oHeader === colStr || 
+                                     oName.toLowerCase() === colStr.toLowerCase() || 
+                                     oHeader.toLowerCase() === colStr.toLowerCase();
+                            });
+                            if (item && item.odds) {
+                              quota = item.odds;
+                              break;
+                            }
+                          }
+                        }
+                      }
+                    }
+                    
+                    // 🔹 Ricerca generica: itera su tutte le chiavi del quote object
+                    if (quota === '-') {
+                      for (const key in quote) {
+                        if (key === 'others' || key === 'goals' || key === 'main' || key === 'half' || 
+                            key === 'asian_lines' || key === 'corners' || key === 'cards' || 
+                            key === 'specials' || key === 'player') {
+                          continue; // Già cercato sopra
+                        }
+                        
+                        // Se la chiave contiene il mercatoKey o è simile
+                        if (key.toLowerCase().includes(mercatoKey.toLowerCase()) || 
+                            mercatoKey.toLowerCase().includes(key.toLowerCase())) {
+                          const data = quote[key];
+                          if (Array.isArray(data)) {
+                            const item = data.find(o => {
+                              if (!o || typeof o !== 'object') return false;
+                              const oName = String(o.name || '').trim();
+                              const oHeader = String(o.header || '').trim();
+                              const colStr = String(col || '').trim();
+                              return oName === colStr || oHeader === colStr || 
+                                     oName.toLowerCase() === colStr.toLowerCase() || 
+                                     oHeader.toLowerCase() === colStr.toLowerCase();
+                            });
+                            if (item && item.odds) {
+                              quota = item.odds;
+                              break;
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
                 }
                 
                 const quotaNum = parseFloat(quota);
@@ -3545,6 +4733,45 @@
           return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
         })
         .join(' ');
+    }
+    
+    // Funzione per convertire nome mercato italiano a chiave database (snake_case)
+    function convertiMercatoToKey(mercatoNome) {
+      // Crea una mappatura inversa da nome italiano a chiave database
+      const reverseMap = {};
+      for (const [key, value] of Object.entries(categoriaNames)) {
+        reverseMap[value] = key;
+      }
+      
+      // Se c'è una mappatura diretta, usala
+      if (reverseMap[mercatoNome]) {
+        return reverseMap[mercatoNome];
+      }
+      
+      // Altrimenti prova a convertire il nome italiano a snake_case
+      // Rimuovi spazi, caratteri speciali e converti a lowercase con underscore
+      let key = mercatoNome
+        .toLowerCase()
+        .replace(/\s+/g, '_')
+        .replace(/[°'"]/g, '')
+        .replace(/[àáâãäå]/g, 'a')
+        .replace(/[èéêë]/g, 'e')
+        .replace(/[ìíîï]/g, 'i')
+        .replace(/[òóôõö]/g, 'o')
+        .replace(/[ùúûü]/g, 'u')
+        .replace(/[ç]/g, 'c')
+        .replace(/[^a-z0-9_]/g, '');
+      
+      // Gestisci casi speciali
+      key = key.replace(/1t/g, '1st_half');
+      key = key.replace(/2t/g, '2nd_half');
+      key = key.replace(/o\/u/g, 'goals_over_under');
+      key = key.replace(/dc/g, 'double_chance');
+      key = key.replace(/gg\/ng/g, 'both_teams_to_score');
+      key = key.replace(/gg/g, 'both_teams_to_score');
+      key = key.replace(/ng/g, 'both_teams_to_score');
+      
+      return key;
     }
 
     // Variabile globale per salvare i mercati per categoria
@@ -4794,7 +6021,7 @@
         if (sportSelezionato === 'calcio') {
           selezionaMercato('Principali');
         } else {
-          selezionaMercato('1X2');
+        selezionaMercato('1X2');
         }
         
         // Event listener per la ricerca
@@ -4955,4 +6182,3 @@
   </script>
 </body>
 </html>
-
