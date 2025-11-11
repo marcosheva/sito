@@ -289,7 +289,16 @@
                 </thead>
                 <tbody id="matches-body">
                   <tr>
-                    <td colspan="6" class="text-center py-4 text-gray-400">Caricamento dati...</td>
+                    <td colspan="6" class="text-center py-20">
+                      <div class="flex flex-col items-center justify-center">
+                        <svg class="w-32 h-32 mb-4 text-yellow-500 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <div class="text-yellow-500 text-xl font-bold">KROOSBET</div>
+                        <div class="text-gray-400 text-sm mt-2">Caricamento in corso...</div>
+                      </div>
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -526,6 +535,32 @@
           console.log('loadLeagues: campionati caricati', Object.keys(nationsLeagues).length, 'nazioni');
           console.log('Nazioni disponibili:', Object.keys(nationsLeagues));
           renderLeaguesMenu();
+          
+          // Seleziona automaticamente il primo campionato italiano (Serie A) se disponibile
+          if (!campionatoSelezionato && nationsLeagues['Italia'] && nationsLeagues['Italia'].length > 0) {
+            // Cerca Serie A
+            const serieA = nationsLeagues['Italia'].find(league => 
+              league.full_name && (league.full_name.includes('Serie A') || league.full_name.includes('serie a'))
+            );
+            
+            if (serieA) {
+              campionatoSelezionato = serieA.full_name;
+              nazioneSelezionata = 'Italia';
+              console.log('Selezionato automaticamente:', campionatoSelezionato);
+              renderLeaguesMenu();
+              // Carica le partite del campionato selezionato
+              loadMatches();
+            } else if (nationsLeagues['Italia'].length > 0) {
+              // Se non c'è Serie A, seleziona il primo campionato italiano
+              const primoCampionato = nationsLeagues['Italia'][0];
+              campionatoSelezionato = primoCampionato.full_name;
+              nazioneSelezionata = 'Italia';
+              console.log('Selezionato automaticamente il primo campionato italiano:', campionatoSelezionato);
+              renderLeaguesMenu();
+              // Carica le partite del campionato selezionato
+              loadMatches();
+            }
+          }
         } else {
           console.error('loadLeagues: risposta API non valida', data);
           submenu.innerHTML = '<div class="text-xs text-red-400 px-2 py-1">Errore caricamento campionati</div>';
@@ -1904,7 +1939,20 @@
         
         const colonne = getColonnePerMercato(mercatoSelezionato);
         const numCols = 4 + (Array.isArray(colonne) && colonne[0]?.type ? colonne.length : colonne.length);
-        matchesBody.innerHTML = `<tr><td colspan="${numCols}" class="text-center py-4 text-gray-400">Caricamento dati...</td></tr>`;
+        matchesBody.innerHTML = `
+          <tr>
+            <td colspan="${numCols}" class="text-center py-20">
+              <div class="flex flex-col items-center justify-center">
+                <svg class="w-32 h-32 mb-4 text-yellow-500 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <div class="text-yellow-500 text-xl font-bold">KROOSBET</div>
+                <div class="text-gray-400 text-sm mt-2">Caricamento in corso...</div>
+              </div>
+            </td>
+          </tr>
+        `;
         
         // Usa URL assoluto per evitare problemi su Render
         // Ridotto limite a 200 per performance
@@ -3997,7 +4045,19 @@
           });
         }
         
-        // Carica solo i campionati all'apertura (le partite verranno caricate solo quando si clicca su "Tutti i campionati")
+        // Seleziona calcio di default all'apertura
+        if (!sportSelezionato) {
+          sportSelezionato = 'calcio';
+          const calcioItem = document.querySelector('[data-sport="calcio"]');
+          if (calcioItem) {
+            calcioItem.classList.add('bg-yellow-500', 'bg-opacity-20');
+            const indicator = calcioItem.querySelector('.sport-indicator');
+            if (indicator) indicator.classList.remove('hidden');
+          }
+          document.getElementById('sport-title').textContent = 'CALCIO';
+        }
+        
+        // Carica i campionati all'apertura (le partite verranno caricate automaticamente quando viene selezionato il campionato)
         console.log('DOMContentLoaded: inizializzazione');
         loadLeagues().then(() => {
           console.log('DOMContentLoaded: campionati caricati');
