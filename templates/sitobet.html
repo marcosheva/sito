@@ -571,7 +571,7 @@
       tbody.innerHTML = "";
 
       try {
-        const res = await fetch(`/api/events?sport=${sport}&limit=${limit}`);
+        const res = await fetch(`/api/events?sport=${sport}&limit=${limit}&add_hour=true`);
         const data = await res.json();
 
         if (!data.results || !data.results.length) {

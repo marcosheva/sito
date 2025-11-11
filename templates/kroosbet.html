@@ -250,21 +250,125 @@
           <div id="normal-layout" class="w-full bg-gray-800 rounded shadow border-2 border-yellow-500">
             <div class="bg-gray-700 text-white text-center font-bold py-2 border-b border-gray-600 text-lg" id="sport-title">CALCIO</div>
             
-            <!-- Tab Mercati Principali -->
-            <div class="flex space-x-2 bg-gray-700 px-2 py-2 border-b border-gray-600 overflow-x-auto">
-              <button id="mercato-Principali" class="mercato-tab-btn px-3 py-1 rounded text-xs font-bold bg-yellow-500 text-black hover:bg-yellow-600 mercato-tab whitespace-nowrap" data-mercato="Principali">Principali</button>
-              <button id="mercato-1X2" class="mercato-tab-btn px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="1X2">1X2</button>
-              <button id="mercato-Doppia Chance" class="mercato-tab-btn px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Doppia Chance">Doppia Chance</button>
-              <button id="mercato-Over/Under" class="mercato-tab-btn px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Over/Under">Over/Under</button>
-              <button id="mercato-Gol Totali" class="mercato-tab-btn px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Gol Totali">Gol Totali</button>
-              <button id="mercato-Handicap" class="mercato-tab-btn px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Handicap">Handicap</button>
-              <button id="mercato-Ris. Esatto" class="mercato-tab-btn px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Ris. Esatto">Ris. Esatto</button>
-              <button id="mercato-Corner" class="mercato-tab-btn px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Corner">Corner</button>
-              <button id="mercato-Cartellini" class="mercato-tab-btn px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Cartellini">Cartellini</button>
-              <button id="mercato-Primo Gol" class="mercato-tab-btn px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Primo Gol">Primo Gol</button>
-              <button id="mercato-1T" class="mercato-tab-btn px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="1T">1T</button>
-              <button id="mercato-2T" class="mercato-tab-btn px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="2T">2T</button>
-              <button id="mercato-DNB" class="mercato-tab-btn px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="DNB">DNB</button>
+            <!-- Griglia Tab Mercati (solo per Calcio) -->
+            <div id="mercati-tabs-container" class="bg-gray-700 px-2 py-2 border-b border-gray-600 overflow-x-auto hidden">
+              <div class="grid grid-cols-8 gap-1 min-w-max">
+                <!-- Riga 1 -->
+                <button id="mercato-Principali" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-yellow-500 text-black hover:bg-yellow-600 mercato-tab whitespace-nowrap" data-mercato="Principali">Principali</button>
+                <button id="mercato-1X2" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="1X2">1X2</button>
+                <button id="mercato-Doppia Chance" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Doppia Chance">Doppia Chance</button>
+                <button id="mercato-Over/Under" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Over/Under">O/U</button>
+                <button id="mercato-O/U 1T" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="O/U 1T">O/U 1T</button>
+                <button id="mercato-O/U 2T" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="O/U 2T">O/U 2T</button>
+                <button id="mercato-O/U C/O" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="O/U C/O">O/U C/O</button>
+                <button id="mercato-O/U 1T C/O" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="O/U 1T C/O">O/U 1T C/O</button>
+                
+                <!-- Pulsante per aprire/chiudere le tab -->
+                <button id="toggle-mercati-btn" class="px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 whitespace-nowrap col-span-8 flex items-center justify-center gap-1" title="Mostra/Nascondi tutti i mercati">
+                  <span id="toggle-mercati-text">▼ Mostra tutti</span>
+                </button>
+                
+                <!-- Righe 2-11 (nascoste di default) -->
+                <div id="mercati-righe-extra" class="hidden col-span-8 grid grid-cols-8 gap-1">
+                  <!-- Riga 2 -->
+                  <button id="mercato-1T" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="1T">1T</button>
+                <button id="mercato-2T" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="2T">2T</button>
+                <button id="mercato-1X2 5 min" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="1X2 5 min">1X2 5 min.</button>
+                <button id="mercato-1X2 10 min" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="1X2 10 min">1X2 10 min.</button>
+                <button id="mercato-1X2 15 min" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="1X2 15 min">1X2 15 min.</button>
+                <button id="mercato-1X2 25 min" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="1X2 25 min">1X2 25 min.</button>
+                <button id="mercato-1X2 30 min" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="1X2 30 min">1X2 30 min.</button>
+                <button id="mercato-DC 1T" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="DC 1T">DC 1T</button>
+                
+                  <!-- Riga 3 -->
+                  <button id="mercato-DC 2T" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="DC 2T">DC 2T</button>
+                <button id="mercato-Parz./Fin." class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Parz./Fin.">Parz./Fin.</button>
+                <button id="mercato-Gol Esatti" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Gol Esatti">Gol Esatti</button>
+                <button id="mercato-GolTot 1T" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="GolTot 1T">GolTot 1T</button>
+                <button id="mercato-GolTot 2T" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="GolTot 2T">GolTot 2T</button>
+                <button id="mercato-GolTot Casa" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="GolTot Casa">GolTot Casa</button>
+                <button id="mercato-GolTot Ospite" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="GolTot Ospite">GolTot Ospite</button>
+                <button id="mercato-Goal (0 - 15)" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Goal (0 - 15)">Goal (0 - 15)</button>
+                
+                  <!-- Riga 4 -->
+                  <button id="mercato-Goal (0 - 30)" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Goal (0 - 30)">Goal (0 - 30)</button>
+                <button id="mercato-GG/NG 1T" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="GG/NG 1T">GG/NG 1T</button>
+                <button id="mercato-GG/NG 2T" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="GG/NG 2T">GG/NG 2T</button>
+                <button id="mercato-GG Special" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="GG Special">GG Special</button>
+                <button id="mercato-Handicap" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Handicap">Handicap</button>
+                <button id="mercato-Handicap 1T" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Handicap 1T">Handicap 1T</button>
+                <button id="mercato-Handicap 2T" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Handicap 2T">Handicap 2T</button>
+                <button id="mercato-Pari/Dispari" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Pari/Dispari">Pari/Dispari</button>
+                
+                  <!-- Riga 5 -->
+                  <button id="mercato-Pari/Dis. 1T" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Pari/Dis. 1T">Pari/Dis. 1T</button>
+                <button id="mercato-Pari/Dis. 2T" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Pari/Dis. 2T">Pari/Dis. 2T</button>
+                <button id="mercato-P./D. Squadre" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="P./D. Squadre">P./D. Squadre</button>
+                <button id="mercato-Ris. Esatto" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Ris. Esatto">Ris. Esatto</button>
+                <button id="mercato-Ris. Es. 1T" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Ris. Es. 1T">Ris. Es. 1T</button>
+                <button id="mercato-Ris. Es. 2T" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Ris. Es. 2T">Ris. Es. 2T</button>
+                <button id="mercato-Ris. Es. P/F" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Ris. Es. P/F">Ris. Es. P/F</button>
+                <button id="mercato-DNB" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="DNB">DNB</button>
+                
+                  <!-- Riga 6 -->
+                  <button id="mercato-DNB 1T" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="DNB 1T">DNB 1T</button>
+                <button id="mercato-DNB 2T" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="DNB 2T">DNB 2T</button>
+                <button id="mercato-HNB" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="HNB">HNB</button>
+                <button id="mercato-ANB" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="ANB">ANB</button>
+                <button id="mercato-Gol No Bet" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Gol No Bet">Gol No Bet</button>
+                <button id="mercato-Tempo+Gol" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Tempo+Gol">Tempo+Gol</button>
+                <button id="mercato-T+G (C/O)" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="T+G (C/O)">T+G (C/O)</button>
+                <button id="mercato-Combo" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Combo">Combo</button>
+                
+                  <!-- Riga 7 -->
+                  <button id="mercato-Combo 1T" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Combo 1T">Combo 1T</button>
+                <button id="mercato-Combo 2T" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Combo 2T">Combo 2T</button>
+                <button id="mercato-Combo DC" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Combo DC">Combo DC</button>
+                <button id="mercato-Combo DC 1T" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Combo DC 1T">Combo DC 1T</button>
+                <button id="mercato-Combo DC 2T" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Combo DC 2T">Combo DC 2T</button>
+                <button id="mercato-C. DC Multi" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="C. DC Multi">C. DC Multi</button>
+                <button id="mercato-Combo 3" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Combo 3">Combo 3</button>
+                <button id="mercato-Combo3 HT/FT" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Combo3 HT/FT">Combo3 HT/FT</button>
+                
+                  <!-- Riga 8 -->
+                  <button id="mercato-Combo+Multi" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Combo+Multi">Combo+Multi</button>
+                <button id="mercato-Combo C/O" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Combo C/O">Combo C/O</button>
+                <button id="mercato-Chance 3 Mix" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Chance 3 Mix">Chance 3 Mix</button>
+                <button id="mercato-Chance Mix" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Chance Mix">Chance Mix</button>
+                <button id="mercato-HT Ch. Mix" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="HT Ch. Mix">HT Ch. Mix</button>
+                <button id="mercato-Ris. Esatto Mix" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Ris. Esatto Mix">Ris. Esatto Mix</button>
+                <button id="mercato-Segna 1T 2T" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Segna 1T 2T">Segna 1T 2T</button>
+                <button id="mercato-Vince a 0" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Vince a 0">Vince a 0</button>
+                
+                  <!-- Riga 9 -->
+                  <button id="mercato-Vince 1T e 2T" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Vince 1T e 2T">Vince 1T e 2T</button>
+                <button id="mercato-Vince 1T o 2T" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Vince 1T o 2T">Vince 1T o 2T</button>
+                <button id="mercato-Vincono Rib." class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Vincono Rib.">Vincono Rib.</button>
+                <button id="mercato-Cart. Allen." class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Cart. Allen.">Cart. Allen.</button>
+                <button id="mercato-Primo Gol" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Primo Gol">Primo Gol</button>
+                <button id="mercato-Primo Gol Min" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Primo Gol Min">Primo Gol Min</button>
+                <button id="mercato-Primo Gol Min." class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Primo Gol Min.">Primo Gol Min.</button>
+                <button id="mercato-1X2+Primo Go" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="1X2+Primo Go">1X2+Primo Go</button>
+                
+                  <!-- Riga 10 -->
+                  <button id="mercato-DNB Primo Go" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="DNB Primo Go">DNB Primo Go</button>
+                <button id="mercato-Ultimo Gol" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Ultimo Gol">Ultimo Gol</button>
+                <button id="mercato-Multi Gol" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Multi Gol">Multi Gol</button>
+                <button id="mercato-Multi Gol 1T" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Multi Gol 1T">Multi Gol 1T</button>
+                <button id="mercato-Multi Gol 2T" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Multi Gol 2T">Multi Gol 2T</button>
+                <button id="mercato-Multi Gol C/O" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Multi Gol C/O">Multi Gol C/O</button>
+                <button id="mercato-Multigoal 1T/2" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Multigoal 1T/2">Multigoal 1T/2</button>
+                <button id="mercato-Multigol Comb" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Multigol Comb">Multigol Comb</button>
+                
+                  <!-- Riga 11 -->
+                  <button id="mercato-Rigori" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Rigori">Rigori</button>
+                  <button id="mercato-Speciali Gol" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Speciali Gol">Speciali Gol</button>
+                  <button id="mercato-Metodo 1° gol" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Metodo 1° gol">Metodo 1° gol</button>
+                  <button id="mercato-Sosituzioni" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Sosituzioni">Sosituzioni</button>
+                  <button id="mercato-VAR Si/No" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="VAR Si/No">VAR Si/No</button>
+                  <button id="mercato-Corner" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="Corner">Corner</button>
+                </div>
+              </div>
             </div>
             
             <!-- Tabelle Mercati per Categoria (solo Calcio) -->
@@ -398,9 +502,9 @@
       'water polo': { icon: '🏓', nome: 'Water Polo' },
       'golf': { icon: '🏌️', nome: 'Golf' },
       'pingpong': { icon: '🎾', nome: 'Pingpong' },
-      'pallamano': { icon: '🎾', nome: 'Pallamano' },
-      'freccette': { icon: '🎾', nome: 'Freccette' },
-      'futsal': { icon: '🎾', nome: 'Futsal' },
+      'pallamano': { icon: '🏐', nome: 'Pallamano' },
+      'freccette': { icon: '�', nome: 'Freccette' },
+      'futsal': { icon: '🥅', nome: 'Futsal' },
       'boxing': { icon: '🥊', nome: 'Boxing' },
       'e-sport': { icon: '🎮', nome: 'E-Sport' },
       'badminton': { icon: '🏸', nome: 'Badminton' },
@@ -414,7 +518,7 @@
       const mapping = {
         'water polo': 'pallanuoto',
         'waterpolo': 'pallanuoto',
-        'american football': 'football',
+        'american football': 'football',        
         'e-sport': 'E-Sport',
         'badminton': 'Badminton',
         'cricket': 'Cricket',
@@ -445,7 +549,6 @@
     // Carica campionati disponibili
     async function loadLeagues() {
       if (sportSelezionato !== 'calcio') {
-        console.log('loadLeagues: sport non è calcio, esco');
         return;
       }
       
@@ -460,11 +563,9 @@
       submenu.innerHTML = '<div class="text-xs text-gray-400 px-2 py-1">Caricamento campionati...</div>';
       
       try {
-        console.log('loadLeagues: chiamata API con sport=', sportSelezionato);
         // Usa URL assoluto per evitare problemi su Render
         const sportForMongo = getSportForMongo(sportSelezionato);
         const apiUrl = `${window.location.origin}/api/leagues?sport=${sportForMongo}`;
-        console.log('loadLeagues: URL completo', apiUrl);
         const response = await fetch(apiUrl);
         
         if (!response.ok) {
@@ -481,59 +582,9 @@
         }
         
         const data = await response.json();
-        console.log('loadLeagues: risposta API', data);
-        console.log('loadLeagues: data.debug esiste?', !!data.debug);
-        console.log('loadLeagues: data.debug =', data.debug);
-        console.log('loadLeagues: chiavi di data =', Object.keys(data));
-        if (data.debug) {
-          console.log('loadLeagues: chiavi di data.debug =', Object.keys(data.debug));
-        }
-        
-        // Mostra info di debug se disponibili
-        if (data.debug) {
-          console.log('=== DEBUG API ===');
-          console.log('DEBUG API completo:', JSON.stringify(data.debug, null, 2));
-          console.log('Nazioni trovate:', data.debug.nations_list);
-          console.log('Campionati in Altri:', data.debug.altri_count);
-          console.log('Campionati in Italia:', data.debug.italia_count);
-          if (data.debug.sample_parsing) {
-            console.log('=== TEST PARSING ===');
-            data.debug.sample_parsing.forEach(test => {
-              console.log(`${test.league}: prima parola="${test.first_word}", in mappatura=${test.in_mapping}, nazione="${test.mapped_nation}"`);
-            });
-          }
-          if (data.debug.mapping_keys_sample) {
-            console.log('Chiavi mappatura (prime 10):', data.debug.mapping_keys_sample);
-          }
-          if (data.debug.test_result) {
-            console.log('=== TEST RISULTATI ===');
-            Object.keys(data.debug.test_result).forEach(league => {
-              const test = data.debug.test_result[league];
-              console.log(`${league}: prima parola="${test.first_word}", in mappatura=${test.in_mapping}, nazione="${test.mapped_nation}"`);
-            });
-          }
-          if (data.debug.test_results) {
-            console.log('=== TEST RISULTATI FINALI ===');
-            Object.keys(data.debug.test_results).forEach(league => {
-              const test = data.debug.test_results[league];
-              console.log(`${league}:`);
-              console.log(`  Prima parola: "${test.first_word}", in mappatura: ${test.in_mapping}`);
-              console.log(`  Nazione attesa: "${test.expected_nation}", League name atteso: "${test.expected_league_name}"`);
-              console.log(`  Nazione trovata: "${test.found_nation}", Trovato nel risultato: ${test.found_in_result}`);
-              if (test.expected_nation !== test.found_nation) {
-                console.warn(`  ⚠️ PROBLEMA: Nazione attesa "${test.expected_nation}" ma trovata "${test.found_nation}"`);
-              }
-            });
-          }
-          console.log('===================');
-        } else {
-          console.warn('⚠️ DEBUG INFO NON DISPONIBILE nella risposta API');
-        }
         
         if (data.success && data.nations) {
           nationsLeagues = data.nations;
-          console.log('loadLeagues: campionati caricati', Object.keys(nationsLeagues).length, 'nazioni');
-          console.log('Nazioni disponibili:', Object.keys(nationsLeagues));
           renderLeaguesMenu();
           
           // Seleziona automaticamente il primo campionato italiano (Serie A) se disponibile
@@ -546,7 +597,6 @@
             if (serieA) {
               campionatoSelezionato = serieA.full_name;
               nazioneSelezionata = 'Italia';
-              console.log('Selezionato automaticamente:', campionatoSelezionato);
               renderLeaguesMenu();
               // Carica le partite del campionato selezionato
               loadMatches();
@@ -555,7 +605,6 @@
               const primoCampionato = nationsLeagues['Italia'][0];
               campionatoSelezionato = primoCampionato.full_name;
               nazioneSelezionata = 'Italia';
-              console.log('Selezionato automaticamente il primo campionato italiano:', campionatoSelezionato);
               renderLeaguesMenu();
               // Carica le partite del campionato selezionato
               loadMatches();
@@ -681,7 +730,6 @@
         if (b === "Italia") return 1;
         return a.localeCompare(b);
       });
-      console.log('renderLeaguesMenu: nazioni trovate', sortedNations.length);
       
       if (sortedNations.length === 0) {
         html += '<div class="text-xs text-gray-400 px-2 py-1 mt-1">Nessun campionato disponibile</div>';
@@ -712,7 +760,6 @@
           if (!flag) {
             flag = "🏳️";
           }
-          console.log(`renderLeaguesMenu: nazione ${nation}, ${leagues.length} campionati`);
           
           // Verifica se questa nazione ha un campionato selezionato
           const hasSelectedLeague = leagues.some(l => l.full_name === campionatoSelezionato);
@@ -764,7 +811,6 @@
       }
       
       submenu.innerHTML = html;
-      console.log('renderLeaguesMenu: menu renderizzato');
       
       // Aggiungi event listener a "Tutti i campionati"
       const allItem = submenu.querySelector('.league-item-all');
@@ -864,10 +910,20 @@
         if (normalLayout) normalLayout.classList.remove('hidden');
       }
       
+      // Mostra/nascondi tab mercati in base allo sport
+      const mercatiTabsContainer = document.getElementById('mercati-tabs-container');
+      if (mercatiTabsContainer) {
+        if (sport === 'calcio') {
+          mercatiTabsContainer.classList.remove('hidden');
+        } else {
+          mercatiTabsContainer.classList.add('hidden');
+        }
+      }
+      
       // Per gli altri sport (non calcio), imposta mercato a 1X2
       if (sport !== 'calcio') {
         mercatoSelezionato = '1X2';
-        // Aggiorna UI tab
+        // Aggiorna UI tab (se visibili)
         document.querySelectorAll('.mercato-tab-btn').forEach(tab => {
           tab.classList.remove('bg-yellow-500', 'text-black');
           tab.classList.add('bg-gray-600', 'text-white');
@@ -945,7 +1001,6 @@
       
       // Ricarica i dati
       loadMatches().then(() => {
-        console.log('Dati caricati per sport:', sport, 'Eventi trovati:', matchesData.length);
       }).catch(error => {
         console.error('Errore caricamento dati per sport:', sport, error);
       });
@@ -1701,10 +1756,11 @@
       const type = match[1].toLowerCase(); // "over" o "under"
       const value = match[2]; // "2.5", "1.5", etc.
       
-      // Prima cerca in goals_over_under (solitamente per 2.5)
-      const goalsOU = quote.main?.sp?.goals_over_under || quote.goals_over_under || {};
+      // Prima cerca in goals.sp.goals_over_under (percorso principale)
+      const goalsOU = quote.goals?.sp?.goals_over_under || 
+                     quote.main?.sp?.goals_over_under || 
+                     quote.goals_over_under || {};
       
-      // Se goalsOU è direttamente un array
       if (Array.isArray(goalsOU)) {
         const item = goalsOU.find(o => {
           const oName = String(o.name || '').trim();
@@ -1714,7 +1770,6 @@
         if (item && item.odds) return item.odds;
       }
       
-      // Se goalsOU ha una proprietà odds che è un array
       if (Array.isArray(goalsOU.odds)) {
         const item = goalsOU.odds.find(o => {
           const oName = String(o.name || '').trim();
@@ -1724,10 +1779,22 @@
         if (item && item.odds) return item.odds;
       }
       
-      // Poi cerca in alternative_total_goals (per tutti i valori inclusi 2.5 se non trovato sopra)
-      const altGoals = quote.main?.sp?.alternative_total_goals || quote.alternative_total_goals || {};
+      // Cerca in asian_lines.sp.goal_line (percorso alternativo)
+      const asianGoalLine = quote.asian_lines?.sp?.goal_line || {};
+      if (Array.isArray(asianGoalLine)) {
+        const item = asianGoalLine.find(o => {
+          const oName = String(o.name || '').trim();
+          const oHeader = (o.header || '').toLowerCase().trim();
+          return oName === value && oHeader === type;
+        });
+        if (item && item.odds) return item.odds;
+      }
       
-      // Se altGoals è direttamente un array
+      // Cerca in goals.sp.alternative_total_goals (per valori alternativi)
+      const altGoals = quote.goals?.sp?.alternative_total_goals || 
+                      quote.main?.sp?.alternative_total_goals || 
+                      quote.alternative_total_goals || {};
+      
       if (Array.isArray(altGoals)) {
         const item = altGoals.find(o => {
           const oName = String(o.name || '').trim();
@@ -1737,9 +1804,20 @@
         if (item && item.odds) return item.odds;
       }
       
-      // Se altGoals ha una proprietà odds che è un array
       if (Array.isArray(altGoals.odds)) {
         const item = altGoals.odds.find(o => {
+          const oName = String(o.name || '').trim();
+          const oHeader = (o.header || '').toLowerCase().trim();
+          return oName === value && oHeader === type;
+        });
+        if (item && item.odds) return item.odds;
+      }
+      
+      // Cerca in half.sp per Over/Under 1T
+      const halfGoalLine = quote.half?.sp?.['1st_half_goal_line'] || 
+                          quote.half?.sp?.goal_line || {};
+      if (Array.isArray(halfGoalLine)) {
+        const item = halfGoalLine.find(o => {
           const oName = String(o.name || '').trim();
           const oHeader = (o.header || '').toLowerCase().trim();
           return oName === value && oHeader === type;
@@ -1751,6 +1829,588 @@
       const matchGoals = quote.match_goals || {};
       if (matchGoals[col]) {
         return matchGoals[col];
+      }
+      
+      return null;
+    }
+
+    // Helper per estrarre quote Handicap
+    function getHandicapQuota(quote, col) {
+      if (!quote) return null;
+      
+      // Estrai il valore handicap dalla colonna (es. "H1 (-0.5)" -> header: "1", handicap: "-0.5")
+      const match = col.match(/H([12X])\s*\(([+-]?\d+\.?\d*)\)/);
+      if (!match) return null;
+      
+      const header = match[1]; // "1", "2", o "X"
+      const handicapValue = match[2]; // "-0.5", "+1.0", etc.
+      
+      // Cerca in asian_lines.sp.asian_handicap
+      const asianHandicap = quote.asian_lines?.sp?.asian_handicap || quote.asian_handicap || {};
+      
+      if (Array.isArray(asianHandicap)) {
+        const item = asianHandicap.find(o => {
+          const oHeader = String(o.header || '').trim();
+          const oHandicap = String(o.handicap || '').trim();
+          return oHeader === header && (oHandicap === handicapValue || oHandicap.includes(handicapValue));
+        });
+        if (item && item.odds) return item.odds;
+      }
+      
+      // Cerca in main.sp.asian_handicap
+      const mainHandicap = quote.main?.sp?.asian_handicap || {};
+      if (Array.isArray(mainHandicap)) {
+        const item = mainHandicap.find(o => {
+          const oHeader = String(o.header || '').trim();
+          const oHandicap = String(o.handicap || '').trim();
+          return oHeader === header && (oHandicap === handicapValue || oHandicap.includes(handicapValue));
+        });
+        if (item && item.odds) return item.odds;
+      }
+      
+      return null;
+    }
+
+    // Helper per estrarre quote GG/NG
+    function getGGNGQuota(quote, col, isFirstHalf = false, isSecondHalf = false) {
+      if (!quote) return null;
+      
+      const isGG = col.includes('GG');
+      const searchName = isGG ? 'Yes' : 'No';
+      
+      if (isFirstHalf) {
+        const btts1T = quote.goals?.sp?.both_teams_to_score_in_1st_half || 
+                      quote.half?.sp?.both_teams_to_score_in_1st_half || {};
+        if (Array.isArray(btts1T)) {
+          const item = btts1T.find(o => (o.name || '').toLowerCase() === searchName.toLowerCase());
+          if (item && item.odds) return item.odds;
+        }
+      } else if (isSecondHalf) {
+        const btts2T = quote.goals?.sp?.both_teams_to_score_in_2nd_half || 
+                      quote.half?.sp?.both_teams_to_score_in_2nd_half || {};
+        if (Array.isArray(btts2T)) {
+          const item = btts2T.find(o => (o.name || '').toLowerCase() === searchName.toLowerCase());
+          if (item && item.odds) return item.odds;
+        }
+      } else {
+        const btts = quote.goals?.sp?.both_teams_to_score || 
+                    quote.main?.sp?.both_teams_to_score || 
+                    quote.both_teams_to_score || {};
+        if (Array.isArray(btts)) {
+          const item = btts.find(o => (o.name || '').toLowerCase() === searchName.toLowerCase());
+          if (item && item.odds) return item.odds;
+        }
+      }
+      
+      return null;
+    }
+
+    // Helper per estrarre quote Risultato Esatto
+    function getRisEsattoQuota(quote, col, isFirstHalf = false) {
+      if (!quote) return null;
+      
+      const correctScore = isFirstHalf 
+        ? quote.half?.sp?.half_time_correct_score || quote.half_time_correct_score || {}
+        : quote.main?.sp?.correct_score || quote.correct_score || {};
+      
+      if (Array.isArray(correctScore)) {
+        const item = correctScore.find(o => {
+          const oName = String(o.name || '').trim();
+          const oHeader = String(o.header || '').trim();
+          return oName === col || oHeader === col || oName.replace('-', '') === col.replace('-', '');
+        });
+        if (item && item.odds) return item.odds;
+      }
+      
+      return null;
+    }
+
+    // Helper per estrarre quote Multi Goal
+    function getMultiGoalQuota(quote, col, isFirstHalf = false, isSecondHalf = false) {
+      if (!quote) return null;
+      
+      let goalsRange;
+      if (isFirstHalf) {
+        goalsRange = quote.goals?.sp?.['1st_half_goals_range'] || 
+                    quote.half?.sp?.['1st_half_goals_range'] || {};
+      } else if (isSecondHalf) {
+        goalsRange = quote.goals?.sp?.['2nd_half_goals_range'] || 
+                    quote.half?.sp?.['2nd_half_goals_range'] || {};
+      } else {
+        goalsRange = quote.goals?.sp?.match_goals_range || 
+                    quote.match_goals_range || {};
+      }
+      
+      if (Array.isArray(goalsRange)) {
+        const item = goalsRange.find(o => {
+          const oName = String(o.name || '').trim();
+          return oName === col || oName.includes(col.replace(' Goals', ''));
+        });
+        if (item && item.odds) return item.odds;
+      }
+      
+      return null;
+    }
+
+    // Helper per estrarre quote Combo
+    function getComboQuota(quote, col) {
+      if (!quote) return null;
+      
+      // Estrai tipo combo (es. "1 + Over 2.5" -> result: "1", type: "Over", value: "2.5")
+      const match = col.match(/([12X])\s*\+\s*(Over|Under|GG|NG)\s*(\d+\.?\d*)?/);
+      if (!match) return null;
+      
+      const result = match[1]; // "1", "2", o "X"
+      const comboType = match[2]; // "Over", "Under", "GG", "NG"
+      const value = match[3]; // "2.5" o undefined
+      
+      // Cerca in goals.sp.result_total_goals per combo 1X2 + Over/Under
+      if (comboType === 'Over' || comboType === 'Under') {
+        const resultTotalGoals = quote.goals?.sp?.result_total_goals || {};
+        if (Array.isArray(resultTotalGoals)) {
+          const item = resultTotalGoals.find(o => {
+            const oName = String(o.name || '').trim();
+            const oHeader = String(o.header || '').trim();
+            const oHandicap = String(o.handicap || '').trim();
+            return oName === result && 
+                   oHeader.toLowerCase() === comboType.toLowerCase() && 
+                   (value ? oHandicap === value : true);
+          });
+          if (item && item.odds) return item.odds;
+        }
+      }
+      
+      // Cerca in goals.sp.total_goals_both_teams_to_score per combo GG/NG + Over/Under
+      if (comboType === 'GG' || comboType === 'NG') {
+        const totalGoalsBtts = quote.goals?.sp?.total_goals_both_teams_to_score || {};
+        if (Array.isArray(totalGoalsBtts)) {
+          const item = totalGoalsBtts.find(o => {
+            const oName = String(o.name || '').trim();
+            return (comboType === 'GG' && (oName.includes('Yes') || oName.includes('Over'))) ||
+                   (comboType === 'NG' && (oName.includes('No') || oName.includes('Under')));
+          });
+          if (item && item.odds) return item.odds;
+        }
+      }
+      
+      return null;
+    }
+
+    // Helper per estrarre quote Primo/Ultimo Gol
+    function getFirstLastGoalQuota(quote, col, isFirst = true) {
+      if (!quote) return null;
+      
+      const searchPath = isFirst 
+        ? quote.main?.sp?.first_team_to_score || quote.first_team_to_score || {}
+        : quote.main?.sp?.last_team_to_score || quote.last_team_to_score || {};
+      
+      if (Array.isArray(searchPath)) {
+        const item = searchPath.find(o => {
+          const oName = String(o.name || '').toLowerCase();
+          const oHeader = String(o.header || '').toLowerCase();
+          const colLower = col.toLowerCase();
+          return (colLower === 'casa' && (oName.includes('home') || oHeader === '1')) ||
+                 (colLower === 'ospiti' && (oName.includes('away') || oHeader === '2')) ||
+                 (colLower === 'nessuno' && (oName.includes('no') || oName.includes('none')));
+        });
+        if (item && item.odds) return item.odds;
+      }
+      
+      return null;
+    }
+
+    // Helper per estrarre quote Pari/Dispari
+    function getPariDispariQuota(quote, col, isFirstHalf = false, isSecondHalf = false) {
+      if (!quote) return null;
+      
+      const isPari = col.toLowerCase().includes('pari');
+      
+      let oddEven;
+      if (isFirstHalf) {
+        oddEven = quote.goals?.sp?.['1st_half_goals_odd_even'] || 
+                 quote.half?.sp?.['1st_half_goals_odd_even'] || {};
+      } else if (isSecondHalf) {
+        oddEven = quote.goals?.sp?.['2nd_half_goals_odd_even'] || 
+                 quote.half?.sp?.['2nd_half_goals_odd_even'] || {};
+      } else {
+        oddEven = quote.goals?.sp?.match_goals_odd_even || 
+                 quote.main?.sp?.match_goals_odd_even || {};
+      }
+      
+      if (Array.isArray(oddEven)) {
+        const item = oddEven.find(o => {
+          const oName = String(o.name || '').toLowerCase();
+          const oHeader = String(o.header || '').toLowerCase();
+          return (isPari && (oName.includes('even') || oHeader === 'even')) ||
+                 (!isPari && (oName.includes('odd') || oHeader === 'odd'));
+        });
+        if (item && item.odds) return item.odds;
+      }
+      
+      return null;
+    }
+
+    // Helper per estrarre quote Gol Totali (esatti)
+    function getGolTotaliQuota(quote, col, isFirstHalf = false, isSecondHalf = false, isHome = false, isAway = false) {
+      if (!quote) return null;
+      
+      let exactGoals;
+      if (isFirstHalf) {
+        exactGoals = quote.goals?.sp?.['1st_half_exact_goals'] || 
+                    quote.half?.sp?.['1st_half_exact_goals'] || {};
+      } else if (isSecondHalf) {
+        exactGoals = quote.goals?.sp?.['2nd_half_exact_goals'] || {};
+      } else if (isHome) {
+        exactGoals = quote.goals?.sp?.home_team_exact_goals || {};
+      } else if (isAway) {
+        exactGoals = quote.goals?.sp?.away_team_exact_goals || {};
+      } else {
+        exactGoals = quote.goals?.sp?.exact_total_goals || 
+                    quote.main?.sp?.exact_total_goals || {};
+      }
+      
+      if (Array.isArray(exactGoals)) {
+        const item = exactGoals.find(o => {
+          const oName = String(o.name || '').trim();
+          return oName === col || oName === col + '+' || oName === col.replace('+', '');
+        });
+        if (item && item.odds) return item.odds;
+      }
+      
+      return null;
+    }
+
+    // Helper per estrarre quote Parziale/Finale
+    function getParzialeFinaleQuota(quote, col) {
+      if (!quote) return null;
+      
+      const htft = quote.main?.sp?.half_time_full_time || 
+                  quote.half_time_full_time || {};
+      
+      if (Array.isArray(htft)) {
+        const item = htft.find(o => {
+          const oName = String(o.name || '').trim();
+          const oHeader = String(o.header || '').trim();
+          const colFormatted = col.replace('/', '/');
+          return oName === colFormatted || oHeader === colFormatted || 
+                 oName.replace('/', '/') === colFormatted;
+        });
+        if (item && item.odds) return item.odds;
+      }
+      
+      return null;
+    }
+
+    // Helper per estrarre quote DNB
+    function getDNBQuota(quote, col, isFirstHalf = false, isSecondHalf = false) {
+      if (!quote) return null;
+      
+      let dnb;
+      if (isFirstHalf) {
+        dnb = quote.half?.sp?.['1st_half_draw_no_bet'] || {};
+      } else if (isSecondHalf) {
+        dnb = quote.half?.sp?.['2nd_half_draw_no_bet'] || {};
+      } else {
+        dnb = quote.main?.sp?.draw_no_bet || 
+              quote.draw_no_bet || {};
+      }
+      
+      if (Array.isArray(dnb)) {
+        const item = dnb.find(o => {
+          const oHeader = String(o.header || '').trim();
+          return oHeader === col;
+        });
+        if (item && item.odds) return item.odds;
+      }
+      
+      return null;
+    }
+
+    // Helper per estrarre quote Corner
+    function getCornerQuota(quote, col) {
+      if (!quote) return null;
+      
+      // Estrai valore da "Over 9.5" o "Under 9.5"
+      const match = col.match(/(Over|Under)\s*(\d+\.?\d*)/i);
+      if (!match) return null;
+      
+      const type = match[1].toLowerCase();
+      const value = match[2];
+      
+      const corners = quote.corners?.sp?.corners || 
+                     quote.main?.sp?.corners || 
+                     quote.corners || {};
+      
+      if (Array.isArray(corners)) {
+        const item = corners.find(o => {
+          const oName = String(o.name || '').trim();
+          const oHeader = (o.header || '').toLowerCase().trim();
+          return oName === value && oHeader === type;
+        });
+        if (item && item.odds) return item.odds;
+      }
+      
+      return null;
+    }
+
+    // Helper per estrarre quote Cartellini/Cards
+    function getCardsQuota(quote, col) {
+      if (!quote) return null;
+      
+      const match = col.match(/(Over|Under)\s*(\d+\.?\d*)/i);
+      if (!match) return null;
+      
+      const type = match[1].toLowerCase();
+      const value = match[2];
+      
+      const cards = quote.cards?.sp?.cards || 
+                   quote.main?.sp?.cards || 
+                   quote.cards || {};
+      
+      if (Array.isArray(cards)) {
+        const item = cards.find(o => {
+          const oName = String(o.name || '').trim();
+          const oHeader = (o.header || '').toLowerCase().trim();
+          return oName === value && oHeader === type;
+        });
+        if (item && item.odds) return item.odds;
+      }
+      
+      return null;
+    }
+
+    // Helper per estrarre quote Rigori
+    function getPenaltyQuota(quote, col) {
+      if (!quote) return null;
+      
+      const isYes = col.toLowerCase().includes('sì') || col.toLowerCase().includes('si') || col.toLowerCase() === 'yes';
+      
+      const penalties = quote.main?.sp?.penalties || 
+                       quote.others?.find(o => o.sp?.penalties)?.sp?.penalties || {};
+      
+      if (Array.isArray(penalties)) {
+        const item = penalties.find(o => {
+          const oName = (o.name || '').toLowerCase();
+          return (isYes && (oName.includes('yes') || oName.includes('sì'))) ||
+                 (!isYes && (oName.includes('no')));
+        });
+        if (item && item.odds) return item.odds;
+      }
+      
+      return null;
+    }
+
+    // Helper per estrarre quote VAR (valori fissi)
+    function getVARQuota(quote, col) {
+      if (!quote) return null;
+      
+      const isYes = col.toLowerCase().includes('sì') || col.toLowerCase().includes('si') || col.toLowerCase() === 'yes';
+      
+      // Valori fissi per VAR
+      if (isYes) {
+        return '3.00';
+      } else {
+        return '1.25';
+      }
+    }
+
+    // Helper per estrarre quote Metodo 1° gol (valori fissi)
+    function getFirstGoalMethodQuota(quote, col) {
+      if (!quote) return null;
+      
+      const colLower = col.toLowerCase();
+      
+      // Valori fissi per Metodo 1° gol
+      const methodQuotes = {
+        'piede': '1.4',
+        'tiro': '1.4',
+        'testa': '6',
+        'rigore': '10',
+        'punizione': '13',
+        'autogol': '25'
+      };
+      
+      // Cerca corrispondenza (anche parziale)
+      for (const [key, value] of Object.entries(methodQuotes)) {
+        if (colLower.includes(key) || key.includes(colLower)) {
+          return value;
+        }
+      }
+      
+      return null;
+    }
+
+    // Helper per estrarre quote Sosituzioni
+    function getSubstitutionsQuota(quote, col) {
+      if (!quote) return null;
+      
+      const match = col.match(/(Over|Under)\s*(\d+\.?\d*)/i);
+      if (!match) return null;
+      
+      const type = match[1].toLowerCase();
+      const value = match[2];
+      
+      const substitutions = quote.main?.sp?.substitutions || 
+                           quote.others?.find(o => o.sp?.substitutions)?.sp?.substitutions || {};
+      
+      if (Array.isArray(substitutions)) {
+        const item = substitutions.find(o => {
+          const oName = String(o.name || '').trim();
+          const oHeader = (o.header || '').toLowerCase().trim();
+          return oName === value && oHeader === type;
+        });
+        if (item && item.odds) return item.odds;
+      }
+      
+      return null;
+    }
+
+    // Helper per estrarre quote Segna (Goalscorers)
+    function getGoalscorersQuota(quote, col, headerType = 'Anytime') {
+      if (!quote) return null;
+      
+      const goalscorers = quote.main?.sp?.goalscorers || 
+                         quote.player?.sp?.goalscorers || {};
+      
+      if (Array.isArray(goalscorers)) {
+        const item = goalscorers.find(o => {
+          const oName = String(o.name || '').trim();
+          const oHeader = String(o.header || '').trim();
+          return oName === col && oHeader === headerType;
+        });
+        if (item && item.odds) return item.odds;
+      }
+      
+      return null;
+    }
+
+    // Helper per estrarre quote Vince a 0 (Winning Margin)
+    function getWinningMarginQuota(quote, col) {
+      if (!quote) return null;
+      
+      const winningMargin = quote.others?.find(o => o.sp?.winning_margin)?.sp?.winning_margin || {};
+      
+      if (Array.isArray(winningMargin)) {
+        const item = winningMargin.find(o => {
+          const oName = String(o.name || '').trim();
+          const oHeader = String(o.header || '').trim();
+          return (oName === col || oName === col + '+') && oHeader === '1';
+        });
+        if (item && item.odds) return item.odds;
+      }
+      
+      return null;
+    }
+
+    // Helper per estrarre quote Vince 1T e 2T / Vince 1T o 2T
+    function getHalfWithMostGoalsQuota(quote, col) {
+      if (!quote) return null;
+      
+      const isBoth = col.includes('e');
+      const isEither = col.includes('o');
+      
+      const halfGoals = quote.main?.sp?.half_with_most_goals || 
+                       quote.others?.find(o => o.sp?.half_with_most_goals)?.sp?.half_with_most_goals || {};
+      
+      if (Array.isArray(halfGoals)) {
+        let item;
+        if (isBoth) {
+          item = halfGoals.find(o => {
+            const oName = (o.name || '').toLowerCase();
+            return oName.includes('both') || oName.includes('1st and 2nd');
+          });
+        } else if (isEither) {
+          item = halfGoals.find(o => {
+            const oName = (o.name || '').toLowerCase();
+            return oName.includes('either') || oName.includes('1st or 2nd');
+          });
+        } else {
+          item = halfGoals.find(o => {
+            const oName = (o.name || '').trim();
+            return oName === col;
+          });
+        }
+        if (item && item.odds) return item.odds;
+      }
+      
+      return null;
+    }
+
+    // Helper per estrarre quote Vincono Ribaltamento
+    function getComebackQuota(quote, col) {
+      if (!quote) return null;
+      
+      const comeback = quote.main?.sp?.comeback || 
+                     quote.others?.find(o => o.sp?.comeback)?.sp?.comeback || {};
+      
+      if (Array.isArray(comeback)) {
+        const item = comeback.find(o => {
+          const oName = (o.name || '').toLowerCase();
+          return oName.includes('comeback') || oName.includes('ribaltamento');
+        });
+        if (item && item.odds) return item.odds;
+      }
+      
+      return null;
+    }
+
+    // Helper per estrarre quote HNB, ANB, Gol No Bet
+    function getNoBetQuota(quote, col, betType = 'draw_no_bet') {
+      if (!quote) return null;
+      
+      let noBet;
+      if (betType === 'handicap_no_bet') {
+        noBet = quote.main?.sp?.handicap_no_bet || {};
+      } else if (betType === 'asian_no_bet') {
+        noBet = quote.asian_lines?.sp?.asian_no_bet || {};
+      } else if (betType === 'goal_no_bet') {
+        noBet = quote.goals?.sp?.goal_no_bet || {};
+      } else {
+        noBet = quote.main?.sp?.draw_no_bet || {};
+      }
+      
+      if (Array.isArray(noBet)) {
+        const item = noBet.find(o => {
+          const oHeader = String(o.header || '').trim();
+          return oHeader === col;
+        });
+        if (item && item.odds) return item.odds;
+      }
+      
+      return null;
+    }
+
+    // Helper per estrarre quote Tempo+Gol
+    function getTimeAndGoalQuota(quote, col) {
+      if (!quote) return null;
+      
+      const timeGoal = quote.main?.sp?.time_and_goal || 
+                      quote.others?.find(o => o.sp?.time_and_goal)?.sp?.time_and_goal || {};
+      
+      if (Array.isArray(timeGoal)) {
+        const item = timeGoal.find(o => {
+          const oName = String(o.name || '').trim();
+          return oName.includes(col) || oName === col;
+        });
+        if (item && item.odds) return item.odds;
+      }
+      
+      return null;
+    }
+
+    // Helper per estrarre quote Speciali Gol
+    function getSpecialGoalsQuota(quote, col) {
+      if (!quote) return null;
+      
+      const specials = quote.main?.sp?.specials || 
+                      quote.others?.find(o => o.sp?.specials)?.sp?.specials || {};
+      
+      if (Array.isArray(specials)) {
+        const item = specials.find(o => {
+          const oName = String(o.name || '').trim();
+          return oName.toLowerCase().includes(col.toLowerCase());
+        });
+        if (item && item.odds) return item.odds;
       }
       
       return null;
@@ -1773,6 +2433,12 @@
       
       // Per l'e-sport, mostra solo To Win (1 e 2, senza X)
       if (sportSelezionato === 'e-sport' || sportSelezionato === 'esport') {
+        if (mercato === 'Principali' || mercato === '1X2') {
+          return ['1', '2'];
+        }
+      }
+      // Per le freccette, mostra solo To Win (1 e 2, senza X)
+      if (sportSelezionato === 'freccette') {
         if (mercato === 'Principali' || mercato === '1X2') {
           return ['1', '2'];
         }
@@ -1904,25 +2570,173 @@
         case 'Doppia Chance':
           return ['1X', '12', 'X2'];
         case 'Over/Under':
-          return ['Over 2.5', 'Under 2.5'];
+          return ['Over 0.5', 'Under 0.5', 'Over 1.5', 'Under 1.5', 'Over 2.5', 'Under 2.5', 'Over 3.5', 'Under 3.5', 'Over 4.5', 'Under 4.5', 'Over 5.5', 'Under 5.5', 'Over 6.5', 'Under 6.5'];
+        case 'O/U 1T':
+          return ['Over 0.5', 'Under 0.5', 'Over 1.5', 'Under 1.5', 'Over 2.5', 'Under 2.5'];
+        case 'O/U 2T':
+          return ['Over 0.5', 'Under 0.5', 'Over 1.5', 'Under 1.5', 'Over 2.5', 'Under 2.5'];
+        case 'O/U C/O':
+          return ['Over 0.5', 'Under 0.5', 'Over 1.5', 'Under 1.5', 'Over 2.5', 'Under 2.5', 'Over 3.5', 'Under 3.5'];
+        case 'O/U 1T C/O':
+          return ['Over 0.5', 'Under 0.5', 'Over 1.5', 'Under 1.5', 'Over 2.5', 'Under 2.5'];
         case 'Gol Totali':
           return ['GG', 'NG'];
+        case 'GG/NG 1T':
+          return ['GG 1T', 'NG 1T'];
+        case 'GG/NG 2T':
+          return ['GG 2T', 'NG 2T'];
+        case 'GG Special':
+          return ['GG + Over 2.5', 'NG + Over 2.5', 'GG + Under 2.5', 'NG + Under 2.5'];
         case 'Handicap':
-          return ['H1', 'HX', 'H2'];
+          return ['H1 (-0.5)', 'H2 (+0.5)', 'H1 (-1.0)', 'H2 (+1.0)', 'H1 (-1.5)', 'H2 (+1.5)', 'H1 (-2.0)', 'H2 (+2.0)', 'H1 (-2.5)', 'H2 (+2.5)'];
+        case 'Handicap 1T':
+          return ['H1 (-0.5)', 'H2 (+0.5)', 'H1 (-1.0)', 'H2 (+1.0)', 'H1 (-1.5)', 'H2 (+1.5)'];
+        case 'Handicap 2T':
+          return ['H1 (-0.5)', 'H2 (+0.5)', 'H1 (-1.0)', 'H2 (+1.0)'];
         case 'Ris. Esatto':
-          return ['0-0', '1-0', '0-1'];
-        case 'Corner':
-          return ['Over', 'Under'];
-        case 'Cartellini':
-          return ['Over', 'Under'];
+          return ['0-0', '1-0', '0-1', '1-1', '2-0', '0-2', '2-1', '1-2', '2-2', '3-0', '0-3', '3-1', '1-3', '3-2', '2-3', '4-0', '0-4', '4-1', '1-4', 'Altro'];
+        case 'Ris. Es. 1T':
+          return ['0-0', '1-0', '0-1', '1-1', '2-0', '0-2', '2-1', '1-2', 'Altro'];
+        case 'Ris. Es. 2T':
+          return ['0-0', '1-0', '0-1', '1-1', '2-0', '0-2', 'Altro'];
+        case 'Ris. Es. P/F':
+          return ['1/1', '1/X', '1/2', 'X/1', 'X/X', 'X/2', '2/1', '2/X', '2/2'];
+        case 'Gol Esatti':
+          return ['0', '1', '2', '3', '4', '5+'];
+        case 'GolTot 1T':
+          return ['0', '1', '2', '3+'];
+        case 'GolTot 2T':
+          return ['0', '1', '2', '3+'];
+        case 'GolTot Casa':
+          return ['0', '1', '2', '3', '4+'];
+        case 'GolTot Ospite':
+          return ['0', '1', '2', '3', '4+'];
+        case 'Multi Gol':
+          return ['1-2 Goals', '1-3 Goals', '1-4 Goals', '2-3 Goals', '2-4 Goals', '3-4 Goals', '3-5 Goals', '4-5 Goals'];
+        case 'Multi Gol 1T':
+          return ['1-2 Goals', '1-3 Goals', '2-3 Goals', '3-4 Goals'];
+        case 'Multi Gol 2T':
+          return ['1-2 Goals', '1-3 Goals', '2-3 Goals', '3-4 Goals'];
+        case 'Multi Gol C/O':
+          return ['1-2 Goals', '1-3 Goals', '2-3 Goals'];
+        case 'Multigoal 1T/2':
+          return ['1T/2T'];
+        case 'Multigol Comb':
+          return ['Combo'];
+        case 'Combo':
+          return ['1 + Over 2.5', '1 + Under 2.5', '2 + Over 2.5', '2 + Under 2.5', 'X + Over 2.5', 'X + Under 2.5', '1 + GG', '1 + NG', '2 + GG', '2 + NG', 'X + GG', 'X + NG'];
+        case 'Combo 1T':
+          return ['1 + Over 1.5', '1 + Under 1.5', '2 + Over 1.5', '2 + Under 1.5', 'X + Over 1.5', 'X + Under 1.5'];
+        case 'Combo 2T':
+          return ['1 + Over 1.5', '1 + Under 1.5', '2 + Over 1.5', '2 + Under 1.5', 'X + Over 1.5', 'X + Under 1.5'];
+        case 'Combo DC':
+          return ['1X + Over 2.5', '1X + Under 2.5', '12 + Over 2.5', '12 + Under 2.5', 'X2 + Over 2.5', 'X2 + Under 2.5'];
+        case 'Combo DC 1T':
+          return ['1X + Over 1.5', '1X + Under 1.5', '12 + Over 1.5', '12 + Under 1.5', 'X2 + Over 1.5', 'X2 + Under 1.5'];
+        case 'Combo DC 2T':
+          return ['1X + Over 1.5', '1X + Under 1.5', '12 + Over 1.5', '12 + Under 1.5', 'X2 + Over 1.5', 'X2 + Under 1.5'];
+        case 'C. DC Multi':
+          return ['1X', '12', 'X2'];
+        case 'Combo 3':
+          return ['Combo 3'];
+        case 'Combo3 HT/FT':
+          return ['HT/FT'];
+        case 'Combo+Multi':
+          return ['Combo+Multi'];
+        case 'Combo C/O':
+          return ['Combo C/O'];
+        case 'Chance 3 Mix':
+          return ['1X2 Mix'];
+        case 'Chance Mix':
+          return ['Chance Mix'];
+        case 'HT Ch. Mix':
+          return ['HT Mix'];
+        case 'Ris. Esatto Mix':
+          return ['Ris. Esatto Mix'];
+        case 'Segna 1T 2T':
+          return ['1T/2T'];
+        case 'Vince a 0':
+          return ['Vince a 0'];
+        case 'Vince 1T e 2T':
+          return ['1T e 2T'];
+        case 'Vince 1T o 2T':
+          return ['1T o 2T'];
+        case 'Vincono Rib.':
+          return ['Ribaltamento'];
+        case 'Cart. Allen.':
+          return ['Cart. Allen.'];
         case 'Primo Gol':
           return ['Casa', 'Ospiti', 'Nessuno'];
+        case 'Primo Gol Min':
+          return ['0-15', '16-30', '31-45', '46-60', '61-75', '76-90'];
+        case 'Primo Gol Min.':
+          return ['0-15', '16-30', '31-45', '46-60', '61-75', '76-90'];
+        case '1X2+Primo Go':
+          return ['1 + Primo', 'X + Primo', '2 + Primo'];
+        case 'DNB Primo Go':
+          return ['DNB Primo'];
+        case 'Ultimo Gol':
+          return ['Casa', 'Ospiti', 'Nessuno'];
+        case 'Rigori':
+          return ['Sì', 'No'];
+        case 'Speciali Gol':
+          return ['Speciali'];
+        case 'Metodo 1° gol':
+          return ['Tiro', 'Testa', 'Rigore', 'Punizione', 'Autogol'];
+        case 'Sosituzioni':
+          return ['Over', 'Under'];
+        case 'VAR Si/No':
+          return ['Sì', 'No'];
+        case 'Corner':
+          return ['Over 9.5', 'Under 9.5', 'Over 10.5', 'Under 10.5', 'Over 11.5', 'Under 11.5'];
+        case 'Pari/Dispari':
+          return ['Pari', 'Dispari'];
+        case 'Pari/Dis. 1T':
+          return ['Pari 1T', 'Dispari 1T'];
+        case 'Pari/Dis. 2T':
+          return ['Pari 2T', 'Dispari 2T'];
+        case 'P./D. Squadre':
+          return ['Casa Pari', 'Casa Dispari', 'Ospite Pari', 'Ospite Dispari'];
+        case 'Parz./Fin.':
+          return ['1/1', '1/X', '1/2', 'X/1', 'X/X', 'X/2', '2/1', '2/X', '2/2'];
+        case 'DC 1T':
+          return ['1X 1T', '12 1T', 'X2 1T'];
+        case 'DC 2T':
+          return ['1X 2T', '12 2T', 'X2 2T'];
+        case '1X2 5 min':
+          return ['1', 'X', '2'];
+        case '1X2 10 min':
+          return ['1', 'X', '2'];
+        case '1X2 15 min':
+          return ['1', 'X', '2'];
+        case '1X2 25 min':
+          return ['1', 'X', '2'];
+        case '1X2 30 min':
+          return ['1', 'X', '2'];
+        case 'Goal (0 - 15)':
+          return ['Sì', 'No'];
+        case 'Goal (0 - 30)':
+          return ['Sì', 'No'];
+        case 'DNB':
+          return ['1', '2'];
+        case 'DNB 1T':
+          return ['1', '2'];
+        case 'DNB 2T':
+          return ['1', '2'];
+        case 'HNB':
+          return ['HNB'];
+        case 'ANB':
+          return ['ANB'];
+        case 'Gol No Bet':
+          return ['Gol No Bet'];
+        case 'Tempo+Gol':
+          return ['Tempo+Gol'];
+        case 'T+G (C/O)':
+          return ['T+G C/O'];
         case '1T':
           return ['1', 'X', '2'];
         case '2T':
           return ['1', 'X', '2'];
-        case 'DNB':
-          return ['1', '2'];
         default:
           return ['1', 'X', '2'];
       }
@@ -1961,7 +2775,6 @@
           ? `${window.location.origin}/api/events?sport=${sportForMongo}&limit=200&league=${encodeURIComponent(campionatoSelezionato)}`
           : `${window.location.origin}/api/events?sport=${sportForMongo}&limit=200`;
         
-        console.log('loadMatches: URL completo', url);
         const response = await fetch(url);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -2260,17 +3073,9 @@
                   const homeName = ev.home_name || '';
                   const awayName = ev.away_name || '';
                   quota = getDoubleChanceQuota(quote, col, homeName, awayName) || '-';
-                  // Debug temporaneo
-                  if (quota === '-' && quote) {
-                    console.log('DC non trovata:', { col, homeName, awayName, quote: JSON.stringify(quote).substring(0, 200) });
-                  }
                 } else if (mercatoSelezionato === 'Over/Under') {
                   // Usa la funzione helper per estrarre la quota Over/Under
                   quota = getOverUnderQuota(quote, col) || '-';
-                  // Debug temporaneo
-                  if (quota === '-' && quote) {
-                    console.log('OU non trovata:', { col, quote: JSON.stringify(quote).substring(0, 200) });
-                  }
                 } else if (mercatoSelezionato === 'Gol Totali') {
                   const btts = quote['both_teams_to_score'] || {};
                   if (Array.isArray(btts)) {
@@ -2279,48 +3084,91 @@
                   } else {
                     quota = btts[col === 'GG' ? 'Yes' : 'No'] || '-';
                   }
-                } else if (mercatoSelezionato === 'Handicap') {
-                  const handicap = quote['asian_lines'] || quote['handicap'] || {};
-                  if (Array.isArray(handicap)) {
-                    const item = handicap.find(o => o.name === col || o.header === col);
-                    quota = item?.odds || '-';
-                  } else {
-                    quota = handicap[col] || '-';
-                  }
+                } else if (mercatoSelezionato === 'Handicap' || mercatoSelezionato === 'Handicap 1T' || mercatoSelezionato === 'Handicap 2T') {
+                  quota = getHandicapQuota(quote, col) || '-';
                 } else if (mercatoSelezionato === 'Ris. Esatto') {
-                  const exact = quote['correct_score'] || {};
-                  if (Array.isArray(exact)) {
-                    const item = exact.find(o => o.name === col || o.header === col);
-                    quota = item?.odds || '-';
-                  } else {
-                    quota = exact[col] || '-';
-                  }
-                } else if (mercatoSelezionato === 'Corner') {
-                  const corners = quote['corners'] || {};
-                  if (Array.isArray(corners)) {
-                    const item = corners.find(o => o.name === col || o.header === col);
-                    quota = item?.odds || '-';
-                  } else {
-                    quota = corners[col] || '-';
-                  }
-                } else if (mercatoSelezionato === 'Cartellini') {
-                  const cards = quote['cards'] || {};
-                  if (Array.isArray(cards)) {
-                    const item = cards.find(o => o.name === col || o.header === col);
-                    quota = item?.odds || '-';
-                  } else {
-                    quota = cards[col] || '-';
-                  }
+                  quota = getRisEsattoQuota(quote, col, false) || '-';
+                } else if (mercatoSelezionato === 'Ris. Es. 1T') {
+                  quota = getRisEsattoQuota(quote, col, true) || '-';
+                } else if (mercatoSelezionato === 'Ris. Es. 2T') {
+                  quota = getRisEsattoQuota(quote, col, false) || '-';
+                } else if (mercatoSelezionato === 'Ris. Es. P/F') {
+                  quota = getParzialeFinaleQuota(quote, col) || '-';
+                } else if (mercatoSelezionato === 'Gol Esatti') {
+                  quota = getGolTotaliQuota(quote, col, false, false, false, false) || '-';
+                } else if (mercatoSelezionato === 'GolTot 1T') {
+                  quota = getGolTotaliQuota(quote, col, true, false, false, false) || '-';
+                } else if (mercatoSelezionato === 'GolTot 2T') {
+                  quota = getGolTotaliQuota(quote, col, false, true, false, false) || '-';
+                } else if (mercatoSelezionato === 'GolTot Casa') {
+                  quota = getGolTotaliQuota(quote, col, false, false, true, false) || '-';
+                } else if (mercatoSelezionato === 'GolTot Ospite') {
+                  quota = getGolTotaliQuota(quote, col, false, false, false, true) || '-';
+                } else if (mercatoSelezionato === 'GG/NG 1T') {
+                  quota = getGGNGQuota(quote, col, true, false) || '-';
+                } else if (mercatoSelezionato === 'GG/NG 2T') {
+                  quota = getGGNGQuota(quote, col, false, true) || '-';
+                } else if (mercatoSelezionato === 'GG Special') {
+                  quota = getComboQuota(quote, col) || '-';
+                } else if (mercatoSelezionato === 'Multi Gol') {
+                  quota = getMultiGoalQuota(quote, col, false, false) || '-';
+                } else if (mercatoSelezionato === 'Multi Gol 1T') {
+                  quota = getMultiGoalQuota(quote, col, true, false) || '-';
+                } else if (mercatoSelezionato === 'Multi Gol 2T') {
+                  quota = getMultiGoalQuota(quote, col, false, true) || '-';
+                } else if (mercatoSelezionato === 'Multi Gol C/O' || mercatoSelezionato === 'Multigoal 1T/2' || mercatoSelezionato === 'Multigol Comb') {
+                  quota = getMultiGoalQuota(quote, col, false, false) || '-';
+                } else if (mercatoSelezionato === 'Combo' || mercatoSelezionato === 'Combo 1T' || mercatoSelezionato === 'Combo 2T' || 
+                          mercatoSelezionato === 'Combo DC' || mercatoSelezionato === 'Combo DC 1T' || mercatoSelezionato === 'Combo DC 2T' ||
+                          mercatoSelezionato === 'C. DC Multi' || mercatoSelezionato === 'Combo 3' || mercatoSelezionato === 'Combo3 HT/FT' ||
+                          mercatoSelezionato === 'Combo+Multi' || mercatoSelezionato === 'Combo C/O' || mercatoSelezionato === 'Chance 3 Mix' ||
+                          mercatoSelezionato === 'Chance Mix' || mercatoSelezionato === 'HT Ch. Mix' || mercatoSelezionato === 'Ris. Esatto Mix') {
+                  quota = getComboQuota(quote, col) || '-';
                 } else if (mercatoSelezionato === 'Primo Gol') {
-                  const firstGoal = quote['first_goal'] || {};
-                  if (Array.isArray(firstGoal)) {
-                    const item = firstGoal.find(o => o.name === col || o.header === col);
+                  quota = getFirstLastGoalQuota(quote, col, true) || '-';
+                } else if (mercatoSelezionato === 'Ultimo Gol') {
+                  quota = getFirstLastGoalQuota(quote, col, false) || '-';
+                } else if (mercatoSelezionato === 'Primo Gol Min' || mercatoSelezionato === 'Primo Gol Min.' || mercatoSelezionato === '1X2+Primo Go' || mercatoSelezionato === 'DNB Primo Go') {
+                  quota = getFirstLastGoalQuota(quote, col, true) || '-';
+                } else if (mercatoSelezionato === 'Pari/Dispari') {
+                  quota = getPariDispariQuota(quote, col, false, false) || '-';
+                } else if (mercatoSelezionato === 'Pari/Dis. 1T') {
+                  quota = getPariDispariQuota(quote, col, true, false) || '-';
+                } else if (mercatoSelezionato === 'Pari/Dis. 2T') {
+                  quota = getPariDispariQuota(quote, col, false, true) || '-';
+                } else if (mercatoSelezionato === 'P./D. Squadre') {
+                  quota = getPariDispariQuota(quote, col, false, false) || '-';
+                } else if (mercatoSelezionato === 'Parz./Fin.') {
+                  quota = getParzialeFinaleQuota(quote, col) || '-';
+                } else if (mercatoSelezionato === 'DC 1T' || mercatoSelezionato === 'DC 2T') {
+                  const homeName = ev.home_name || '';
+                  const awayName = ev.away_name || '';
+                  quota = getDoubleChanceQuota(quote, col, homeName, awayName) || '-';
+                } else if (mercatoSelezionato === '1X2 5 min' || mercatoSelezionato === '1X2 10 min' || mercatoSelezionato === '1X2 15 min' || 
+                          mercatoSelezionato === '1X2 25 min' || mercatoSelezionato === '1X2 30 min') {
+                  quota = quote_1x2[col] || '-';
+                } else if (mercatoSelezionato === 'Goal (0 - 15)' || mercatoSelezionato === 'Goal (0 - 30)') {
+                  // Cerca in early_goal o late_goal
+                  const goalType = mercatoSelezionato.includes('15') ? 'early_goal' : 'late_goal';
+                  const goalData = quote.goals?.sp?.[goalType] || {};
+                  if (Array.isArray(goalData)) {
+                    const item = goalData.find(o => (o.name || '').toLowerCase() === col.toLowerCase());
                     quota = item?.odds || '-';
-                  } else {
-                    quota = firstGoal[col] || '-';
                   }
+                } else if (mercatoSelezionato === 'DNB' || mercatoSelezionato === 'DNB 1T' || mercatoSelezionato === 'DNB 2T') {
+                  const is1T = mercatoSelezionato === 'DNB 1T';
+                  const is2T = mercatoSelezionato === 'DNB 2T';
+                  quota = getDNBQuota(quote, col, is1T, is2T) || '-';
+                } else if (mercatoSelezionato === 'HNB') {
+                  quota = getNoBetQuota(quote, col, 'handicap_no_bet') || '-';
+                } else if (mercatoSelezionato === 'ANB') {
+                  quota = getNoBetQuota(quote, col, 'asian_no_bet') || '-';
+                } else if (mercatoSelezionato === 'Gol No Bet') {
+                  quota = getNoBetQuota(quote, col, 'goal_no_bet') || '-';
+                } else if (mercatoSelezionato === 'Tempo+Gol' || mercatoSelezionato === 'T+G (C/O)') {
+                  quota = getTimeAndGoalQuota(quote, col) || '-';
                 } else if (mercatoSelezionato === '1T') {
-                  const ht = quote['half_time'] || {};
+                  const ht = quote.half?.sp?.half_time_result || quote.half_time || {};
                   if (Array.isArray(ht)) {
                     const item = ht.find(o => o.name === col || o.header === col);
                     quota = item?.odds || '-';
@@ -2328,21 +3176,38 @@
                     quota = ht[col] || quote_1x2[col] || '-';
                   }
                 } else if (mercatoSelezionato === '2T') {
-                  const sh = quote['second_half'] || {};
+                  const sh = quote.half?.sp?.second_half_result || quote.second_half || {};
                   if (Array.isArray(sh)) {
                     const item = sh.find(o => o.name === col || o.header === col);
                     quota = item?.odds || '-';
                   } else {
                     quota = sh[col] || quote_1x2[col] || '-';
                   }
-                } else if (mercatoSelezionato === 'DNB') {
-                  const dnb = quote['draw_no_bet'] || {};
-                  if (Array.isArray(dnb)) {
-                    const item = dnb.find(o => o.name === col || o.header === col);
-                    quota = item?.odds || '-';
-                  } else {
-                    quota = dnb[col] || quote_1x2[col] || '-';
-                  }
+                } else if (mercatoSelezionato === 'O/U 1T' || mercatoSelezionato === 'O/U 2T' || mercatoSelezionato === 'O/U C/O' || mercatoSelezionato === 'O/U 1T C/O') {
+                  quota = getOverUnderQuota(quote, col) || '-';
+                } else if (mercatoSelezionato === 'Corner') {
+                  quota = getCornerQuota(quote, col) || '-';
+                } else if (mercatoSelezionato === 'Cart. Allen.') {
+                  quota = getCardsQuota(quote, col) || '-';
+                } else if (mercatoSelezionato === 'Sosituzioni') {
+                  quota = getSubstitutionsQuota(quote, col) || '-';
+                } else if (mercatoSelezionato === 'VAR Si/No') {
+                  quota = getVARQuota(quote, col) || '-';
+                } else if (mercatoSelezionato === 'Rigori') {
+                  quota = getPenaltyQuota(quote, col) || '-';
+                } else if (mercatoSelezionato === 'Speciali Gol') {
+                  quota = getSpecialGoalsQuota(quote, col) || '-';
+                } else if (mercatoSelezionato === 'Metodo 1° gol') {
+                  quota = getFirstGoalMethodQuota(quote, col) || '-';
+                } else if (mercatoSelezionato === 'Segna 1T 2T') {
+                  // Per Segna 1T 2T, cerca goalscorers con header appropriato
+                  quota = getGoalscorersQuota(quote, col, 'Anytime') || '-';
+                } else if (mercatoSelezionato === 'Vince a 0') {
+                  quota = getWinningMarginQuota(quote, col) || '-';
+                } else if (mercatoSelezionato === 'Vince 1T e 2T' || mercatoSelezionato === 'Vince 1T o 2T') {
+                  quota = getHalfWithMostGoalsQuota(quote, col) || '-';
+                } else if (mercatoSelezionato === 'Vincono Rib.') {
+                  quota = getComebackQuota(quote, col) || '-';
                 }
                 
                 const quotaNum = parseFloat(quota);
@@ -2697,7 +3562,6 @@
         return;
       }
       
-      console.log('renderMercatiPerCategoria: Inizio, partite:', matchesData.length);
       
       // Raccogli tutti i mercati da tutte le partite, organizzati per categoria
       mercatiPerCategoriaGlobal = {};
@@ -2741,7 +3605,6 @@
         });
       });
       
-      console.log('Categorie trovate:', Object.keys(mercatiPerCategoriaGlobal));
       
       // Rimuovi duplicati (stesso ID o stessa combinazione)
       Object.keys(mercatiPerCategoriaGlobal).forEach(categoria => {
@@ -3325,7 +4188,6 @@
       
       // Verifica che matchesData sia popolato
       if (!matchesData || matchesData.length === 0) {
-        console.log('matchesData è vuoto, impossibile cercare');
         return [];
       }
       
@@ -3390,7 +4252,6 @@
         }
       });
       
-      // Log di debug: mostra i primi 3 match_id per capire il formato
       if (matchesData.length > 0 && risultati.length === 0) {
         const sampleIds = matchesData.slice(0, 5).map(ev => ({
           match_id: ev.match_id,
@@ -3398,8 +4259,6 @@
           type_match_id: typeof ev.match_id,
           type__id: typeof ev._id
         }));
-        console.log('Sample IDs:', sampleIds);
-        console.log('Search term:', searchTerm, 'Search term num:', searchTermNum);
         
         // Verifica se l'ID cercato esiste nei dati
         const foundId = matchesData.find(ev => {
@@ -3407,13 +4266,9 @@
           return id === searchTermNum || id === searchTerm || id.includes(searchTermNum) || id.includes(searchTerm);
         });
         if (foundId) {
-          console.log('ID trovato ma non aggiunto:', foundId.match_id, foundId._id);
-        } else {
-          console.log('ID non trovato nei dati');
         }
       }
       
-      console.log(`Ricerca "${query}": trovati ${risultati.length} risultati su ${matchesData.length} eventi`);
       return risultati;
     }
 
@@ -3442,11 +4297,9 @@
       
       let risultati = cercaEvento(query);
       
-      console.log('Ricerca eseguita:', { query, risultatiCount: risultati.length, matchesDataCount: matchesData.length });
       
       // Se non trova risultati, usa l'API di ricerca dedicata (più veloce)
       if (risultati.length === 0) {
-        console.log('Nessun risultato trovato localmente, uso ricerca API...');
         
         // Mostra messaggio di caricamento
         if (searchResults) {
@@ -3458,7 +4311,6 @@
           // Usa endpoint di ricerca dedicato (più veloce, cerca direttamente nel DB)
           const sportForMongo = getSportForMongo(sportSelezionato);
           const url = `${window.location.origin}/api/search?sport=${sportForMongo}&q=${encodeURIComponent(query)}&limit=50`;
-          console.log('Ricerca API:', url);
           
           const response = await fetch(url);
           if (response.ok) {
@@ -3485,7 +4337,6 @@
                 };
               });
               
-              console.log('Trovati', risultati.length, 'risultati tramite API');
             }
           }
         } catch (error) {
@@ -3590,7 +4441,6 @@
       if (!ev) {
         // Prova a trovare l'evento nei risultati della ricerca API (se disponibili)
         // Altrimenti, carica l'evento specifico tramite API
-        console.log('Evento non trovato nei dati caricati, carico il campionato specifico...');
         
         // Carica l'evento specifico per ottenere il campionato
         const sportForMongo = getSportForMongo(sportSelezionato);
@@ -3912,8 +4762,40 @@
           });
         });
         
-        // Imposta mercato 1X2
-        selezionaMercato('1X2');
+        // Aggiungi event listener al pulsante toggle mercati
+        const toggleMercatiBtn = document.getElementById('toggle-mercati-btn');
+        const mercatiRigheExtra = document.getElementById('mercati-righe-extra');
+        const toggleMercatiText = document.getElementById('toggle-mercati-text');
+        
+        if (toggleMercatiBtn && mercatiRigheExtra && toggleMercatiText) {
+          toggleMercatiBtn.addEventListener('click', function() {
+            const isHidden = mercatiRigheExtra.classList.contains('hidden');
+            if (isHidden) {
+              mercatiRigheExtra.classList.remove('hidden');
+              toggleMercatiText.textContent = '▲ Nascondi';
+            } else {
+              mercatiRigheExtra.classList.add('hidden');
+              toggleMercatiText.textContent = '▼ Mostra tutti';
+            }
+          });
+        }
+        
+        // Mostra/nascondi tab mercati in base allo sport iniziale
+        const mercatiTabsContainer = document.getElementById('mercati-tabs-container');
+        if (mercatiTabsContainer) {
+          if (sportSelezionato === 'calcio') {
+            mercatiTabsContainer.classList.remove('hidden');
+          } else {
+            mercatiTabsContainer.classList.add('hidden');
+          }
+        }
+        
+        // Imposta mercato Principali per calcio, 1X2 per altri sport
+        if (sportSelezionato === 'calcio') {
+          selezionaMercato('Principali');
+        } else {
+          selezionaMercato('1X2');
+        }
         
         // Event listener per la ricerca
         const searchInput = document.getElementById('search-input');
@@ -4058,9 +4940,7 @@
         }
         
         // Carica i campionati all'apertura (le partite verranno caricate automaticamente quando viene selezionato il campionato)
-        console.log('DOMContentLoaded: inizializzazione');
         loadLeagues().then(() => {
-          console.log('DOMContentLoaded: campionati caricati');
         }).catch(error => {
           console.error('DOMContentLoaded: errore caricamento campionati', error);
         });
