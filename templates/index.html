@@ -264,48 +264,7 @@
                 <div class="card-title">Le Mie Schedine</div>
                 <div class="card-subtitle">Schedine salvate</div>
             </a>
-            
-            <a href="cloudedge://" class="card" id="cloudedge-card" onclick="openCloudEdge(event)">
-                <span class="card-icon">📹</span>
-                <div class="card-title">CloudEdge</div>
-                <div class="card-subtitle">Videocamere di sicurezza</div>
-            </a>
         </div>
     </div>
-    
-    <script>
-        // Funzione per aprire CloudEdge
-        function openCloudEdge(event) {
-            // Prova a aprire l'app CloudEdge
-            const appUrl = 'cloudedge://';
-            const webUrl = 'https://cloudedgeapp.com'; // Fallback
-            
-            // Prova deep link per mobile
-            window.location.href = appUrl;
-            
-            // Se dopo 2 secondi non si è aperta l'app, apri il sito web
-            setTimeout(function() {
-                if (document.hidden || document.webkitHidden) {
-                    // L'app si è aperta
-                    return;
-                }
-                // Fallback: apri il sito web
-                window.open(webUrl, '_blank');
-            }, 2000);
-            
-            event.preventDefault();
-        }
-        
-        // Rileva se siamo su mobile
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        
-        if (isMobile) {
-            // Su mobile, prova direttamente il deep link
-            document.getElementById('cloudedge-card').addEventListener('click', function(e) {
-                window.location.href = 'cloudedge://';
-                e.preventDefault();
-            });
-        }
-    </script>
 </body>
 </html>
