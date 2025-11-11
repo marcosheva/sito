@@ -190,6 +190,13 @@
               </div>
               <span class="sport-indicator hidden text-yellow-400">✓</span>
             </div>
+            <div class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="horse racing" data-icon="🐴" data-nome="Horse Racing">
+              <div class="flex items-center space-x-2">
+                <span class="text-lg">🐴</span>
+                <span class="text-xs">Horse Racing</span>
+              </div>
+              <span class="sport-indicator hidden text-yellow-400">✓</span>
+            </div>
           </div>
         </div>
       </aside>
@@ -211,7 +218,22 @@
         </header>
         
         <div class="flex-1 overflow-y-auto p-4">
-          <div class="w-full bg-gray-800 rounded shadow border-2 border-yellow-500">
+          <!-- Per Horse Racing: layout con sidebar a destra -->
+          <div id="horse-racing-layout" class="hidden flex gap-4 h-full">
+            <!-- Contenuto centrale con le corse -->
+            <div class="flex-1 bg-gray-800 rounded shadow border-2 border-yellow-500 overflow-y-auto">
+              <div class="bg-gray-700 text-white text-center font-bold py-2 border-b border-gray-600 text-lg" id="campo-selezionato-title">Seleziona un campo</div>
+              <div id="corse-container" class="p-4"></div>
+            </div>
+            <!-- Sidebar a destra con i campi -->
+            <div class="w-64 bg-gray-800 rounded shadow border-2 border-gray-600 overflow-y-auto">
+              <div class="bg-gray-700 text-white text-center font-bold py-2 border-b border-gray-600 text-sm">🏇 Campi</div>
+              <div id="campi-list" class="p-2"></div>
+            </div>
+          </div>
+          
+          <!-- Layout normale per gli altri sport -->
+          <div id="normal-layout" class="w-full bg-gray-800 rounded shadow border-2 border-yellow-500">
             <div class="bg-gray-700 text-white text-center font-bold py-2 border-b border-gray-600 text-lg" id="sport-title">CALCIO</div>
             
             <!-- Tab Mercati Principali -->
@@ -229,6 +251,14 @@
               <button id="mercato-1T" class="mercato-tab-btn px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="1T">1T</button>
               <button id="mercato-2T" class="mercato-tab-btn px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="2T">2T</button>
               <button id="mercato-DNB" class="mercato-tab-btn px-3 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap" data-mercato="DNB">DNB</button>
+            </div>
+            
+            <!-- Tabelle Mercati per Categoria (solo Calcio) -->
+            <div id="mercati-categorie-container" class="hidden mb-4">
+              <div class="bg-gray-800 rounded-lg p-4">
+                <h3 class="text-yellow-400 font-bold text-sm mb-3">Mercati per Categoria</h3>
+                <div id="mercati-categorie" class="space-y-4"></div>
+              </div>
             </div>
             
             <div class="overflow-x-auto">
@@ -353,6 +383,7 @@
       'badminton': { icon: '🏸', nome: 'Badminton' },
       'cricket': { icon: '🏏', nome: 'Cricket' },
       'squash': { icon: '🎾', nome: 'Squash' },
+      'horse racing': { icon: '🐴', nome: 'Horse Racing' },
     };
 
     // Mapping sport UI -> MongoDB
@@ -364,7 +395,8 @@
         'e-sport': 'E-Sport',
         'badminton': 'Badminton',
         'cricket': 'Cricket',
-        'squash': 'Squash'
+        'squash': 'Squash',
+        'horse racing': 'Horse Racing'
       };
       return mapping[sport] || sport;
     }
@@ -762,10 +794,26 @@
       }
     }
 
+    // Variabile per campo selezionato (Horse Racing)
+    let campoSelezionato = null;
+    
     // Seleziona sport
     function selezionaSport(sport, icon, nome) {
       sportSelezionato = sport;
       campionatoSelezionato = null; // Reset filtro campionato
+      campoSelezionato = null; // Reset campo selezionato
+      
+      // Mostra/nascondi layout in base allo sport
+      const horseRacingLayout = document.getElementById('horse-racing-layout');
+      const normalLayout = document.getElementById('normal-layout');
+      
+      if (sport === 'horse racing' || sport === 'horseracing') {
+        if (horseRacingLayout) horseRacingLayout.classList.remove('hidden');
+        if (normalLayout) normalLayout.classList.add('hidden');
+      } else {
+        if (horseRacingLayout) horseRacingLayout.classList.add('hidden');
+        if (normalLayout) normalLayout.classList.remove('hidden');
+      }
       
       // Per gli altri sport (non calcio), imposta mercato a 1X2
       if (sport !== 'calcio') {
@@ -830,6 +878,16 @@
       
       // Aggiorna titolo
       document.getElementById('sport-title').textContent = nome;
+      
+      // Mostra/nascondi contenitore mercati per categoria
+      const mercatiContainer = document.getElementById('mercati-categorie-container');
+      if (mercatiContainer) {
+        if (sport === 'calcio') {
+          // Verrà mostrato quando vengono caricati i dati
+        } else {
+          mercatiContainer.classList.add('hidden');
+        }
+      }
       
       // Carica campionati se è calcio
       if (sport === 'calcio') {
@@ -1392,6 +1450,23 @@
         return null;
       }
       
+      // Per Horse Racing, cerca in win_each_way per nome del cavallo
+      if (sport === 'horse racing' || sport === 'horseracing') {
+        const winEachWay = quote.win_each_way || [];
+        
+        if (Array.isArray(winEachWay)) {
+          for (const cavallo of winEachWay) {
+            const nomeCavallo = (cavallo.name || '').trim();
+            // col è il nome del cavallo
+            if (nomeCavallo === col.trim()) {
+              return cavallo.odds;
+            }
+          }
+        }
+        
+        return null;
+      }
+      
       // Per il ping pong, cerca in match_lines con name "To Win" e header "1" o "2"
       if (sport === 'pingpong' || sport === 'ping_pong') {
         const matchLines = quote.main?.sp?.match_lines || quote.match_lines || {};
@@ -1678,6 +1753,26 @@
         }
       }
       
+      // Per Horse Racing, mostra tutti i cavalli con i loro nomi
+      if (sportSelezionato === 'horse racing' || sportSelezionato === 'horseracing') {
+        if (mercato === 'Principali' || mercato === '1X2') {
+          // Raccogli tutti i nomi dei cavalli unici da matchesData
+          const nomiCavalli = new Set();
+          matchesData.forEach(ev => {
+            const quote = ev.quote || {};
+            const winEachWay = quote.win_each_way || [];
+            if (Array.isArray(winEachWay)) {
+              winEachWay.forEach(cavallo => {
+                const nome = cavallo.name || cavallo.header || '';
+                if (nome) nomiCavalli.add(nome);
+              });
+            }
+          });
+          // Ordina per nome
+          return Array.from(nomiCavalli).sort();
+        }
+      }
+      
       // Per il ping pong, mostra solo Money Line (1 e 2, senza X)
       if (sportSelezionato === 'pingpong' || sportSelezionato === 'ping_pong') {
         if (mercato === 'Principali' || mercato === '1X2') {
@@ -1810,7 +1905,21 @@
         
         if (data.success && data.results) {
           matchesData = data.results;
-          renderMatches();
+          
+          // Per Horse Racing, renderizza campi e corse
+          if (sportSelezionato === 'horse racing' || sportSelezionato === 'horseracing') {
+            renderCampiHorseRacing();
+            renderCorseHorseRacing();
+          } else {
+            renderMatches();
+          }
+          
+          // Mostra tabelle mercati per categoria solo per calcio
+          if (sportSelezionato === 'calcio') {
+            renderMercatiPerCategoria();
+          } else {
+            document.getElementById('mercati-categorie-container').classList.add('hidden');
+          }
         } else {
           const colonne = getColonnePerMercato(mercatoSelezionato);
           const numCols = 4 + (Array.isArray(colonne) && colonne[0]?.type ? colonne.length : colonne.length);
@@ -1840,33 +1949,44 @@
         
         if (matchesData.length === 0) {
           const colonne = getColonnePerMercato(mercatoSelezionato);
-          const numCols = 4 + (Array.isArray(colonne) && colonne[0]?.type ? colonne.length : colonne.length);
+          const numCols = (sportSelezionato === 'horse racing' || sportSelezionato === 'horseracing') ? 1 : (4 + (Array.isArray(colonne) && colonne[0]?.type ? colonne.length : colonne.length));
           tbody.innerHTML = `<tr><td colspan="${numCols}" class="text-center py-4 text-gray-400">Nessuna partita disponibile</td></tr>`;
           return;
         }
 
         // Aggiorna header in base al mercato
         let colonne = getColonnePerMercato(mercatoSelezionato);
-        const isPrincipali = Array.isArray(colonne) && colonne[0]?.type;
+        // Assicurati che colonne sia sempre un array valido
+        if (!Array.isArray(colonne)) {
+          colonne = [];
+        }
+        const isPrincipali = Array.isArray(colonne) && colonne.length > 0 && colonne[0]?.type;
         
         // Aggiorna header tabella
-        let headerHtml = `
-          <th class="px-2 py-1 border-b border-gray-600 text-center">Id</th>
-          <th class="px-2 py-1 border-b border-gray-600 text-center">Data</th>
-          <th class="px-2 py-1 border-b border-gray-600 text-center">Evento</th>
-        `;
+        let headerHtml = '';
         
-        // Se colonne è un array di oggetti (Principali), usa label, altrimenti usa direttamente la stringa
-        if (isPrincipali) {
-          colonne.forEach(col => {
-            headerHtml += `<th class="px-1 py-1 border-b border-gray-600">${col.label}</th>`;
-          });
+        // Per Horse Racing, header semplificato
+        if (sportSelezionato === 'horse racing' || sportSelezionato === 'horseracing') {
+          headerHtml = `<th class="px-2 py-1 border-b border-gray-600 text-center">Corse di Cavalli</th>`;
         } else {
-        colonne.forEach(col => {
-          headerHtml += `<th class="px-1 py-1 border-b border-gray-600">${col}</th>`;
-        });
+          headerHtml = `
+            <th class="px-2 py-1 border-b border-gray-600 text-center">Id</th>
+            <th class="px-2 py-1 border-b border-gray-600 text-center">Data</th>
+            <th class="px-2 py-1 border-b border-gray-600 text-center">Evento</th>
+          `;
+          
+          // Se colonne è un array di oggetti (Principali), usa label, altrimenti usa direttamente la stringa
+          if (isPrincipali) {
+            colonne.forEach(col => {
+              headerHtml += `<th class="px-1 py-1 border-b border-gray-600">${col.label}</th>`;
+            });
+          } else {
+            colonne.forEach(col => {
+              headerHtml += `<th class="px-1 py-1 border-b border-gray-600">${col}</th>`;
+            });
+          }
+          headerHtml += `<th class="px-2 py-1 border-b border-gray-600 text-center">Mercati</th>`;
         }
-        headerHtml += `<th class="px-2 py-1 border-b border-gray-600 text-center">Mercati</th>`;
         thead.innerHTML = `<tr>${headerHtml}</tr>`;
 
         let html = '';
@@ -1888,26 +2008,96 @@
         });
 
         Object.keys(grouped).sort().forEach(date => {
-          const numCols = 4 + colonne.length;
+          // Per Horse Racing, usa solo 1 colonna (colspan)
+          const numCols = (sportSelezionato === 'horse racing' || sportSelezionato === 'horseracing') ? 1 : (4 + colonne.length);
           html += `<tr><td colspan="${numCols}" class="bg-gray-900 text-yellow-400 font-bold px-2 py-1 border-b border-gray-700">${date}</td></tr>`;
           
           // Per ogni data, mostra i campionati
           Object.keys(grouped[date]).sort().forEach(league => {
-            html += `<tr><td colspan="${numCols}" class="bg-gray-800 text-blue-400 font-semibold px-4 py-1 border-b border-gray-600 text-xs">🏆 ${league}</td></tr>`;
-            
-            grouped[date][league].forEach(ev => {
-              const time = new Date(ev.start_time_date || ev.start_time).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
-              const quote_1x2 = ev.quote_1x2 || {};
-              const matchId = ev.match_id || ev._id;
-              const teams = `${ev.home_name || ''} - ${ev.away_name || ''}`;
+            // Per Horse Racing, visualizzazione speciale verticale
+            if (sportSelezionato === 'horse racing' || sportSelezionato === 'horseracing') {
+              // Raggruppa le corse per campo (league)
+              const corsePerCampo = {};
+              grouped[date][league].forEach(ev => {
+                const campo = ev.league || ev.home_name || 'Unknown';
+                if (!corsePerCampo[campo]) {
+                  corsePerCampo[campo] = [];
+                }
+                corsePerCampo[campo].push(ev);
+              });
               
-              html += `<tr class="bg-gray-800 hover:bg-gray-700">
-                <td class="px-2 py-1 border-b border-gray-700 text-center">${matchId}</td>
-                <td class="px-2 py-1 border-b border-gray-700 text-center">${time}</td>
-                <td class="px-2 py-1 border-b border-gray-700 text-center">${teams}</td>`;
+              // Per ogni campo
+              Object.keys(corsePerCampo).sort().forEach(campo => {
+                // Header del campo
+                html += `<tr><td colspan="${numCols}" class="bg-gray-800 text-blue-400 font-semibold px-4 py-2 border-b border-gray-600 text-sm">🏇 ${campo}</td></tr>`;
+                
+                // Per ogni corsa nel campo
+                corsePerCampo[campo].forEach(ev => {
+                  const numeroCorsa = ev.numero_corsa || ev.quote?.numero_corsa || 'N/A';
+                  const quote = ev.quote || {};
+                  const winEachWay = quote.win_each_way || [];
+                  
+                  // Riga con numero corsa
+                  html += `<tr class="bg-gray-750">
+                    <td colspan="${numCols}" class="px-4 py-1 border-b border-gray-600">
+                      <span class="text-yellow-400 font-bold text-sm">🐴 Corsa ${numeroCorsa}</span>
+                    </td>
+                  </tr>`;
+                  
+                  // Riga con lista cavalli
+                  if (winEachWay && Array.isArray(winEachWay) && winEachWay.length > 0) {
+                    // Ordina i cavalli per posizione (header)
+                    const cavalliOrdinati = [...winEachWay].sort((a, b) => {
+                      const posA = parseInt(a.header || '99');
+                      const posB = parseInt(b.header || '99');
+                      return posA - posB;
+                    });
+                    
+                    cavalliOrdinati.forEach((cavallo) => {
+                      const nomeCavallo = cavallo.name || '';
+                      const quota = cavallo.odds || '-';
+                      const posizione = cavallo.header || '';
+                      
+                      html += `<tr class="bg-gray-800 hover:bg-gray-700">
+                        <td colspan="${numCols}" class="px-6 py-1 border-b border-gray-700">
+                          <div class="flex items-center justify-between">
+                            <span class="text-white text-sm">Cavallo ${posizione}: ${nomeCavallo}</span>
+                            <button class="quota-btn bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm font-bold" 
+                                    data-match-id="${ev.match_id || ev._id}" 
+                                    data-quota="${quota}" 
+                                    data-categoria="win_each_way" 
+                                    data-segno="${nomeCavallo}"
+                                    data-evento="Corsa ${numeroCorsa} - ${nomeCavallo}">
+                              ${quota}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>`;
+                    });
+                  } else {
+                    html += `<tr class="bg-gray-800">
+                      <td colspan="${numCols}" class="px-6 py-1 border-b border-gray-700 text-gray-400 text-sm">Nessun cavallo disponibile</td>
+                    </tr>`;
+                  }
+                });
+              });
+            } else {
+              // Visualizzazione normale per gli altri sport
+              html += `<tr><td colspan="${numCols}" class="bg-gray-800 text-blue-400 font-semibold px-4 py-1 border-b border-gray-600 text-xs">🏆 ${league}</td></tr>`;
               
-              // Aggiungi colonne in base al mercato
-              colonne.forEach(col => {
+              grouped[date][league].forEach(ev => {
+                const time = new Date(ev.start_time_date || ev.start_time).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+                const quote_1x2 = ev.quote_1x2 || {};
+                const matchId = ev.match_id || ev._id;
+                const teams = `${ev.home_name || ''} - ${ev.away_name || ''}`;
+                
+                html += `<tr class="bg-gray-800 hover:bg-gray-700">
+                  <td class="px-2 py-1 border-b border-gray-700 text-center">${matchId}</td>
+                  <td class="px-2 py-1 border-b border-gray-700 text-center">${time}</td>
+                  <td class="px-2 py-1 border-b border-gray-700 text-center">${teams}</td>`;
+                
+                // Aggiungi colonne in base al mercato
+                colonne.forEach(col => {
                 let quota = '-';
                 const quote = ev.quote || {};
                 const colLabel = isPrincipali ? col.label : col;
@@ -1969,6 +2159,9 @@
                     }
                   }
                   quota = squashQuote || quote_1x2[colLabel || col] || '-';
+                } else if (sportSelezionato === 'horse racing' || sportSelezionato === 'horseracing') {
+                  // Per Horse Racing, estrai le quote da win_each_way usando il nome del cavallo
+                  quota = get1X2Quota(quote, colLabel || col, 'horse racing') || '-';
                 } else if (sportSelezionato === 'futsal') {
                   // Per il futsal, estrai le quote 1X2 da money_line con Result
                   quota = get1X2Quota(quote, colLabel || col, 'futsal') || quote_1x2[colLabel || col] || '-';
@@ -2117,14 +2310,15 @@
               `;
               
               html += `</tr>`;
-            });
+              });
+            }
           });
         });
 
         tbody.innerHTML = html;
         
-        // Aggiungi event listener ai pulsanti quote
-        tbody.querySelectorAll('.quote-btn').forEach(btn => {
+        // Aggiungi event listener ai pulsanti quote (sia quote-btn che quota-btn per Horse Racing)
+        tbody.querySelectorAll('.quote-btn, .quota-btn').forEach(btn => {
           if (!btn.disabled) {
             btn.addEventListener('click', function() {
               const matchId = this.getAttribute('data-match-id');
@@ -2151,6 +2345,489 @@
           tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-red-400">Errore nel rendering delle partite</td></tr>';
         }
       }
+    }
+
+    // Renderizza i campi nella sidebar per Horse Racing
+    function renderCampiHorseRacing() {
+      const campiList = document.getElementById('campi-list');
+      if (!campiList) return;
+      
+      // Raccogli tutti i campi unici
+      const campi = new Set();
+      matchesData.forEach(ev => {
+        const campo = ev.league || ev.home_name || 'Unknown';
+        if (campo && campo !== 'Unknown') {
+          campi.add(campo);
+        }
+      });
+      
+      const campiArray = Array.from(campi).sort();
+      
+      if (campiArray.length === 0) {
+        campiList.innerHTML = '<div class="text-gray-400 text-sm p-2">Nessun campo disponibile</div>';
+        return;
+      }
+      
+      let html = '';
+      campiArray.forEach(campo => {
+        const isSelected = campoSelezionato === campo;
+        html += `
+          <button class="campo-btn w-full text-left px-3 py-2 mb-1 rounded text-sm font-medium transition-colors ${
+            isSelected 
+              ? 'bg-yellow-500 text-black' 
+              : 'bg-gray-700 text-white hover:bg-gray-600'
+          }" 
+                  data-campo="${campo}">
+            🏇 ${campo}
+          </button>
+        `;
+      });
+      
+      campiList.innerHTML = html;
+      
+      // Aggiungi event listener
+      campiList.querySelectorAll('.campo-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const campo = this.getAttribute('data-campo');
+          campoSelezionato = campo;
+          renderCampiHorseRacing(); // Aggiorna UI
+          renderCorseHorseRacing(); // Renderizza le corse
+        });
+      });
+    }
+
+    // Renderizza le corse del campo selezionato per Horse Racing
+    function renderCorseHorseRacing() {
+      const corseContainer = document.getElementById('corse-container');
+      const campoTitle = document.getElementById('campo-selezionato-title');
+      
+      if (!corseContainer) return;
+      
+      if (!campoSelezionato) {
+        campoTitle.textContent = 'Seleziona un campo';
+        corseContainer.innerHTML = '<div class="text-gray-400 text-center py-8">Seleziona un campo dalla lista a destra</div>';
+        return;
+      }
+      
+      campoTitle.textContent = `🏇 ${campoSelezionato}`;
+      
+      // Filtra le corse del campo selezionato
+      const corse = matchesData.filter(ev => {
+        const campo = ev.league || ev.home_name || 'Unknown';
+        return campo === campoSelezionato;
+      });
+      
+      if (corse.length === 0) {
+        corseContainer.innerHTML = '<div class="text-gray-400 text-center py-8">Nessuna corsa disponibile per questo campo</div>';
+        return;
+      }
+      
+      // Raggruppa per data
+      const groupedByDate = {};
+      corse.forEach(ev => {
+        const date = new Date(ev.start_time_date || ev.start_time);
+        const dateStr = date.toLocaleDateString('it-IT');
+        if (!groupedByDate[dateStr]) {
+          groupedByDate[dateStr] = [];
+        }
+        groupedByDate[dateStr].push(ev);
+      });
+      
+      let html = '';
+      Object.keys(groupedByDate).sort().forEach(date => {
+        html += `<div class="mb-4">
+          <div class="bg-gray-900 text-yellow-400 font-bold px-4 py-2 mb-2 rounded">${date}</div>`;
+        
+        groupedByDate[date].forEach(ev => {
+          const time = new Date(ev.start_time_date || ev.start_time).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+          const numeroCorsa = ev.numero_corsa || ev.quote?.numero_corsa || 'N/A';
+          const matchId = ev.match_id || ev._id;
+          const quote = ev.quote || {};
+          const winEachWay = quote.win_each_way || [];
+          
+          html += `
+            <div class="bg-gray-800 rounded mb-3 p-3">
+              <div class="flex items-center justify-between mb-2 pb-2 border-b border-gray-700">
+                <div class="flex items-center space-x-3">
+                  <span class="text-yellow-400 font-bold">🐴 Corsa ${numeroCorsa}</span>
+                  <span class="text-gray-400 text-sm">${time}</span>
+                  <span class="text-gray-500 text-xs">ID: ${matchId}</span>
+                </div>
+              </div>
+              <div class="space-y-1">`;
+          
+          if (winEachWay && Array.isArray(winEachWay) && winEachWay.length > 0) {
+            const cavalliOrdinati = [...winEachWay].sort((a, b) => {
+              const posA = parseInt(a.header || '99');
+              const posB = parseInt(b.header || '99');
+              return posA - posB;
+            });
+            
+            cavalliOrdinati.forEach(cavallo => {
+              const nomeCavallo = cavallo.name || '';
+              const quota = cavallo.odds || '-';
+              const posizione = cavallo.header || '';
+              
+              html += `
+                <div class="flex items-center justify-between py-1 px-2 hover:bg-gray-700 rounded">
+                  <span class="text-white text-sm">Cavallo ${posizione}: ${nomeCavallo}</span>
+                  <button class="quota-btn bg-green-600 hover:bg-green-700 text-white px-4 py-1 rounded text-sm font-bold min-w-[60px] text-center" 
+                          data-match-id="${matchId}" 
+                          data-quota="${quota}" 
+                          data-categoria="win_each_way" 
+                          data-segno="${nomeCavallo}"
+                          data-evento="Corsa ${numeroCorsa} - ${nomeCavallo}">
+                    ${quota}
+                  </button>
+                </div>`;
+            });
+          } else {
+            html += '<div class="text-gray-400 text-sm py-2">Nessun cavallo disponibile</div>';
+          }
+          
+          html += `</div></div>`;
+        });
+        
+        html += `</div>`;
+      });
+      
+      corseContainer.innerHTML = html;
+      
+      // Aggiungi event listener ai pulsanti quote
+      corseContainer.querySelectorAll('.quota-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const matchId = this.getAttribute('data-match-id');
+          const categoria = this.getAttribute('data-categoria');
+          const segno = this.getAttribute('data-segno');
+          const quota = this.getAttribute('data-quota');
+          const evento = this.getAttribute('data-evento');
+          selectQuote(matchId, categoria, segno, quota, evento);
+        });
+      });
+    }
+
+    // Mappatura nomi categorie da chiave database a nome italiano (come nell'immagine)
+    const categoriaNames = {
+      'goals_over_under': 'O/U',
+      '1st_half_goals_over_under': 'O/U 1T',
+      '2nd_half_goals_over_under': 'O/U 2T',
+      'goals_over_under_corners': 'O/U C/O',
+      '1st_half_goals_over_under_corners': 'O/U 1T C/O',
+      '2nd_half_goals_over_under_corners': 'O/U 2T C/O',
+      '1st_half_2nd_half_goals': 'O/U 1T/2T',
+      'half_time_result': '1T',
+      '2nd_half_result': '2T',
+      'half_time_double_chance': 'DC 1T',
+      '2nd_half_double_chance': 'DC 2T',
+      'half_time_full_time': 'Parz./Fin.',
+      'result_total_goals': 'P/F + GG/NG',
+      'alternative_total_goals': 'Gol Totali',
+      '1st_half_alternative_total_goals': 'GolTot 1T',
+      '2nd_half_alternative_total_goals': 'GolTot 2T',
+      'home_team_total_goals': 'GolTot Casa',
+      'away_team_total_goals': 'GolTot Ospite',
+      'both_teams_to_score': 'GG/NG',
+      'both_teams_to_score_1st_half': 'GG/NG 1T',
+      'both_teams_to_score_2nd_half': 'GG/NG 2T',
+      'both_teams_to_score_special': 'GG Special',
+      'handicap_result': 'Handicap',
+      '1st_half_handicap_result': 'Handicap 1T',
+      '2nd_half_handicap_result': 'Handicap 2T',
+      'asian_handicap': 'Asian Handicap',
+      'goals_odd_even': 'Pari/Dispari',
+      '1st_half_goals_odd_even': 'Pari/Dis. 1T',
+      '2nd_half_goals_odd_even': 'Pari/Dis. 2T',
+      'team_goals_odd_even': 'P/D. Squadre',
+      'correct_score': 'Ris. Esatto',
+      '1st_half_correct_score': 'Ris. Es. 1T',
+      '2nd_half_correct_score': 'Ris. Es. 2T',
+      'half_time_full_time_correct_score': 'Ris. Es. P/F',
+      'draw_no_bet': 'DNB',
+      '1st_half_draw_no_bet': 'DNB 1T',
+      '2nd_half_draw_no_bet': 'DNB 2T',
+      'home_no_bet': 'HNB',
+      'away_no_bet': 'ANB',
+      'goals_no_bet': 'Gol No Bet',
+      'time_goals': 'Tempo+Gol',
+      'time_goals_corners': 'T+G (C/O)',
+      'result_total_goals_combo': 'Combo',
+      '1st_half_result_total_goals_combo': 'Combo 1T',
+      '2nd_half_result_total_goals_combo': 'Combo 2T',
+      'double_chance_total_goals': 'Combo DC',
+      '1st_half_double_chance_total_goals': 'Combo DC 1T',
+      '2nd_half_double_chance_total_goals': 'Combo DC 2T',
+      'double_chance_multi': 'C. DC Multi',
+      'combo_3': 'Combo 3',
+      'combo_3_ht_ft': 'Combo3 HT/FT',
+      'combo_multi': 'Combo+Multi',
+      'combo_3_multi_corners': 'Combo3 Multi C/C',
+      'chance_3_mix': 'Chance 3 Mix',
+      'ht_chance_mix': 'HT Ch. Mix',
+      'correct_score_mix': 'Ris. Esatto Mix',
+      'first_team_to_score': 'Primo Gol',
+      'last_team_to_score': 'Ultimo Gol',
+      'match_goals_range': 'Multi Gol',
+      '1st_half_match_goals_range': 'Multi Gol 1T',
+      '2nd_half_match_goals_range': 'Multi Gol 2T',
+      'home_team_match_goals_range': 'Multi Gol Casa',
+      'away_team_match_goals_range': 'Multi Gol Ospite',
+      'match_goals_range_corners': 'Multi Gol C/O',
+      '1st_half_2nd_half_match_goals_range': 'Multigoal 1T/2T',
+      'special_goals': 'Speciali Gol',
+      'full_time_result': '1X2',
+      'double_chance': 'DC',
+      'goal_line': 'Goal Line',
+      'first_team_to_score': 'Segna',
+      'win_to_nil': 'Vince a 0',
+      'win_both_halves': 'Vince 1T e 2T',
+      'win_either_half': 'Vince 1T o 2T',
+      'win_from_behind': 'Vincono Rib.',
+      'winning_margin': 'Margine Vitt.',
+      'corners': 'Corner',
+      'cards': 'Cartellini'
+    };
+    
+    // Organizzazione delle categorie in righe (come nell'immagine)
+    const categoriePerRiga = [
+      ['goals_over_under', '1st_half_goals_over_under', '2nd_half_goals_over_under', 'goals_over_under_corners', '1st_half_goals_over_under_corners', '2nd_half_goals_over_under_corners', '1st_half_2nd_half_goals', 'half_time_result', '2nd_half_result', 'half_time_double_chance', '2nd_half_double_chance', 'half_time_full_time'],
+      ['result_total_goals', 'alternative_total_goals', '1st_half_alternative_total_goals', '2nd_half_alternative_total_goals', 'home_team_total_goals', 'away_team_total_goals', 'both_teams_to_score', 'both_teams_to_score_1st_half', 'both_teams_to_score_2nd_half', 'both_teams_to_score_special', 'handicap_result', '1st_half_handicap_result'],
+      ['2nd_half_handicap_result', 'asian_handicap', 'goals_odd_even', '1st_half_goals_odd_even', '2nd_half_goals_odd_even', 'team_goals_odd_even', 'correct_score', '1st_half_correct_score', '2nd_half_correct_score', 'half_time_full_time_correct_score', 'draw_no_bet', '1st_half_draw_no_bet'],
+      ['2nd_half_draw_no_bet', 'home_no_bet', 'away_no_bet', 'goals_no_bet', 'time_goals', 'time_goals_corners', 'result_total_goals_combo', '1st_half_result_total_goals_combo', '2nd_half_result_total_goals_combo', 'double_chance_total_goals', '1st_half_double_chance_total_goals', '2nd_half_double_chance_total_goals'],
+      ['double_chance_multi', 'combo_3', 'combo_3_ht_ft', 'combo_multi', 'combo_3_multi_corners', 'chance_3_mix', 'ht_chance_mix', 'correct_score_mix', 'first_team_to_score', 'win_to_nil', 'win_both_halves', 'win_either_half'],
+      ['win_from_behind', 'winning_margin', 'last_team_to_score', 'match_goals_range', '1st_half_match_goals_range', '2nd_half_match_goals_range', 'home_team_match_goals_range', 'away_team_match_goals_range', 'match_goals_range_corners', '1st_half_2nd_half_match_goals_range', 'special_goals', 'full_time_result']
+    ];
+    
+    // Funzione per convertire chiave categoria a nome formattato
+    function getCategoriaNome(categoriaKey) {
+      // Se c'è una mappatura, usala
+      if (categoriaNames[categoriaKey]) {
+        return categoriaNames[categoriaKey];
+      }
+      // Altrimenti converte snake_case a Title Case
+      return categoriaKey
+        .split('_')
+        .map(word => {
+          // Gestisci casi speciali come "1st", "2nd", etc.
+          if (word.match(/^\d+[a-z]+$/)) {
+            return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+          }
+          return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+        })
+        .join(' ');
+    }
+
+    // Variabile globale per salvare i mercati per categoria
+    let mercatiPerCategoriaGlobal = {};
+    let categoriaSelezionataMercati = null;
+
+    // Renderizza mercati organizzati per categoria con tab (solo calcio)
+    function renderMercatiPerCategoria() {
+      const container = document.getElementById('mercati-categorie-container');
+      const tabsDiv = document.getElementById('categorie-tabs');
+      const contentDiv = document.getElementById('mercati-categorie-content');
+      
+      if (!container || !tabsDiv || !contentDiv || !matchesData || matchesData.length === 0) {
+        if (container) container.classList.add('hidden');
+        return;
+      }
+      
+      console.log('renderMercatiPerCategoria: Inizio, partite:', matchesData.length);
+      
+      // Raccogli tutti i mercati da tutte le partite, organizzati per categoria
+      mercatiPerCategoriaGlobal = {};
+      
+      matchesData.forEach((ev, idx) => {
+        const quote = ev.quote || {};
+        
+        // La struttura è: ev.quote = { "categoria": [array di quote], ... }
+        // Ogni categoria è una chiave del dizionario
+        Object.keys(quote).forEach(categoriaKey => {
+          const quoteArray = quote[categoriaKey];
+          
+          // Verifica che sia un array
+          if (!Array.isArray(quoteArray) || quoteArray.length === 0) {
+            return;
+          }
+          
+          // Usa la funzione per ottenere il nome formattato della categoria
+          const categoriaNome = getCategoriaNome(categoriaKey);
+          
+          if (!mercatiPerCategoriaGlobal[categoriaNome]) {
+            mercatiPerCategoriaGlobal[categoriaNome] = [];
+          }
+          
+          // Aggiungi le quote di questa categoria
+          quoteArray.forEach(odd => {
+            if (odd && odd.odds) {
+              // Crea un ID univoco basato su categoria + nome + header + handicap
+              const uniqueId = `${categoriaKey}_${odd.name || ''}_${odd.header || ''}_${odd.handicap || ''}`;
+              
+              mercatiPerCategoriaGlobal[categoriaNome].push({
+                id: uniqueId,
+                name: odd.name || '',
+                header: odd.header || '',
+                odds: odd.odds,
+                handicap: odd.handicap || '',
+                categoria: categoriaNome
+              });
+            }
+          });
+        });
+      });
+      
+      console.log('Categorie trovate:', Object.keys(mercatiPerCategoriaGlobal));
+      
+      // Rimuovi duplicati (stesso ID o stessa combinazione)
+      Object.keys(mercatiPerCategoriaGlobal).forEach(categoria => {
+        const seen = new Set();
+        mercatiPerCategoriaGlobal[categoria] = mercatiPerCategoriaGlobal[categoria].filter(item => {
+          if (seen.has(item.id)) return false;
+          seen.add(item.id);
+          return true;
+        });
+      });
+      
+      if (Object.keys(mercatiPerCategoriaGlobal).length === 0) {
+        container.classList.add('hidden');
+        return;
+      }
+      
+      // Mostra il contenitore
+      container.classList.remove('hidden');
+      
+      // Genera le tab organizzate per righe (come nell'immagine)
+      let tabsHtml = '';
+      let primaCategoriaTrovata = null;
+      
+      // Crea una mappa inversa: nome categoria -> chiave database
+      const categoriaToKey = {};
+      Object.keys(mercatiPerCategoriaGlobal).forEach(catNome => {
+        // Trova la chiave corrispondente
+        Object.keys(categoriaNames).forEach(key => {
+          if (categoriaNames[key] === catNome) {
+            categoriaToKey[catNome] = key;
+          }
+        });
+      });
+      
+      // Genera le righe di tab
+      categoriePerRiga.forEach((riga, rigaIdx) => {
+        riga.forEach((categoriaKey, idx) => {
+          const categoriaNome = categoriaNames[categoriaKey] || getCategoriaNome(categoriaKey);
+          
+          // Verifica se questa categoria ha quote disponibili
+          if (!mercatiPerCategoriaGlobal[categoriaNome]) {
+            return; // Salta se non ci sono quote
+          }
+          
+          // Seleziona la prima categoria trovata come attiva
+          if (!primaCategoriaTrovata) {
+            primaCategoriaTrovata = categoriaNome;
+            categoriaSelezionataMercati = categoriaNome;
+          }
+          
+          const isActive = categoriaNome === primaCategoriaTrovata;
+          
+          tabsHtml += `<button 
+            class="categoria-tab-btn px-2 py-1 rounded text-xs font-bold whitespace-nowrap ${
+              isActive ? 'bg-yellow-500 text-black border-2 border-yellow-400' : 'bg-gray-700 text-white hover:bg-gray-600'
+            }" 
+            data-categoria="${categoriaNome}">
+            ${categoriaNome}
+          </button>`;
+        });
+      });
+      
+      // Aggiungi anche le categorie non mappate (se ce ne sono)
+      Object.keys(mercatiPerCategoriaGlobal).forEach(catNome => {
+        let found = false;
+        categoriePerRiga.forEach(riga => {
+          riga.forEach(key => {
+            if (categoriaNames[key] === catNome) found = true;
+          });
+        });
+        if (!found) {
+          const isActive = catNome === primaCategoriaTrovata;
+          if (!primaCategoriaTrovata) {
+            primaCategoriaTrovata = catNome;
+            categoriaSelezionataMercati = catNome;
+          }
+          tabsHtml += `<button 
+            class="categoria-tab-btn px-2 py-1 rounded text-xs font-bold whitespace-nowrap ${
+              isActive ? 'bg-yellow-500 text-black border-2 border-yellow-400' : 'bg-gray-700 text-white hover:bg-gray-600'
+            }" 
+            data-categoria="${catNome}">
+            ${catNome}
+          </button>`;
+        }
+      });
+      
+      tabsDiv.innerHTML = tabsHtml;
+      
+      // Aggiungi event listener alle tab
+      document.querySelectorAll('.categoria-tab-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const categoria = this.getAttribute('data-categoria');
+          mostraCategoriaMercati(categoria);
+        });
+      });
+      
+      // Mostra la prima categoria trovata
+      if (primaCategoriaTrovata) {
+        mostraCategoriaMercati(primaCategoriaTrovata);
+      }
+    }
+    
+    // Mostra le quote di una categoria specifica
+    function mostraCategoriaMercati(categoria) {
+      categoriaSelezionataMercati = categoria;
+      const contentDiv = document.getElementById('mercati-categorie-content');
+      const mercati = mercatiPerCategoriaGlobal[categoria] || [];
+      
+      // Aggiorna le tab attive
+      document.querySelectorAll('.categoria-tab-btn').forEach(btn => {
+        if (btn.getAttribute('data-categoria') === categoria) {
+          btn.classList.remove('bg-gray-700', 'text-white', 'hover:bg-gray-600');
+          btn.classList.add('bg-yellow-500', 'text-black', 'border-2', 'border-yellow-400');
+        } else {
+          btn.classList.remove('bg-yellow-500', 'text-black', 'border-2', 'border-yellow-400');
+          btn.classList.add('bg-gray-700', 'text-white', 'hover:bg-gray-600');
+        }
+      });
+      
+      if (mercati.length === 0) {
+        contentDiv.innerHTML = '<div class="text-gray-400 text-center py-4">Nessuna quota disponibile per questa categoria</div>';
+        return;
+      }
+      
+      // Genera la tabella
+      let html = `<table class="min-w-full text-xs text-white">`;
+      html += `<thead class="bg-gray-600">`;
+      html += `<tr>`;
+      html += `<th class="px-2 py-1 border-b border-gray-500 text-left">Nome/Header</th>`;
+      html += `<th class="px-2 py-1 border-b border-gray-500 text-left">Handicap</th>`;
+      html += `<th class="px-2 py-1 border-b border-gray-500 text-center">Quota</th>`;
+      html += `</tr>`;
+      html += `</thead>`;
+      html += `<tbody>`;
+      
+      mercati.forEach(mercato => {
+        const nomeDisplay = mercato.name || mercato.header || '-';
+        const handicapDisplay = mercato.handicap || '-';
+        const quotaNum = parseFloat(mercato.odds);
+        const quotaDisplay = quotaNum > 1 ? parseFloat(mercato.odds).toFixed(2) : '-';
+        
+        html += `<tr class="bg-gray-800 hover:bg-gray-700">`;
+        html += `<td class="px-2 py-1 border-b border-gray-600">${nomeDisplay}</td>`;
+        html += `<td class="px-2 py-1 border-b border-gray-600">${handicapDisplay}</td>`;
+        html += `<td class="px-2 py-1 border-b border-gray-600 text-center font-bold ${quotaNum > 1 ? 'text-yellow-400' : 'text-gray-500'}">${quotaDisplay}</td>`;
+        html += `</tr>`;
+      });
+      
+      html += `</tbody>`;
+      html += `</table>`;
+      
+      contentDiv.innerHTML = html;
     }
 
     // Seleziona una quota
