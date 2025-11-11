@@ -204,15 +204,29 @@
       <!-- Contenuto Centrale -->
       <div class="flex-1 flex flex-col overflow-hidden">
         <header class="bg-gray-800 text-white px-6 py-4 border-b border-gray-700">
-          <div class="flex items-center justify-between">
+          <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div>
               <h1 class="text-2xl font-bold">Kroosbet</h1>
               <p class="text-xs text-gray-400 mt-1">Credito: <span class="font-bold text-green-400" id="credito-display">{{ "%.2f"|format(credito) }} €</span></p>
             </div>
-            <div class="flex items-center space-x-4">
-              <a href="/schedine" class="text-sm hover:text-yellow-400">Le Mie Schedine</a>
-              <a href="/" class="text-sm hover:text-yellow-400">Home</a>
-              <a href="/logout" class="text-sm hover:text-yellow-400">Logout</a>
+            <div class="flex flex-col md:flex-row items-start md:items-center gap-3 w-full md:w-auto">
+              <!-- Barra di ricerca -->
+              <div class="relative w-full md:w-64">
+                <input type="text" 
+                       id="search-input" 
+                       placeholder="Cerca ID o nome..." 
+                       class="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:border-yellow-500 text-sm"
+                       autocomplete="off">
+                <button id="search-btn" class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-yellow-500 hover:bg-yellow-600 text-black px-3 py-1 rounded text-xs font-bold">
+                  🔍
+                </button>
+                <div id="search-results" class="hidden absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto z-50"></div>
+              </div>
+              <div class="flex items-center space-x-4">
+                <a href="/schedine" class="text-sm hover:text-yellow-400">Le Mie Schedine</a>
+                <a href="/" class="text-sm hover:text-yellow-400">Home</a>
+                <a href="/logout" class="text-sm hover:text-yellow-400">Logout</a>
+              </div>
             </div>
           </div>
         </header>
@@ -895,7 +909,11 @@
       }
       
       // Ricarica i dati
-      loadMatches();
+      loadMatches().then(() => {
+        console.log('Dati caricati per sport:', sport, 'Eventi trovati:', matchesData.length);
+      }).catch(error => {
+        console.error('Errore caricamento dati per sport:', sport, error);
+      });
     }
 
     // Seleziona mercato
@@ -2091,7 +2109,7 @@
                 const matchId = ev.match_id || ev._id;
                 const teams = `${ev.home_name || ''} - ${ev.away_name || ''}`;
                 
-                html += `<tr class="bg-gray-800 hover:bg-gray-700">
+                html += `<tr class="bg-gray-800 hover:bg-gray-700" data-match-id="${matchId}">
                   <td class="px-2 py-1 border-b border-gray-700 text-center">${matchId}</td>
                   <td class="px-2 py-1 border-b border-gray-700 text-center">${time}</td>
                   <td class="px-2 py-1 border-b border-gray-700 text-center">${teams}</td>`;
@@ -2446,7 +2464,7 @@
           const winEachWay = quote.win_each_way || [];
           
           html += `
-            <div class="bg-gray-800 rounded mb-3 p-2 md:p-3">
+            <div class="bg-gray-800 rounded mb-3 p-2 md:p-3" data-corsa-id="${matchId}">
               <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-2 pb-2 border-b border-gray-700 gap-1 md:gap-0">
                 <div class="flex flex-wrap items-center gap-2 md:gap-3">
                   <span class="text-yellow-400 font-bold text-sm md:text-base">🐴 Corsa ${numeroCorsa}</span>
@@ -3251,6 +3269,449 @@
       document.getElementById('modal-mercati').classList.add('hidden');
     }
 
+    // Funzione di ricerca
+    function cercaEvento(query) {
+      if (!query || query.trim() === '') {
+        return [];
+      }
+      
+      // Verifica che matchesData sia popolato
+      if (!matchesData || matchesData.length === 0) {
+        console.log('matchesData è vuoto, impossibile cercare');
+        return [];
+      }
+      
+      const searchTerm = query.trim().toLowerCase();
+      const searchTermNum = query.trim(); // Mantieni anche la versione originale per confronti numerici
+      const risultati = [];
+      
+      // Cerca negli eventi caricati
+      matchesData.forEach(ev => {
+        if (!ev) return;
+        
+        // Gestisci match_id come numero o stringa
+        const matchIdNum = ev.match_id || ev._id;
+        const matchId = String(matchIdNum || '').toLowerCase();
+        const matchIdOriginal = String(matchIdNum || '');
+        
+        const homeName = (ev.home_name || '').toLowerCase().trim();
+        const awayName = (ev.away_name || '').toLowerCase().trim();
+        const league = (ev.league || '').toLowerCase().trim();
+        const numeroCorsa = String(ev.numero_corsa || ev.quote?.numero_corsa || '').toLowerCase().trim();
+        
+        let matchFound = false;
+        let matchType = '';
+        
+        // Cerca per ID evento (confronta sia come stringa che come numero, esatto o parziale)
+        const idMatch = matchId && (
+          matchId === searchTerm || 
+          matchIdOriginal === searchTermNum ||
+          matchId.includes(searchTerm) || 
+          matchIdOriginal.includes(searchTermNum) ||
+          String(matchIdNum) === searchTermNum ||
+          (matchIdNum && matchIdNum === Number(searchTermNum))
+        );
+        
+        if (idMatch) {
+          matchFound = true;
+          matchType = 'ID Evento';
+        }
+        // Cerca per nome squadra (home o away) - gestisci anche spazi e caratteri speciali
+        if (!matchFound) {
+          const homeMatch = homeName && (homeName.includes(searchTerm) || homeName.replace(/\s+/g, '').includes(searchTerm.replace(/\s+/g, '')));
+          const awayMatch = awayName && (awayName.includes(searchTerm) || awayName.replace(/\s+/g, '').includes(searchTerm.replace(/\s+/g, '')));
+          if (homeMatch || awayMatch) {
+            matchFound = true;
+            matchType = 'Squadra';
+          }
+        }
+        // Cerca per nome campo/league (per Horse Racing e altri sport)
+        if (!matchFound && league && league.includes(searchTerm)) {
+          matchFound = true;
+          matchType = 'Campo';
+        }
+        // Cerca per numero corsa (per Horse Racing)
+        if (!matchFound && numeroCorsa && numeroCorsa.includes(searchTerm)) {
+          matchFound = true;
+          matchType = 'Corsa';
+        }
+        
+        // Aggiungi solo se trovato e non già presente (evita duplicati)
+        if (matchFound && !risultati.some(r => String(r.evento.match_id || r.evento._id) === String(ev.match_id || ev._id))) {
+          risultati.push({ tipo: matchType, evento: ev, match: matchId || homeName || awayName || league || numeroCorsa });
+        }
+      });
+      
+      // Log di debug: mostra i primi 3 match_id per capire il formato
+      if (matchesData.length > 0 && risultati.length === 0) {
+        const sampleIds = matchesData.slice(0, 5).map(ev => ({
+          match_id: ev.match_id,
+          _id: ev._id,
+          type_match_id: typeof ev.match_id,
+          type__id: typeof ev._id
+        }));
+        console.log('Sample IDs:', sampleIds);
+        console.log('Search term:', searchTerm, 'Search term num:', searchTermNum);
+        
+        // Verifica se l'ID cercato esiste nei dati
+        const foundId = matchesData.find(ev => {
+          const id = String(ev.match_id || ev._id || '');
+          return id === searchTermNum || id === searchTerm || id.includes(searchTermNum) || id.includes(searchTerm);
+        });
+        if (foundId) {
+          console.log('ID trovato ma non aggiunto:', foundId.match_id, foundId._id);
+        } else {
+          console.log('ID non trovato nei dati');
+        }
+      }
+      
+      console.log(`Ricerca "${query}": trovati ${risultati.length} risultati su ${matchesData.length} eventi`);
+      return risultati;
+    }
+
+    // Mostra risultati ricerca e scrolla al primo risultato
+    async function eseguiRicerca() {
+      const searchInput = document.getElementById('search-input');
+      const searchResults = document.getElementById('search-results');
+      
+      if (!searchInput || !searchResults) return;
+      
+      const query = searchInput.value.trim();
+      
+      if (query === '') {
+        searchResults.classList.add('hidden');
+        return;
+      }
+      
+      // Verifica che matchesData sia popolato prima di cercare
+      if (!matchesData || matchesData.length === 0) {
+        searchResults.innerHTML = '<div class="p-3 text-gray-400 text-sm">Caricamento dati in corso... Attendi un momento e riprova.</div>';
+        searchResults.classList.remove('hidden');
+        // Prova a caricare i dati se non sono stati caricati
+        loadMatches();
+        return;
+      }
+      
+      let risultati = cercaEvento(query);
+      
+      console.log('Ricerca eseguita:', { query, risultatiCount: risultati.length, matchesDataCount: matchesData.length });
+      
+      // Se non trova risultati, usa l'API di ricerca dedicata (più veloce)
+      if (risultati.length === 0) {
+        console.log('Nessun risultato trovato localmente, uso ricerca API...');
+        
+        // Mostra messaggio di caricamento
+        if (searchResults) {
+          searchResults.innerHTML = '<div class="p-3 text-yellow-400 text-sm">🔍 Ricerca in corso...</div>';
+          searchResults.classList.remove('hidden');
+        }
+        
+        try {
+          // Usa endpoint di ricerca dedicato (più veloce, cerca direttamente nel DB)
+          const sportForMongo = getSportForMongo(sportSelezionato);
+          const url = `${window.location.origin}/api/search?sport=${sportForMongo}&q=${encodeURIComponent(query)}&limit=50`;
+          console.log('Ricerca API:', url);
+          
+          const response = await fetch(url);
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.results && data.results.length > 0) {
+              // Converti i risultati in formato compatibile
+              risultati = data.results.map(ev => {
+                const matchId = String(ev.match_id || ev._id || '').toLowerCase();
+                const homeName = (ev.home_name || '').toLowerCase();
+                const awayName = (ev.away_name || '').toLowerCase();
+                const league = (ev.league || '').toLowerCase();
+                
+                let tipo = 'ID Evento';
+                if (homeName.includes(query.toLowerCase()) || awayName.includes(query.toLowerCase())) {
+                  tipo = 'Squadra';
+                } else if (league.includes(query.toLowerCase())) {
+                  tipo = 'Campo';
+                }
+                
+                return {
+                  tipo: tipo,
+                  evento: ev,
+                  match: matchId || homeName || awayName || league
+                };
+              });
+              
+              console.log('Trovati', risultati.length, 'risultati tramite API');
+            }
+          }
+        } catch (error) {
+          console.error('Errore durante la ricerca API:', error);
+        }
+      }
+      
+      if (risultati.length === 0) {
+        searchResults.innerHTML = '<div class="p-3 text-gray-400 text-sm">Nessun risultato trovato</div>';
+        searchResults.classList.remove('hidden');
+        return;
+      }
+      
+      // Mostra max 5 risultati nel dropdown
+      const risultatiLimitati = risultati.slice(0, 5);
+      let html = '';
+      risultatiLimitati.forEach((risultato, idx) => {
+        const ev = risultato.evento;
+        const matchId = ev.match_id || ev._id;
+        const homeName = ev.home_name || '';
+        const awayName = ev.away_name || '';
+        const league = ev.league || '';
+        const displayText = sportSelezionato === 'horse racing' || sportSelezionato === 'horseracing'
+          ? `${league} - Corsa ${ev.numero_corsa || ev.quote?.numero_corsa || 'N/A'}`
+          : `${homeName} vs ${awayName} (${league})`;
+        
+        html += `
+          <div class="search-result-item p-2 hover:bg-gray-700 cursor-pointer border-b border-gray-700 last:border-b-0" 
+               data-match-id="${matchId}" 
+               data-index="${idx}">
+            <div class="text-white text-sm font-medium">${displayText}</div>
+            <div class="text-gray-400 text-xs">ID: ${matchId} - ${risultato.tipo}</div>
+          </div>
+        `;
+      });
+      
+      if (risultati.length > 5) {
+        html += `<div class="p-2 text-gray-400 text-xs text-center">... e altri ${risultati.length - 5} risultati</div>`;
+      }
+      
+      searchResults.innerHTML = html;
+      searchResults.classList.remove('hidden');
+      
+      // Aggiungi event listener ai risultati
+      searchResults.querySelectorAll('.search-result-item').forEach((item, idx) => {
+        item.addEventListener('click', function() {
+          const matchId = this.getAttribute('data-match-id');
+          const risultato = risultati[idx];
+          const ev = risultato.evento;
+          const league = ev.league;
+          
+          // Seleziona il campionato dell'evento selezionato
+          if (league && league !== campionatoSelezionato) {
+            campionatoSelezionato = league;
+            renderLeaguesMenu();
+            // Ricarica i dati con il filtro del campionato
+            loadMatches().then(() => {
+              setTimeout(() => {
+                scrollaAEvento(matchId);
+              }, 300);
+            });
+          } else {
+            scrollaAEvento(matchId);
+          }
+          
+          searchResults.classList.add('hidden');
+          searchInput.value = '';
+        });
+      });
+      
+      // Se c'è almeno un risultato, seleziona il campionato e scrolla al primo
+      if (risultati.length > 0) {
+        const primoRisultato = risultati[0].evento;
+        const league = primoRisultato.league;
+        
+        // Se c'è un campionato, selezionalo automaticamente
+        if (league && league !== campionatoSelezionato) {
+          campionatoSelezionato = league;
+          renderLeaguesMenu();
+          // Ricarica i dati con il filtro del campionato
+          loadMatches().then(() => {
+            setTimeout(() => {
+              scrollaAEvento(primoRisultato.match_id || primoRisultato._id);
+            }, 300);
+          });
+        } else {
+          // Se non c'è campionato o è già selezionato, scrolla direttamente
+          setTimeout(() => {
+            scrollaAEvento(primoRisultato.match_id || primoRisultato._id);
+          }, 100);
+        }
+      }
+    }
+
+    // Scrolla all'evento trovato e lo evidenzia
+    function scrollaAEvento(matchId) {
+      // Trova l'evento nei dati caricati
+      let ev = matchesData.find(e => String(e.match_id || e._id) === String(matchId));
+      
+      // Se l'evento non è nei dati caricati, potrebbe essere perché c'è un filtro attivo
+      // In questo caso, seleziona il campionato dell'evento e ricarica
+      if (!ev) {
+        // Prova a trovare l'evento nei risultati della ricerca API (se disponibili)
+        // Altrimenti, carica l'evento specifico tramite API
+        console.log('Evento non trovato nei dati caricati, carico il campionato specifico...');
+        
+        // Carica l'evento specifico per ottenere il campionato
+        const sportForMongo = getSportForMongo(sportSelezionato);
+        fetch(`${window.location.origin}/api/search?sport=${sportForMongo}&q=${matchId}&limit=1`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.success && data.results && data.results.length > 0) {
+              const evento = data.results[0];
+              const league = evento.league;
+              
+              // Seleziona il campionato dell'evento
+              if (league) {
+                campionatoSelezionato = league;
+                renderLeaguesMenu();
+                // Ricarica i dati con il filtro del campionato
+                loadMatches().then(() => {
+                  setTimeout(() => {
+                    scrollaAEventoDopoRicerca(matchId);
+                  }, 300);
+                });
+              } else {
+                // Se non c'è campionato, carica senza filtro ma solo 200 eventi
+                campionatoSelezionato = null;
+                nazioneSelezionata = null;
+                renderLeaguesMenu();
+                loadMatches().then(() => {
+                  setTimeout(() => {
+                    scrollaAEventoDopoRicerca(matchId);
+                  }, 300);
+                });
+              }
+            }
+          })
+          .catch(error => {
+            console.error('Errore caricamento evento:', error);
+          });
+        return;
+      }
+      
+      // Se ancora non lo trova, potrebbe non essere stato caricato
+      if (!ev) {
+        console.warn('Evento non trovato nei dati caricati:', matchId);
+        return;
+      }
+      
+      // Per Horse Racing, seleziona il campo e scrolla alla corsa
+      if (sportSelezionato === 'horse racing' || sportSelezionato === 'horseracing') {
+        const campo = ev.league || ev.home_name || 'Unknown';
+        campoSelezionato = campo;
+        renderCampiHorseRacing();
+        renderCorseHorseRacing();
+        
+        // Scrolla alla corsa
+        setTimeout(() => {
+          const corseContainer = document.getElementById('corse-container');
+          if (corseContainer) {
+            const corsaElement = corseContainer.querySelector(`[data-corsa-id="${matchId}"]`);
+            if (corsaElement) {
+              corsaElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              corsaElement.classList.add('ring-8', 'ring-red-500', 'bg-red-500', 'bg-opacity-40', 'shadow-2xl', 'shadow-red-500/80', 'border-4', 'border-red-400', 'animate-pulse');
+              
+              // Rimuovi evidenziazione quando l'utente clicca su qualcosa
+              const rimuoviEvidenziazione = () => {
+                corsaElement.classList.remove('ring-8', 'ring-red-500', 'bg-red-500', 'bg-opacity-40', 'shadow-2xl', 'shadow-red-500/80', 'border-4', 'border-red-400', 'animate-pulse');
+                document.removeEventListener('click', rimuoviEvidenziazione);
+              };
+              // Usa setTimeout per evitare che il click sul risultato della ricerca rimuova subito l'evidenziazione
+              setTimeout(() => {
+                document.addEventListener('click', rimuoviEvidenziazione, { once: true });
+              }, 100);
+            }
+          }
+        }, 300);
+        return;
+      }
+      
+      // Per gli altri sport, seleziona il campionato dell'evento se diverso da quello attuale
+      const league = ev.league || '';
+      if (league && campionatoSelezionato !== league) {
+        // Seleziona il campionato dell'evento
+        campionatoSelezionato = league;
+        renderLeaguesMenu();
+        // Ricarica i dati con il filtro del campionato (solo 200 eventi)
+        loadMatches().then(() => {
+          // Dopo aver ricaricato, scrolla all'evento
+          setTimeout(() => {
+            scrollaAEventoDopoRicerca(matchId);
+          }, 300);
+        });
+        return;
+      }
+      
+      // Se il campionato è già selezionato o non c'è campionato, scrolla direttamente
+      scrollaAEventoDopoRicerca(matchId);
+    }
+
+    // Funzione helper per scrollare dopo aver verificato/ricaricato i dati
+    function scrollaAEventoDopoRicerca(matchId) {
+      // Aspetta che il rendering sia completato, poi scrolla
+      setTimeout(() => {
+        const tbody = document.getElementById('matches-body');
+        if (!tbody) return;
+        
+        // Cerca la riga con il match_id (prima per data-match-id sulla riga, poi sui pulsanti)
+        const foundRow = tbody.querySelector(`tr[data-match-id="${matchId}"]`) || 
+                        Array.from(tbody.querySelectorAll('tr')).find(row => {
+                          const quoteBtns = row.querySelectorAll('[data-match-id]');
+                          return Array.from(quoteBtns).some(btn => 
+                            String(btn.getAttribute('data-match-id')) === String(matchId)
+                          );
+                        });
+        
+        if (foundRow) {
+          foundRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          foundRow.classList.add('ring-8', 'ring-red-500', 'bg-red-500', 'bg-opacity-40', 'shadow-2xl', 'shadow-red-500/80', 'border-4', 'border-red-400', 'animate-pulse');
+          
+          // Rimuovi evidenziazione quando l'utente clicca su qualcosa
+          const rimuoviEvidenziazione = () => {
+            foundRow.classList.remove('ring-8', 'ring-red-500', 'bg-red-500', 'bg-opacity-40', 'shadow-2xl', 'shadow-red-500/80', 'border-4', 'border-red-400', 'animate-pulse');
+            document.removeEventListener('click', rimuoviEvidenziazione);
+          };
+          // Usa setTimeout per evitare che il click sul risultato della ricerca rimuova subito l'evidenziazione
+          setTimeout(() => {
+            document.addEventListener('click', rimuoviEvidenziazione, { once: true });
+          }, 100);
+        } else {
+          // Se non trova la riga, potrebbe essere in una sezione di data/campionato collassata
+          // Prova a cercare in tutte le righe, incluse quelle nascoste
+          const allRows = tbody.querySelectorAll('tr');
+          let targetRow = null;
+          
+          allRows.forEach(row => {
+            if (row.getAttribute('data-match-id') === String(matchId)) {
+              targetRow = row;
+            } else {
+              const quoteBtns = row.querySelectorAll('[data-match-id]');
+              Array.from(quoteBtns).forEach(btn => {
+                if (String(btn.getAttribute('data-match-id')) === String(matchId)) {
+                  targetRow = row;
+                }
+              });
+            }
+          });
+          
+          if (targetRow) {
+            // Assicurati che la riga sia visibile (espandi eventuali sezioni collassate)
+            targetRow.closest('tbody')?.querySelectorAll('tr').forEach(tr => {
+              if (tr.contains(targetRow) || tr === targetRow) {
+                tr.style.display = '';
+              }
+            });
+            
+            targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            targetRow.classList.add('ring-8', 'ring-red-500', 'bg-red-500', 'bg-opacity-40', 'shadow-2xl', 'shadow-red-500/80', 'border-4', 'border-red-400', 'animate-pulse');
+            
+            // Rimuovi evidenziazione quando l'utente clicca su qualcosa
+            const rimuoviEvidenziazione = () => {
+              targetRow.classList.remove('ring-8', 'ring-red-500', 'bg-red-500', 'bg-opacity-40', 'shadow-2xl', 'shadow-red-500/80', 'border-4', 'border-red-400', 'animate-pulse');
+              document.removeEventListener('click', rimuoviEvidenziazione);
+            };
+            // Usa setTimeout per evitare che il click sul risultato della ricerca rimuova subito l'evidenziazione
+            setTimeout(() => {
+              document.addEventListener('click', rimuoviEvidenziazione, { once: true });
+            }, 100);
+          }
+        }
+      }, 100);
+    }
+
     // Seleziona quota dal modal
     function selectQuoteFromModal(id, categoria, segno, quota, evento) {
       selectQuote(id, categoria, segno, quota, evento);
@@ -3406,6 +3867,136 @@
         // Imposta mercato 1X2
         selezionaMercato('1X2');
         
+        // Event listener per la ricerca
+        const searchInput = document.getElementById('search-input');
+        const searchBtn = document.getElementById('search-btn');
+        const searchResults = document.getElementById('search-results');
+        
+        if (searchInput && searchBtn) {
+          // Ricerca al click del pulsante
+          searchBtn.addEventListener('click', eseguiRicerca);
+          
+          // Ricerca al premere Enter
+          searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+              eseguiRicerca();
+            }
+          });
+          
+          // Mostra risultati mentre si digita (con debounce)
+          let searchTimeout;
+          let isSearching = false; // Flag per evitare ricerche multiple simultanee
+          searchInput.addEventListener('input', async function() {
+            clearTimeout(searchTimeout);
+            const query = this.value.trim();
+            
+            if (query === '') {
+              if (searchResults) searchResults.classList.add('hidden');
+              return;
+            }
+            
+            searchTimeout = setTimeout(async () => {
+              if (isSearching) return; // Evita ricerche multiple simultanee
+              isSearching = true;
+              
+              let risultati = cercaEvento(query);
+              
+              // Se non trova risultati, usa l'API di ricerca dedicata (più veloce)
+              if (risultati.length === 0) {
+                try {
+                  // Usa endpoint di ricerca dedicato (più veloce, cerca direttamente nel DB)
+                  const sportForMongo = getSportForMongo(sportSelezionato);
+                  const url = `${window.location.origin}/api/search?sport=${sportForMongo}&q=${encodeURIComponent(query)}&limit=50`;
+                  
+                  const response = await fetch(url);
+                  if (response.ok) {
+                    const data = await response.json();
+                    if (data.success && data.results && data.results.length > 0) {
+                      // Converti i risultati in formato compatibile
+                      risultati = data.results.map(ev => {
+                        const matchId = String(ev.match_id || ev._id || '').toLowerCase();
+                        const homeName = (ev.home_name || '').toLowerCase();
+                        const awayName = (ev.away_name || '').toLowerCase();
+                        const league = (ev.league || '').toLowerCase();
+                        
+                        let tipo = 'ID Evento';
+                        if (homeName.includes(query.toLowerCase()) || awayName.includes(query.toLowerCase())) {
+                          tipo = 'Squadra';
+                        } else if (league.includes(query.toLowerCase())) {
+                          tipo = 'Campo';
+                        }
+                        
+                        return {
+                          tipo: tipo,
+                          evento: ev,
+                          match: matchId || homeName || awayName || league
+                        };
+                      });
+                    }
+                  }
+                } catch (error) {
+                  console.error('Errore durante la ricerca API:', error);
+                }
+              }
+              
+              isSearching = false;
+              
+              if (!searchResults) return;
+              
+              if (risultati.length === 0) {
+                searchResults.innerHTML = '<div class="p-3 text-gray-400 text-sm">Nessun risultato trovato</div>';
+                searchResults.classList.remove('hidden');
+                return;
+              }
+              
+              const risultatiLimitati = risultati.slice(0, 5);
+              let html = '';
+              risultatiLimitati.forEach((risultato) => {
+                const ev = risultato.evento;
+                const matchId = ev.match_id || ev._id;
+                const homeName = ev.home_name || '';
+                const awayName = ev.away_name || '';
+                const league = ev.league || '';
+                const displayText = sportSelezionato === 'horse racing' || sportSelezionato === 'horseracing'
+                  ? `${league} - Corsa ${ev.numero_corsa || ev.quote?.numero_corsa || 'N/A'}`
+                  : `${homeName} vs ${awayName} (${league})`;
+                
+                html += `
+                  <div class="search-result-item p-2 hover:bg-gray-700 cursor-pointer border-b border-gray-700 last:border-b-0" 
+                       data-match-id="${matchId}">
+                    <div class="text-white text-sm font-medium">${displayText}</div>
+                    <div class="text-gray-400 text-xs">ID: ${matchId} - ${risultato.tipo}</div>
+                  </div>
+                `;
+              });
+              
+              if (risultati.length > 5) {
+                html += `<div class="p-2 text-gray-400 text-xs text-center">... e altri ${risultati.length - 5} risultati</div>`;
+              }
+              
+              searchResults.innerHTML = html;
+              searchResults.classList.remove('hidden');
+              
+              // Aggiungi event listener ai risultati
+              searchResults.querySelectorAll('.search-result-item').forEach(item => {
+                item.addEventListener('click', function() {
+                  const matchId = this.getAttribute('data-match-id');
+                  scrollaAEvento(matchId);
+                  searchResults.classList.add('hidden');
+                  searchInput.value = '';
+                });
+              });
+            }, 300);
+          });
+          
+          // Nascondi risultati quando si clicca fuori
+          document.addEventListener('click', function(e) {
+            if (searchResults && !searchInput.contains(e.target) && !searchResults.contains(e.target) && !searchBtn.contains(e.target)) {
+              searchResults.classList.add('hidden');
+            }
+          });
+        }
+        
         // Carica solo i campionati all'apertura (le partite verranno caricate solo quando si clicca su "Tutti i campionati")
         console.log('DOMContentLoaded: inizializzazione');
         loadLeagues().then(() => {
@@ -3424,3 +4015,4 @@
   </script>
 </body>
 </html>
+
