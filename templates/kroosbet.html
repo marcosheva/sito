@@ -219,16 +219,16 @@
         
         <div class="flex-1 overflow-y-auto p-4">
           <!-- Per Horse Racing: layout con sidebar a destra -->
-          <div id="horse-racing-layout" class="hidden flex gap-4 h-full">
+          <div id="horse-racing-layout" class="hidden flex flex-col md:flex-row gap-4 h-full">
             <!-- Contenuto centrale con le corse -->
-            <div class="flex-1 bg-gray-800 rounded shadow border-2 border-yellow-500 overflow-y-auto">
+            <div class="flex-1 bg-gray-800 rounded shadow border-2 border-yellow-500 overflow-y-auto order-2 md:order-1">
               <div class="bg-gray-700 text-white text-center font-bold py-2 border-b border-gray-600 text-lg" id="campo-selezionato-title">Seleziona un campo</div>
-              <div id="corse-container" class="p-4"></div>
+              <div id="corse-container" class="p-2 md:p-4"></div>
             </div>
-            <!-- Sidebar a destra con i campi -->
-            <div class="w-64 bg-gray-800 rounded shadow border-2 border-gray-600 overflow-y-auto">
+            <!-- Sidebar a destra con i campi (su mobile va sopra) -->
+            <div class="w-full md:w-64 bg-gray-800 rounded shadow border-2 border-gray-600 overflow-y-auto max-h-48 md:max-h-none order-1 md:order-2">
               <div class="bg-gray-700 text-white text-center font-bold py-2 border-b border-gray-600 text-sm">🏇 Campi</div>
-              <div id="campi-list" class="p-2"></div>
+              <div id="campi-list" class="p-2 flex flex-row md:flex-col overflow-x-auto md:overflow-x-visible gap-1 md:gap-0"></div>
             </div>
           </div>
           
@@ -2372,7 +2372,7 @@
       campiArray.forEach(campo => {
         const isSelected = campoSelezionato === campo;
         html += `
-          <button class="campo-btn w-full text-left px-3 py-2 mb-1 rounded text-sm font-medium transition-colors ${
+          <button class="campo-btn w-full md:w-full text-left px-2 md:px-3 py-1.5 md:py-2 mb-0 md:mb-1 rounded text-xs md:text-sm font-medium transition-colors whitespace-nowrap ${
             isSelected 
               ? 'bg-yellow-500 text-black' 
               : 'bg-gray-700 text-white hover:bg-gray-600'
@@ -2446,11 +2446,11 @@
           const winEachWay = quote.win_each_way || [];
           
           html += `
-            <div class="bg-gray-800 rounded mb-3 p-3">
-              <div class="flex items-center justify-between mb-2 pb-2 border-b border-gray-700">
-                <div class="flex items-center space-x-3">
-                  <span class="text-yellow-400 font-bold">🐴 Corsa ${numeroCorsa}</span>
-                  <span class="text-gray-400 text-sm">${time}</span>
+            <div class="bg-gray-800 rounded mb-3 p-2 md:p-3">
+              <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-2 pb-2 border-b border-gray-700 gap-1 md:gap-0">
+                <div class="flex flex-wrap items-center gap-2 md:gap-3">
+                  <span class="text-yellow-400 font-bold text-sm md:text-base">🐴 Corsa ${numeroCorsa}</span>
+                  <span class="text-gray-400 text-xs md:text-sm">${time}</span>
                   <span class="text-gray-500 text-xs">ID: ${matchId}</span>
                 </div>
               </div>
@@ -2469,9 +2469,9 @@
               const posizione = cavallo.header || '';
               
               html += `
-                <div class="flex items-center justify-between py-1 px-2 hover:bg-gray-700 rounded">
-                  <span class="text-white text-sm">Cavallo ${posizione}: ${nomeCavallo}</span>
-                  <button class="quota-btn bg-green-600 hover:bg-green-700 text-white px-4 py-1 rounded text-sm font-bold min-w-[60px] text-center" 
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between py-1 px-2 hover:bg-gray-700 rounded gap-1 sm:gap-0">
+                  <span class="text-white text-xs sm:text-sm truncate">Cavallo ${posizione}: ${nomeCavallo}</span>
+                  <button class="quota-btn bg-green-600 hover:bg-green-700 text-white px-3 sm:px-4 py-1 rounded text-xs sm:text-sm font-bold min-w-[60px] w-full sm:w-auto text-center" 
                           data-match-id="${matchId}" 
                           data-quota="${quota}" 
                           data-categoria="win_each_way" 
