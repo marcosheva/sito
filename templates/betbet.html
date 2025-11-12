@@ -71,129 +71,299 @@
                 <div class="text-xs text-gray-400 px-2 py-1">Caricamento campionati...</div>
               </div>
             </div>
-            <div class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="tennis" data-icon="🎾" data-nome="Tennis">
-              <div class="flex items-center space-x-2">
-                <span class="text-lg">🎾</span>
-                <span class="text-xs">Tennis</span>
+            <div class="sport-item" data-sport="tennis">
+              <div id="tennis-toggle" class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer">
+                <div class="flex items-center space-x-2">
+                  <span class="text-lg">🎾</span>
+                  <span class="text-xs font-bold">Tennis</span>
+                </div>
+                <div class="flex items-center space-x-1">
+                  <span class="sport-indicator hidden text-yellow-400">✓</span>
+                  <svg id="tennis-arrow" class="w-3 h-3 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
               </div>
-              <span class="sport-indicator hidden text-yellow-400">✓</span>
+              <div id="tennis-submenu" class="hidden ml-4 mt-1 space-y-1">
+                <div class="text-xs text-gray-400 px-2 py-1">Caricamento campionati...</div>
+              </div>
             </div>
-            <div class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="basket" data-icon="🏀" data-nome="Basket">
-              <div class="flex items-center space-x-2">
-                <span class="text-lg">🏀</span>
-                <span class="text-xs">Basket</span>
+            <div class="sport-item" data-sport="basket">
+              <div id="basket-toggle" class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer">
+                <div class="flex items-center space-x-2">
+                  <span class="text-lg">🏀</span>
+                  <span class="text-xs font-bold">Basket</span>
+                </div>
+                <div class="flex items-center space-x-1">
+                  <span class="sport-indicator hidden text-yellow-400">✓</span>
+                  <svg id="basket-arrow" class="w-3 h-3 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
               </div>
-              <span class="sport-indicator hidden text-yellow-400">✓</span>
+              <div id="basket-submenu" class="hidden ml-4 mt-1 space-y-1">
+                <div class="text-xs text-gray-400 px-2 py-1">Caricamento campionati...</div>
+              </div>
             </div>
-            <div class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="hockey" data-icon="🏒" data-nome="Hockey">
-              <div class="flex items-center space-x-2">
-                <span class="text-lg">🏒</span>
-                <span class="text-xs">Hockey</span>
+            <div class="sport-item" data-sport="hockey">
+              <div id="hockey-toggle" class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer">
+                <div class="flex items-center space-x-2">
+                  <span class="text-lg">🏒</span>
+                  <span class="text-xs font-bold">Hockey</span>
+                </div>
+                <div class="flex items-center space-x-1">
+                  <span class="sport-indicator hidden text-yellow-400">✓</span>
+                  <svg id="hockey-arrow" class="w-3 h-3 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
               </div>
-              <span class="sport-indicator hidden text-yellow-400">✓</span>
+              <div id="hockey-submenu" class="hidden ml-4 mt-1 space-y-1">
+                <div class="text-xs text-gray-400 px-2 py-1">Caricamento campionati...</div>
+              </div>
             </div>
-            <div class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="rugby" data-icon="🏉" data-nome="Rugby">
-              <div class="flex items-center space-x-2">
-                <span class="text-lg">🏉</span>
-                <span class="text-xs">Rugby</span>
+            <div class="sport-item" data-sport="rugby">
+              <div id="rugby-toggle" class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer">
+                <div class="flex items-center space-x-2">
+                  <span class="text-lg">🏉</span>
+                  <span class="text-xs font-bold">Rugby</span>
+                </div>
+                <div class="flex items-center space-x-1">
+                  <span class="sport-indicator hidden text-yellow-400">✓</span>
+                  <svg id="rugby-arrow" class="w-3 h-3 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
               </div>
-              <span class="sport-indicator hidden text-yellow-400">✓</span>
+              <div id="rugby-submenu" class="hidden ml-4 mt-1 space-y-1">
+                <div class="text-xs text-gray-400 px-2 py-1">Caricamento campionati...</div>
+              </div>
             </div>
-            <div class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="american football" data-icon="🏈" data-nome="American Football">
-              <div class="flex items-center space-x-2">
-                <span class="text-lg">🏈</span>
-                <span class="text-xs">American Football</span>
+            <div class="sport-item" data-sport="american football">
+              <div id="american-football-toggle" class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer">
+                <div class="flex items-center space-x-2">
+                  <span class="text-lg">🏈</span>
+                  <span class="text-xs font-bold">American Football</span>
+                </div>
+                <div class="flex items-center space-x-1">
+                  <span class="sport-indicator hidden text-yellow-400">✓</span>
+                  <svg id="american-football-arrow" class="w-3 h-3 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
               </div>
-              <span class="sport-indicator hidden text-yellow-400">✓</span>
+              <div id="american-football-submenu" class="hidden ml-4 mt-1 space-y-1">
+                <div class="text-xs text-gray-400 px-2 py-1">Caricamento campionati...</div>
+              </div>
             </div>
-            <div class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="volleyball" data-icon="🏐" data-nome="Volleyball">
-              <div class="flex items-center space-x-2">
-                <span class="text-lg">🏐</span>
-                <span class="text-xs">Volleyball</span>
+            <div class="sport-item" data-sport="volleyball">
+              <div id="volleyball-toggle" class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer">
+                <div class="flex items-center space-x-2">
+                  <span class="text-lg">🏐</span>
+                  <span class="text-xs font-bold">Volleyball</span>
+                </div>
+                <div class="flex items-center space-x-1">
+                  <span class="sport-indicator hidden text-yellow-400">✓</span>
+                  <svg id="volleyball-arrow" class="w-3 h-3 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
               </div>
-              <span class="sport-indicator hidden text-yellow-400">✓</span>
+              <div id="volleyball-submenu" class="hidden ml-4 mt-1 space-y-1">
+                <div class="text-xs text-gray-400 px-2 py-1">Caricamento campionati...</div>
+              </div>
             </div>
-            <div class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="water polo" data-icon="🏓" data-nome="Water Polo">
-              <div class="flex items-center space-x-2">
-                <span class="text-lg">🏓</span>
-                <span class="text-xs">Water Polo</span>
+            <div class="sport-item" data-sport="water polo">
+              <div id="water-polo-toggle" class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer">
+                <div class="flex items-center space-x-2">
+                  <span class="text-lg">🏓</span>
+                  <span class="text-xs font-bold">Water Polo</span>
+                </div>
+                <div class="flex items-center space-x-1">
+                  <span class="sport-indicator hidden text-yellow-400">✓</span>
+                  <svg id="water-polo-arrow" class="w-3 h-3 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
               </div>
-              <span class="sport-indicator hidden text-yellow-400">✓</span>
+              <div id="water-polo-submenu" class="hidden ml-4 mt-1 space-y-1">
+                <div class="text-xs text-gray-400 px-2 py-1">Caricamento campionati...</div>
+              </div>
             </div>
-            <div class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="golf" data-icon="🏌️" data-nome="Golf">
-              <div class="flex items-center space-x-2">
-                <span class="text-lg">🏌️</span>
-                <span class="text-xs">Golf</span>
+            <div class="sport-item" data-sport="golf">
+              <div id="golf-toggle" class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer">
+                <div class="flex items-center space-x-2">
+                  <span class="text-lg">🏌️</span>
+                  <span class="text-xs font-bold">Golf</span>
+                </div>
+                <div class="flex items-center space-x-1">
+                  <span class="sport-indicator hidden text-yellow-400">✓</span>
+                  <svg id="golf-arrow" class="w-3 h-3 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
               </div>
-              <span class="sport-indicator hidden text-yellow-400">✓</span>
+              <div id="golf-submenu" class="hidden ml-4 mt-1 space-y-1">
+                <div class="text-xs text-gray-400 px-2 py-1">Caricamento campionati...</div>
+              </div>
             </div>
-            <div class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="pingpong" data-icon="🎾" data-nome="Pingpong">
-              <div class="flex items-center space-x-2">
-                <span class="text-lg">🎾</span>
-                <span class="text-xs">Pingpong</span>
+            <div class="sport-item" data-sport="pingpong">
+              <div id="pingpong-toggle" class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer">
+                <div class="flex items-center space-x-2">
+                  <span class="text-lg">🎾</span>
+                  <span class="text-xs font-bold">Pingpong</span>
+                </div>
+                <div class="flex items-center space-x-1">
+                  <span class="sport-indicator hidden text-yellow-400">✓</span>
+                  <svg id="pingpong-arrow" class="w-3 h-3 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
               </div>
-              <span class="sport-indicator hidden text-yellow-400">✓</span>
+              <div id="pingpong-submenu" class="hidden ml-4 mt-1 space-y-1">
+                <div class="text-xs text-gray-400 px-2 py-1">Caricamento campionati...</div>
+              </div>
             </div>
-            <div class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="futsal" data-icon="⚽" data-nome="Futsal">
-              <div class="flex items-center space-x-2">
-                <span class="text-lg">⚽</span>
-                <span class="text-xs">Futsal</span>
+            <div class="sport-item" data-sport="futsal">
+              <div id="futsal-toggle" class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer">
+                <div class="flex items-center space-x-2">
+                  <span class="text-lg">⚽</span>
+                  <span class="text-xs font-bold">Futsal</span>
+                </div>
+                <div class="flex items-center space-x-1">
+                  <span class="sport-indicator hidden text-yellow-400">✓</span>
+                  <svg id="futsal-arrow" class="w-3 h-3 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
               </div>
-              <span class="sport-indicator hidden text-yellow-400">✓</span>
+              <div id="futsal-submenu" class="hidden ml-4 mt-1 space-y-1">
+                <div class="text-xs text-gray-400 px-2 py-1">Caricamento campionati...</div>
+              </div>
             </div>
-            <div class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="pallamano" data-icon="🎾" data-nome="Pallamano">
-              <div class="flex items-center space-x-2">
-                <span class="text-lg">🎾</span>
-                <span class="text-xs">Pallamano</span>
+            <div class="sport-item" data-sport="pallamano">
+              <div id="pallamano-toggle" class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer">
+                <div class="flex items-center space-x-2">
+                  <span class="text-lg">🎾</span>
+                  <span class="text-xs font-bold">Pallamano</span>
+                </div>
+                <div class="flex items-center space-x-1">
+                  <span class="sport-indicator hidden text-yellow-400">✓</span>
+                  <svg id="pallamano-arrow" class="w-3 h-3 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
               </div>
-              <span class="sport-indicator hidden text-yellow-400">✓</span>
+              <div id="pallamano-submenu" class="hidden ml-4 mt-1 space-y-1">
+                <div class="text-xs text-gray-400 px-2 py-1">Caricamento campionati...</div>
+              </div>
             </div>
-            <div class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="freccette" data-icon="🎾" data-nome="Freccette">
-              <div class="flex items-center space-x-2">
-                <span class="text-lg">🎾</span>
-                <span class="text-xs">Freccette</span>
+            <div class="sport-item" data-sport="freccette">
+              <div id="freccette-toggle" class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer">
+                <div class="flex items-center space-x-2">
+                  <span class="text-lg">🎾</span>
+                  <span class="text-xs font-bold">Freccette</span>
+                </div>
+                <div class="flex items-center space-x-1">
+                  <span class="sport-indicator hidden text-yellow-400">✓</span>
+                  <svg id="freccette-arrow" class="w-3 h-3 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
               </div>
-              <span class="sport-indicator hidden text-yellow-400">✓</span>
+              <div id="freccette-submenu" class="hidden ml-4 mt-1 space-y-1">
+                <div class="text-xs text-gray-400 px-2 py-1">Caricamento campionati...</div>
+              </div>
             </div>
-            <div class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="boxing" data-icon="🥊" data-nome="Boxing">
-              <div class="flex items-center space-x-2">
-                <span class="text-lg">🥊</span>
-                <span class="text-xs">Boxing</span>
+            <div class="sport-item" data-sport="boxing">
+              <div id="boxing-toggle" class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer">
+                <div class="flex items-center space-x-2">
+                  <span class="text-lg">🥊</span>
+                  <span class="text-xs font-bold">Boxing</span>
+                </div>
+                <div class="flex items-center space-x-1">
+                  <span class="sport-indicator hidden text-yellow-400">✓</span>
+                  <svg id="boxing-arrow" class="w-3 h-3 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
               </div>
-              <span class="sport-indicator hidden text-yellow-400">✓</span>
+              <div id="boxing-submenu" class="hidden ml-4 mt-1 space-y-1">
+                <div class="text-xs text-gray-400 px-2 py-1">Caricamento campionati...</div>
+              </div>
             </div>
-            <div class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="e-sport" data-icon="🎮" data-nome="E-Sport">
-              <div class="flex items-center space-x-2">
-                <span class="text-lg">🎮</span>
-                <span class="text-xs">E-Sport</span>
+            <div class="sport-item" data-sport="e-sport">
+              <div id="e-sport-toggle" class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer">
+                <div class="flex items-center space-x-2">
+                  <span class="text-lg">🎮</span>
+                  <span class="text-xs font-bold">E-Sport</span>
+                </div>
+                <div class="flex items-center space-x-1">
+                  <span class="sport-indicator hidden text-yellow-400">✓</span>
+                  <svg id="e-sport-arrow" class="w-3 h-3 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
               </div>
-              <span class="sport-indicator hidden text-yellow-400">✓</span>
+              <div id="e-sport-submenu" class="hidden ml-4 mt-1 space-y-1">
+                <div class="text-xs text-gray-400 px-2 py-1">Caricamento campionati...</div>
+              </div>
             </div>
-            <div class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="badminton" data-icon="🏸" data-nome="Badminton">
-              <div class="flex items-center space-x-2">
-                <span class="text-lg">🏸</span>
-                <span class="text-xs">Badminton</span>
+            <div class="sport-item" data-sport="badminton">
+              <div id="badminton-toggle" class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer">
+                <div class="flex items-center space-x-2">
+                  <span class="text-lg">🏸</span>
+                  <span class="text-xs font-bold">Badminton</span>
+                </div>
+                <div class="flex items-center space-x-1">
+                  <span class="sport-indicator hidden text-yellow-400">✓</span>
+                  <svg id="badminton-arrow" class="w-3 h-3 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
               </div>
-              <span class="sport-indicator hidden text-yellow-400">✓</span>
+              <div id="badminton-submenu" class="hidden ml-4 mt-1 space-y-1">
+                <div class="text-xs text-gray-400 px-2 py-1">Caricamento campionati...</div>
+              </div>
             </div>
-            <div class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="cricket" data-icon="🏏" data-nome="Cricket">
-              <div class="flex items-center space-x-2">
-                <span class="text-lg">🏏</span>
-                <span class="text-xs">Cricket</span>
+            <div class="sport-item" data-sport="cricket">
+              <div id="cricket-toggle" class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer">
+                <div class="flex items-center space-x-2">
+                  <span class="text-lg">🏏</span>
+                  <span class="text-xs font-bold">Cricket</span>
+                </div>
+                <div class="flex items-center space-x-1">
+                  <span class="sport-indicator hidden text-yellow-400">✓</span>
+                  <svg id="cricket-arrow" class="w-3 h-3 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
               </div>
-              <span class="sport-indicator hidden text-yellow-400">✓</span>
+              <div id="cricket-submenu" class="hidden ml-4 mt-1 space-y-1">
+                <div class="text-xs text-gray-400 px-2 py-1">Caricamento campionati...</div>
+              </div>
             </div>
-            <div class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="squash" data-icon="🎾" data-nome="Squash">
-              <div class="flex items-center space-x-2">
-                <span class="text-lg">🎾</span>
-                <span class="text-xs">Squash</span>
+            <div class="sport-item" data-sport="squash">
+              <div id="squash-toggle" class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer">
+                <div class="flex items-center space-x-2">
+                  <span class="text-lg">🎾</span>
+                  <span class="text-xs font-bold">Squash</span>
+                </div>
+                <div class="flex items-center space-x-1">
+                  <span class="sport-indicator hidden text-yellow-400">✓</span>
+                  <svg id="squash-arrow" class="w-3 h-3 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
               </div>
-              <span class="sport-indicator hidden text-yellow-400">✓</span>
+              <div id="squash-submenu" class="hidden ml-4 mt-1 space-y-1">
+                <div class="text-xs text-gray-400 px-2 py-1">Caricamento campionati...</div>
+              </div>
             </div>
             <div class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer sport-item" data-sport="horse racing" data-icon="🐴" data-nome="Horse Racing">
               <div class="flex items-center space-x-2">
                 <span class="text-lg">🐴</span>
-                <span class="text-xs">Horse Racing</span>
+                <span class="text-xs font-bold">Horse Racing</span>
               </div>
               <span class="sport-indicator hidden text-yellow-400">✓</span>
             </div>
@@ -503,6 +673,35 @@
     let mercatoSelezionato = 'Principali';
     let campionatoSelezionato = null;
     let nationsLeagues = {};
+    
+    // Mappatura nazioni inglese -> italiano (per convertire nazioni dagli eventi)
+    const nationMapping = {
+      "Italy": "Italia",
+      "Brazil": "Brasile",
+      "Argentina": "Argentina",
+      "Australia": "Australia",
+      "Austria": "Austria",
+      "Bulgaria": "Bulgaria",
+      "China": "Cina",
+      "Denmark": "Danimarca",
+      "Ecuador": "Ecuador",
+      "England": "Inghilterra",
+      "France": "Francia",
+      "Germany": "Germania",
+      "Greece": "Grecia",
+      "Israel": "Israele",
+      "Netherlands": "Paesi Bassi",
+      "Paraguay": "Paraguay",
+      "Poland": "Polonia",
+      "Slovenia": "Slovenia",
+      "Spain": "Spagna"
+    };
+    
+    // Funzione per convertire nazione inglese in italiano
+    function convertNationToItalian(nation) {
+      if (!nation) return null;
+      return nationMapping[nation] || nation;
+    }
     let nazioneSelezionata = null; // Traccia quale nazione è selezionata
     let expandedNations = new Set(); // Traccia quali nazioni sono espanse
     
@@ -547,15 +746,51 @@
     }
 
     // Toggle menu calcio
-    function toggleCalcioMenu() {
-      const submenu = document.getElementById('calcio-submenu');
-      const arrow = document.getElementById('calcio-arrow');
+    // Funzione generica per toggle menu sport
+    function toggleSportMenu(sport) {
+      // Mappa sport -> ID submenu e arrow
+      const sportMap = {
+        'calcio': { submenu: 'calcio-submenu', arrow: 'calcio-arrow' },
+        'tennis': { submenu: 'tennis-submenu', arrow: 'tennis-arrow' },
+        'basket': { submenu: 'basket-submenu', arrow: 'basket-arrow' },
+        'hockey': { submenu: 'hockey-submenu', arrow: 'hockey-arrow' },
+        'rugby': { submenu: 'rugby-submenu', arrow: 'rugby-arrow' },
+        'american football': { submenu: 'american-football-submenu', arrow: 'american-football-arrow' },
+        'volleyball': { submenu: 'volleyball-submenu', arrow: 'volleyball-arrow' },
+        'water polo': { submenu: 'water-polo-submenu', arrow: 'water-polo-arrow' },
+        'golf': { submenu: 'golf-submenu', arrow: 'golf-arrow' },
+        'pingpong': { submenu: 'pingpong-submenu', arrow: 'pingpong-arrow' },
+        'futsal': { submenu: 'futsal-submenu', arrow: 'futsal-arrow' },
+        'pallamano': { submenu: 'pallamano-submenu', arrow: 'pallamano-arrow' },
+        'freccette': { submenu: 'freccette-submenu', arrow: 'freccette-arrow' },
+        'boxing': { submenu: 'boxing-submenu', arrow: 'boxing-arrow' },
+        'e-sport': { submenu: 'e-sport-submenu', arrow: 'e-sport-arrow' },
+        'badminton': { submenu: 'badminton-submenu', arrow: 'badminton-arrow' },
+        'cricket': { submenu: 'cricket-submenu', arrow: 'cricket-arrow' },
+        'squash': { submenu: 'squash-submenu', arrow: 'squash-arrow' },
+      };
+      
+      const sportInfo = sportMap[sport];
+      if (!sportInfo) {
+        console.error('toggleSportMenu: sport non mappato:', sport);
+        return;
+      }
+      
+      const submenu = document.getElementById(sportInfo.submenu);
+      const arrow = document.getElementById(sportInfo.arrow);
+      
+      if (!submenu || !arrow) {
+        console.error('toggleSportMenu: submenu o arrow non trovato per sport:', sport);
+        return;
+      }
+      
       const isHidden = submenu.classList.contains('hidden');
       
       if (isHidden) {
         submenu.classList.remove('hidden');
         arrow.style.transform = 'rotate(180deg)';
-        if (Object.keys(nationsLeagues).length === 0) {
+        // Carica campionati se non già caricati o se lo sport è cambiato
+        if (Object.keys(nationsLeagues).length === 0 || sportSelezionato === sport) {
           loadLeagues();
         }
       } else {
@@ -563,16 +798,45 @@
         arrow.style.transform = 'rotate(0deg)';
       }
     }
+    
+    // Alias per retrocompatibilità
+    function toggleCalcioMenu() {
+      toggleSportMenu('calcio');
+    }
 
     // Carica campionati disponibili
     async function loadLeagues() {
-      if (sportSelezionato !== 'calcio') {
+      // Mappa sport -> ID submenu
+      const sportSubmenuMap = {
+        'calcio': 'calcio-submenu',
+        'tennis': 'tennis-submenu',
+        'basket': 'basket-submenu',
+        'hockey': 'hockey-submenu',
+        'rugby': 'rugby-submenu',
+        'american football': 'american-football-submenu',
+        'volleyball': 'volleyball-submenu',
+        'water polo': 'water-polo-submenu',
+        'golf': 'golf-submenu',
+        'pingpong': 'pingpong-submenu',
+        'futsal': 'futsal-submenu',
+        'pallamano': 'pallamano-submenu',
+        'freccette': 'freccette-submenu',
+        'boxing': 'boxing-submenu',
+        'e-sport': 'e-sport-submenu',
+        'badminton': 'badminton-submenu',
+        'cricket': 'cricket-submenu',
+        'squash': 'squash-submenu',
+      };
+      
+      const submenuId = sportSubmenuMap[sportSelezionato];
+      if (!submenuId) {
+        console.error('loadLeagues: sport non mappato:', sportSelezionato);
         return;
       }
       
-      const submenu = document.getElementById('calcio-submenu');
+      const submenu = document.getElementById(submenuId);
       if (!submenu) {
-        console.error('loadLeagues: submenu non trovato');
+        console.error('loadLeagues: submenu non trovato per sport:', sportSelezionato, 'ID:', submenuId);
         return;
       }
       
@@ -605,27 +869,32 @@
           nationsLeagues = data.nations;
           renderLeaguesMenu();
           
-          // Seleziona automaticamente il primo campionato italiano (Serie A) se disponibile
-          if (!campionatoSelezionato && nationsLeagues['Italia'] && nationsLeagues['Italia'].length > 0) {
+          // Per horse racing, i "campi" sono i campionati - seleziona automaticamente il primo campo disponibile
+          if (sportSelezionato === 'horse racing' || sportSelezionato === 'horseracing') {
+            // Trova il primo campionato disponibile (qualsiasi nazione)
+            const firstNation = Object.keys(nationsLeagues).sort()[0];
+            if (firstNation && nationsLeagues[firstNation] && nationsLeagues[firstNation].length > 0) {
+              const primoCampo = nationsLeagues[firstNation][0];
+              campoSelezionato = primoCampo.full_name;
+              // Carica i dati per mostrare i campi
+              loadMatches();
+            }
+          }
+          // Seleziona automaticamente il primo campionato solo per il calcio (Serie A)
+          else if (sportSelezionato === 'calcio' && !campionatoSelezionato && nationsLeagues['Italia'] && nationsLeagues['Italia'].length > 0) {
             // Cerca Serie A
             const serieA = nationsLeagues['Italia'].find(league => 
               league.full_name && (league.full_name.includes('Serie A') || league.full_name.includes('serie a'))
             );
             
             if (serieA) {
-              campionatoSelezionato = serieA.full_name;
-              nazioneSelezionata = 'Italia';
-              renderLeaguesMenu();
-              // Carica le partite del campionato selezionato
-              loadMatches();
+              // Passa la nazione direttamente per evitare ambiguità
+              selezionaCampionato(serieA.full_name, 'Italia');
             } else if (nationsLeagues['Italia'].length > 0) {
               // Se non c'è Serie A, seleziona il primo campionato italiano
               const primoCampionato = nationsLeagues['Italia'][0];
-              campionatoSelezionato = primoCampionato.full_name;
-              nazioneSelezionata = 'Italia';
-              renderLeaguesMenu();
-              // Carica le partite del campionato selezionato
-              loadMatches();
+              // Passa la nazione direttamente per evitare ambiguità
+              selezionaCampionato(primoCampionato.full_name, 'Italia');
             }
           }
         } else {
@@ -724,9 +993,37 @@
 
     // Renderizza menu campionati con struttura gerarchica: Nazioni -> Campionati
     function renderLeaguesMenu() {
-      const submenu = document.getElementById('calcio-submenu');
+      // Mappa sport -> ID submenu
+      const sportSubmenuMap = {
+        'calcio': 'calcio-submenu',
+        'tennis': 'tennis-submenu',
+        'basket': 'basket-submenu',
+        'hockey': 'hockey-submenu',
+        'rugby': 'rugby-submenu',
+        'american football': 'american-football-submenu',
+        'volleyball': 'volleyball-submenu',
+        'water polo': 'water-polo-submenu',
+        'golf': 'golf-submenu',
+        'pingpong': 'pingpong-submenu',
+        'futsal': 'futsal-submenu',
+        'pallamano': 'pallamano-submenu',
+        'freccette': 'freccette-submenu',
+        'boxing': 'boxing-submenu',
+        'e-sport': 'e-sport-submenu',
+        'badminton': 'badminton-submenu',
+        'cricket': 'cricket-submenu',
+        'squash': 'squash-submenu',
+      };
+      
+      const submenuId = sportSubmenuMap[sportSelezionato];
+      if (!submenuId) {
+        console.error('renderLeaguesMenu: sport non mappato:', sportSelezionato);
+        return;
+      }
+      
+      const submenu = document.getElementById(submenuId);
       if (!submenu) {
-        console.error('renderLeaguesMenu: submenu non trovato');
+        console.error('renderLeaguesMenu: submenu non trovato per sport:', sportSelezionato, 'ID:', submenuId);
         return;
       }
       
@@ -880,14 +1177,28 @@
     }
 
     // Seleziona campionato
-    function selezionaCampionato(league) {
+    async function selezionaCampionato(league, nation = null) {
+      // Se nationsLeagues non è ancora caricato, caricarlo prima
+      if (Object.keys(nationsLeagues).length === 0 && (sportSelezionato === 'calcio' || sportSelezionato === 'horse racing' || sportSelezionato === 'horseracing')) {
+        await loadLeagues();
+      }
+      
       campionatoSelezionato = league;
       
-      // Trova la nazione del campionato selezionato
-      if (league) {
-        for (const [nation, leagues] of Object.entries(nationsLeagues)) {
+      // Per horse racing, imposta anche campoSelezionato (i campionati sono i campi)
+      if (sportSelezionato === 'horse racing' || sportSelezionato === 'horseracing') {
+        campoSelezionato = league;
+      }
+      
+      // Se la nazione è fornita, usala direttamente (evita ambiguità con campionati omonimi)
+      if (nation) {
+        nazioneSelezionata = nation;
+      } else if (league) {
+        // Altrimenti, trova la nazione del campionato selezionato
+        // ATTENZIONE: se ci sono più campionati con lo stesso nome, potrebbe trovare quello sbagliato
+        for (const [nationKey, leagues] of Object.entries(nationsLeagues)) {
           if (leagues.some(l => l.full_name === league)) {
-            nazioneSelezionata = nation;
+            nazioneSelezionata = nationKey;
             break;
           }
         }
@@ -903,8 +1214,8 @@
     function selezionaCampionatoByIndex(nation, index) {
       if (nationsLeagues[nation] && nationsLeagues[nation][index]) {
         const league = nationsLeagues[nation][index].full_name;
-        nazioneSelezionata = nation; // Salva la nazione selezionata
-        selezionaCampionato(league);
+        // Passa la nazione direttamente per evitare ambiguità
+        selezionaCampionato(league, nation);
       }
     }
 
@@ -927,6 +1238,7 @@
       const normalLayout = document.getElementById('normal-layout');
       
       if (sport === 'horse racing' || sport === 'horseracing') {
+        // Per horse racing, usa il layout normale con campi a destra
         if (horseRacingLayout) horseRacingLayout.classList.remove('hidden');
         if (goalscorerLayout) goalscorerLayout.classList.add('hidden');
         if (normalLayout) normalLayout.classList.add('hidden');
@@ -1024,10 +1336,8 @@
         }
       }
       
-      // Carica campionati se è calcio
-      if (sport === 'calcio') {
-        loadLeagues();
-      }
+      // Carica campionati per tutti gli sport (non solo calcio)
+      loadLeagues();
       
       // Ricarica i dati
       loadMatches().then(() => {
@@ -7374,93 +7684,52 @@
       document.getElementById('modal-mercati').classList.add('hidden');
     }
 
-    // Funzione di ricerca
-    function cercaEvento(query) {
+
+    // Funzione di ricerca - cerca sempre direttamente nel database tramite API
+    async function cercaEvento(query) {
       if (!query || query.trim() === '') {
         return [];
       }
       
-      // Verifica che matchesData sia popolato
-      if (!matchesData || matchesData.length === 0) {
-        return [];
-      }
-      
-      const searchTerm = query.trim().toLowerCase();
-      const searchTermNum = query.trim(); // Mantieni anche la versione originale per confronti numerici
       const risultati = [];
       
-      // Cerca negli eventi caricati
-      matchesData.forEach(ev => {
-        if (!ev) return;
+      try {
+        // Cerca sempre direttamente nel database tramite API
+        const sportForMongo = getSportForMongo(sportSelezionato);
+        const url = `${window.location.origin}/api/search-betbet?sport=${sportForMongo}&q=${encodeURIComponent(query)}&limit=50`;
         
-        // Gestisci match_id come numero o stringa
-        const matchIdNum = ev.match_id || ev._id;
-        const matchId = String(matchIdNum || '').toLowerCase();
-        const matchIdOriginal = String(matchIdNum || '');
-        
-        const homeName = (ev.home_name || '').toLowerCase().trim();
-        const awayName = (ev.away_name || '').toLowerCase().trim();
-        const league = (ev.league || '').toLowerCase().trim();
-        const numeroCorsa = String(ev.numero_corsa || ev.quote?.numero_corsa || '').toLowerCase().trim();
-        
-        let matchFound = false;
-        let matchType = '';
-        
-        // Cerca per ID evento (confronta sia come stringa che come numero, esatto o parziale)
-        const idMatch = matchId && (
-          matchId === searchTerm || 
-          matchIdOriginal === searchTermNum ||
-          matchId.includes(searchTerm) || 
-          matchIdOriginal.includes(searchTermNum) ||
-          String(matchIdNum) === searchTermNum ||
-          (matchIdNum && matchIdNum === Number(searchTermNum))
-        );
-        
-        if (idMatch) {
-          matchFound = true;
-          matchType = 'ID Evento';
-        }
-        // Cerca per nome squadra (home o away) - gestisci anche spazi e caratteri speciali
-        if (!matchFound) {
-          const homeMatch = homeName && (homeName.includes(searchTerm) || homeName.replace(/\s+/g, '').includes(searchTerm.replace(/\s+/g, '')));
-          const awayMatch = awayName && (awayName.includes(searchTerm) || awayName.replace(/\s+/g, '').includes(searchTerm.replace(/\s+/g, '')));
-          if (homeMatch || awayMatch) {
-            matchFound = true;
-            matchType = 'Squadra';
+        const response = await fetch(url);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.results && data.results.length > 0) {
+            // Converti i risultati in formato compatibile
+            const searchTerm = query.trim().toLowerCase();
+            data.results.forEach(ev => {
+              const matchId = String(ev.match_id || ev._id || '').toLowerCase();
+              const homeName = (ev.home_name || '').toLowerCase();
+              const awayName = (ev.away_name || '').toLowerCase();
+              const league = (ev.league || '').toLowerCase();
+              const numeroCorsa = String(ev.numero_corsa || ev.quote?.numero_corsa || '').toLowerCase().trim();
+              
+              let tipo = 'ID Evento';
+              if (homeName.includes(searchTerm) || awayName.includes(searchTerm)) {
+                tipo = 'Squadra';
+              } else if (league.includes(searchTerm)) {
+                tipo = 'Campo';
+              } else if (numeroCorsa && numeroCorsa.includes(searchTerm)) {
+                tipo = 'Corsa';
+              }
+              
+              risultati.push({
+                tipo: tipo,
+                evento: ev,
+                match: matchId || homeName || awayName || league || numeroCorsa
+              });
+            });
           }
         }
-        // Cerca per nome campo/league (per Horse Racing e altri sport)
-        if (!matchFound && league && league.includes(searchTerm)) {
-          matchFound = true;
-          matchType = 'Campo';
-        }
-        // Cerca per numero corsa (per Horse Racing)
-        if (!matchFound && numeroCorsa && numeroCorsa.includes(searchTerm)) {
-          matchFound = true;
-          matchType = 'Corsa';
-        }
-        
-        // Aggiungi solo se trovato e non già presente (evita duplicati)
-        if (matchFound && !risultati.some(r => String(r.evento.match_id || r.evento._id) === String(ev.match_id || ev._id))) {
-          risultati.push({ tipo: matchType, evento: ev, match: matchId || homeName || awayName || league || numeroCorsa });
-        }
-      });
-      
-      if (matchesData.length > 0 && risultati.length === 0) {
-        const sampleIds = matchesData.slice(0, 5).map(ev => ({
-          match_id: ev.match_id,
-          _id: ev._id,
-          type_match_id: typeof ev.match_id,
-          type__id: typeof ev._id
-        }));
-        
-        // Verifica se l'ID cercato esiste nei dati
-        const foundId = matchesData.find(ev => {
-          const id = String(ev.match_id || ev._id || '');
-          return id === searchTermNum || id === searchTerm || id.includes(searchTermNum) || id.includes(searchTerm);
-        });
-        if (foundId) {
-        }
+      } catch (error) {
+        console.error('Errore durante la ricerca API:', error);
       }
       
       return risultati;
@@ -7480,63 +7749,14 @@
         return;
       }
       
-      // Verifica che matchesData sia popolato prima di cercare
-      if (!matchesData || matchesData.length === 0) {
-        searchResults.innerHTML = '<div class="p-3 text-gray-400 text-sm">Caricamento dati in corso... Attendi un momento e riprova.</div>';
+      // Mostra messaggio di caricamento
+      if (searchResults) {
+        searchResults.innerHTML = '<div class="p-3 text-yellow-400 text-sm">🔍 Ricerca in corso...</div>';
         searchResults.classList.remove('hidden');
-        // Prova a caricare i dati se non sono stati caricati
-        loadMatches();
-        return;
       }
       
-      let risultati = cercaEvento(query);
-      
-      
-      // Se non trova risultati, usa l'API di ricerca dedicata (più veloce)
-      if (risultati.length === 0) {
-        
-        // Mostra messaggio di caricamento
-        if (searchResults) {
-          searchResults.innerHTML = '<div class="p-3 text-yellow-400 text-sm">🔍 Ricerca in corso...</div>';
-          searchResults.classList.remove('hidden');
-        }
-        
-        try {
-          // Usa endpoint di ricerca dedicato per betbet (più veloce, cerca direttamente nel DB 'sports')
-          const sportForMongo = getSportForMongo(sportSelezionato);
-          const url = `${window.location.origin}/api/search-betbet?sport=${sportForMongo}&q=${encodeURIComponent(query)}&limit=50`;
-          
-          const response = await fetch(url);
-          if (response.ok) {
-            const data = await response.json();
-            if (data.success && data.results && data.results.length > 0) {
-              // Converti i risultati in formato compatibile
-              risultati = data.results.map(ev => {
-                const matchId = String(ev.match_id || ev._id || '').toLowerCase();
-                const homeName = (ev.home_name || '').toLowerCase();
-                const awayName = (ev.away_name || '').toLowerCase();
-                const league = (ev.league || '').toLowerCase();
-                
-                let tipo = 'ID Evento';
-                if (homeName.includes(query.toLowerCase()) || awayName.includes(query.toLowerCase())) {
-                  tipo = 'Squadra';
-                } else if (league.includes(query.toLowerCase())) {
-                  tipo = 'Campo';
-                }
-                
-                return {
-                  tipo: tipo,
-                  evento: ev,
-                  match: matchId || homeName || awayName || league
-                };
-              });
-              
-            }
-          }
-        } catch (error) {
-          console.error('Errore durante la ricerca API:', error);
-        }
-      }
+      // Cerca sempre direttamente nel database tramite API
+      const risultati = await cercaEvento(query);
       
       if (risultati.length === 0) {
         searchResults.innerHTML = '<div class="p-3 text-gray-400 text-sm">Nessun risultato trovato</div>';
@@ -7584,13 +7804,16 @@
           
           // Seleziona il campionato dell'evento selezionato
           if (league && league !== campionatoSelezionato) {
-            campionatoSelezionato = league;
-            renderLeaguesMenu();
-            // Ricarica i dati con il filtro del campionato
-            loadMatches().then(() => {
-              setTimeout(() => {
-                scrollaAEvento(matchId);
-              }, 300);
+            // Estrai la nazione dall'evento se disponibile e convertila in italiano
+            const eventNation = convertNationToItalian(ev.nation);
+            // Aspetta che il campionato sia selezionato prima di caricare i match
+            selezionaCampionato(league, eventNation).then(() => {
+              // Ricarica i dati con il filtro del campionato
+              loadMatches().then(() => {
+                setTimeout(() => {
+                  scrollaAEvento(matchId);
+                }, 300);
+              });
             });
           } else {
             scrollaAEvento(matchId);
@@ -7608,13 +7831,16 @@
         
         // Se c'è un campionato, selezionalo automaticamente
         if (league && league !== campionatoSelezionato) {
-          campionatoSelezionato = league;
-          renderLeaguesMenu();
-          // Ricarica i dati con il filtro del campionato
-          loadMatches().then(() => {
-            setTimeout(() => {
-              scrollaAEvento(primoRisultato.match_id || primoRisultato._id);
-            }, 300);
+          // Estrai la nazione dall'evento se disponibile e convertila in italiano
+          const eventNation = convertNationToItalian(primoRisultato.nation);
+          // Aspetta che il campionato sia selezionato prima di caricare i match
+          selezionaCampionato(league, eventNation).then(() => {
+            // Ricarica i dati con il filtro del campionato
+            loadMatches().then(() => {
+              setTimeout(() => {
+                scrollaAEvento(primoRisultato.match_id || primoRisultato._id);
+              }, 300);
+            });
           });
         } else {
           // Se non c'è campionato o è già selezionato, scrolla direttamente
@@ -7647,13 +7873,16 @@
               
               // Seleziona il campionato dell'evento
               if (league) {
-                campionatoSelezionato = league;
-                renderLeaguesMenu();
-                // Ricarica i dati con il filtro del campionato
-                loadMatches().then(() => {
-                  setTimeout(() => {
-                    scrollaAEventoDopoRicerca(matchId);
-                  }, 300);
+                // Estrai la nazione dall'evento se disponibile e convertila in italiano
+                const eventNation = convertNationToItalian(evento.nation);
+                // Aspetta che il campionato sia selezionato prima di caricare i match
+                selezionaCampionato(league, eventNation).then(() => {
+                  // Ricarica i dati con il filtro del campionato
+                  loadMatches().then(() => {
+                    setTimeout(() => {
+                      scrollaAEventoDopoRicerca(matchId);
+                    }, 300);
+                  });
                 });
               } else {
                 // Se non c'è campionato, carica senza filtro ma solo 200 eventi
@@ -7714,15 +7943,17 @@
       // Per gli altri sport, seleziona il campionato dell'evento se diverso da quello attuale
       const league = ev.league || '';
       if (league && campionatoSelezionato !== league) {
-        // Seleziona il campionato dell'evento
-        campionatoSelezionato = league;
-        renderLeaguesMenu();
-        // Ricarica i dati con il filtro del campionato (solo 200 eventi)
-        loadMatches().then(() => {
-          // Dopo aver ricaricato, scrolla all'evento
-          setTimeout(() => {
-            scrollaAEventoDopoRicerca(matchId);
-          }, 300);
+        // Estrai la nazione dall'evento se disponibile e convertila in italiano
+        const eventNation = convertNationToItalian(ev.nation);
+        // Aspetta che il campionato sia selezionato prima di caricare i match
+        selezionaCampionato(league, eventNation).then(() => {
+          // Ricarica i dati con il filtro del campionato (solo 200 eventi)
+          loadMatches().then(() => {
+            // Dopo aver ricaricato, scrolla all'evento
+            setTimeout(() => {
+              scrollaAEventoDopoRicerca(matchId);
+            }, 300);
+          });
         });
         return;
       }
@@ -7811,12 +8042,13 @@
       apriMercati(id);
     }
 
-    // Chiudi modal cliccando fuori
+        // Chiudi modal cliccando fuori
     document.getElementById('modal-mercati').addEventListener('click', (e) => {
       if (e.target.id === 'modal-mercati') {
         chiudiMercati();
       }
     });
+
 
     // Gestione menu mobile
     function toggleSidebar(sidebarId, overlayId) {
@@ -7917,30 +8149,73 @@
           arrow.style.transform = 'rotate(180deg)';
         }
         
-        // Aggiungi event listener per toggle menu calcio e selezione sport
-        const calcioToggle = document.getElementById('calcio-toggle');
-        if (calcioToggle) {
-          calcioToggle.addEventListener('click', function(e) {
-            // Se si clicca sulla freccia, solo toggle menu
-            if (e.target.closest('#calcio-arrow') || e.target.closest('.sport-indicator')) {
-              toggleCalcioMenu();
-            } else {
-              // Altrimenti seleziona calcio
-              selezionaSport('calcio', '⚽', 'CALCIO');
-              toggleCalcioMenu(); // Apri anche il menu
-            }
+        // Mappa sport -> toggle ID, icon, nome
+        const sportToggleMap = {
+          'calcio': { toggle: 'calcio-toggle', icon: '⚽', nome: 'CALCIO' },
+          'tennis': { toggle: 'tennis-toggle', icon: '🎾', nome: 'Tennis' },
+          'basket': { toggle: 'basket-toggle', icon: '🏀', nome: 'Basket' },
+          'hockey': { toggle: 'hockey-toggle', icon: '🏒', nome: 'Hockey' },
+          'rugby': { toggle: 'rugby-toggle', icon: '🏉', nome: 'Rugby' },
+          'american football': { toggle: 'american-football-toggle', icon: '🏈', nome: 'American Football' },
+          'volleyball': { toggle: 'volleyball-toggle', icon: '🏐', nome: 'Volleyball' },
+          'water polo': { toggle: 'water-polo-toggle', icon: '🏓', nome: 'Water Polo' },
+          'golf': { toggle: 'golf-toggle', icon: '🏌️', nome: 'Golf' },
+          'pingpong': { toggle: 'pingpong-toggle', icon: '🎾', nome: 'Pingpong' },
+          'futsal': { toggle: 'futsal-toggle', icon: '⚽', nome: 'Futsal' },
+          'pallamano': { toggle: 'pallamano-toggle', icon: '🎾', nome: 'Pallamano' },
+          'freccette': { toggle: 'freccette-toggle', icon: '🎾', nome: 'Freccette' },
+          'boxing': { toggle: 'boxing-toggle', icon: '🥊', nome: 'Boxing' },
+          'e-sport': { toggle: 'e-sport-toggle', icon: '🎮', nome: 'E-Sport' },
+          'badminton': { toggle: 'badminton-toggle', icon: '🏸', nome: 'Badminton' },
+          'cricket': { toggle: 'cricket-toggle', icon: '🏏', nome: 'Cricket' },
+          'squash': { toggle: 'squash-toggle', icon: '🎾', nome: 'Squash' }
+        };
+        
+        // Aggiungi event listener per horse racing
+        const horseRacingItem = document.querySelector('[data-sport="horse racing"]');
+        if (horseRacingItem) {
+          horseRacingItem.addEventListener('click', function() {
+            selezionaSport('horse racing', '🐴', 'Horse Racing');
           });
         }
         
-        // Aggiungi event listener agli sport
-        document.querySelectorAll('.sport-item[data-sport]').forEach(item => {
-          if (item.id !== 'calcio-toggle' && !item.closest('#calcio-submenu')) {
-            item.addEventListener('click', function() {
-              const sport = this.getAttribute('data-sport');
-              const icon = this.getAttribute('data-icon');
-              const nome = this.getAttribute('data-nome');
-              if (sport && icon && nome) {
-                selezionaSport(sport, icon, nome);
+        // Aggiungi event listener per tutti i toggle sport
+        Object.entries(sportToggleMap).forEach(([sport, info]) => {
+          const toggle = document.getElementById(info.toggle);
+          if (toggle) {
+            toggle.addEventListener('click', function(e) {
+              // Trova l'arrow ID dalla mappa toggleSportMenu
+              const sportMap = {
+                'calcio': { arrow: 'calcio-arrow' },
+                'tennis': { arrow: 'tennis-arrow' },
+                'basket': { arrow: 'basket-arrow' },
+                'hockey': { arrow: 'hockey-arrow' },
+                'rugby': { arrow: 'rugby-arrow' },
+                'american football': { arrow: 'american-football-arrow' },
+                'volleyball': { arrow: 'volleyball-arrow' },
+                'water polo': { arrow: 'water-polo-arrow' },
+                'golf': { arrow: 'golf-arrow' },
+                'pingpong': { arrow: 'pingpong-arrow' },
+                'futsal': { arrow: 'futsal-arrow' },
+                'pallamano': { arrow: 'pallamano-arrow' },
+                'freccette': { arrow: 'freccette-arrow' },
+                'boxing': { arrow: 'boxing-arrow' },
+                'e-sport': { arrow: 'e-sport-arrow' },
+                'badminton': { arrow: 'badminton-arrow' },
+                'cricket': { arrow: 'cricket-arrow' },
+                'squash': { arrow: 'squash-arrow' },
+                'horse racing': { arrow: 'horse-racing-arrow' }
+              };
+              
+              const arrowId = sportMap[sport]?.arrow;
+              
+              // Se si clicca sulla freccia o sull'indicatore, solo toggle menu
+              if (arrowId && (e.target.closest(`#${arrowId}`) || e.target.closest('.sport-indicator'))) {
+                toggleSportMenu(sport);
+              } else {
+                // Altrimenti seleziona sport e apri menu
+                selezionaSport(sport, info.icon, info.nome);
+                toggleSportMenu(sport); // Apri anche il menu
               }
             });
           }
@@ -8023,45 +8298,14 @@
               if (isSearching) return; // Evita ricerche multiple simultanee
               isSearching = true;
               
-              let risultati = cercaEvento(query);
-              
-              // Se non trova risultati, usa l'API di ricerca dedicata (più veloce)
-              if (risultati.length === 0) {
-                try {
-                  // Usa endpoint di ricerca dedicato (più veloce, cerca direttamente nel DB)
-                  const sportForMongo = getSportForMongo(sportSelezionato);
-                  const url = `${window.location.origin}/api/search-betbet?sport=${sportForMongo}&q=${encodeURIComponent(query)}&limit=50`;
-                  
-                  const response = await fetch(url);
-                  if (response.ok) {
-                    const data = await response.json();
-                    if (data.success && data.results && data.results.length > 0) {
-                      // Converti i risultati in formato compatibile
-                      risultati = data.results.map(ev => {
-                        const matchId = String(ev.match_id || ev._id || '').toLowerCase();
-                        const homeName = (ev.home_name || '').toLowerCase();
-                        const awayName = (ev.away_name || '').toLowerCase();
-                        const league = (ev.league || '').toLowerCase();
-                        
-                        let tipo = 'ID Evento';
-                        if (homeName.includes(query.toLowerCase()) || awayName.includes(query.toLowerCase())) {
-                          tipo = 'Squadra';
-                        } else if (league.includes(query.toLowerCase())) {
-                          tipo = 'Campo';
-                        }
-                        
-                        return {
-                          tipo: tipo,
-                          evento: ev,
-                          match: matchId || homeName || awayName || league
-                        };
-                      });
-                    }
-                  }
-                } catch (error) {
-                  console.error('Errore durante la ricerca API:', error);
-                }
+              // Mostra messaggio di caricamento
+              if (searchResults) {
+                searchResults.innerHTML = '<div class="p-3 text-yellow-400 text-sm">🔍 Ricerca in corso...</div>';
+                searchResults.classList.remove('hidden');
               }
+              
+              // Cerca sempre direttamente nel database tramite API
+              const risultati = await cercaEvento(query);
               
               isSearching = false;
               
@@ -8102,10 +8346,28 @@
               searchResults.classList.remove('hidden');
               
               // Aggiungi event listener ai risultati
-              searchResults.querySelectorAll('.search-result-item').forEach(item => {
+              searchResults.querySelectorAll('.search-result-item').forEach((item, idx) => {
                 item.addEventListener('click', function() {
                   const matchId = this.getAttribute('data-match-id');
-                  scrollaAEvento(matchId);
+                  const risultato = risultati[idx];
+                  const ev = risultato.evento;
+                  const league = ev.league;
+                  
+                  // Seleziona il campionato dell'evento selezionato
+                  if (league && league !== campionatoSelezionato) {
+                    // Estrai la nazione dall'evento se disponibile e convertila in italiano
+                    const eventNation = convertNationToItalian(ev.nation);
+                    selezionaCampionato(league, eventNation);
+                    // Ricarica i dati con il filtro del campionato
+                    loadMatches().then(() => {
+                      setTimeout(() => {
+                        scrollaAEvento(matchId);
+                      }, 300);
+                    });
+                  } else {
+                    scrollaAEvento(matchId);
+                  }
+                  
                   searchResults.classList.add('hidden');
                   searchInput.value = '';
                 });
