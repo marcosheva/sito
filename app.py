@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from datetime import datetime, timedelta, timezone
 from pymongo import MongoClient
+import pymongo
 from bson import ObjectId
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -629,11 +630,15 @@ def api_leagues_betbet():
     }
     sport_id = sport_id_map.get(sport, '1')
     
+    mongodb_connection = None
     try:
-        db = client["sports"]
+        # Connessione MongoDB - usa la stessa connessione delle quote
+        uri = 'mongodb://admin:Mongolicani@52.210.150.253:27017/admin'
+        mongodb_connection = MongoClient(uri, tls=False, tlsAllowInvalidCertificates=True, server_api=pymongo.server_api.ServerApi(version="1", strict=True, deprecation_errors=True))
+        db = mongodb_connection["sports"]
         col = db["prematch"]
         
-        # Query per il sport specifico
+        # Query per il sport specifico - prova prima con sport_id come stringa e settled=False
         query = {"sport_id": sport_id, "settled": False}
         
         # Recupera tutti i campionati unici iterando sui documenti
@@ -643,7 +648,30 @@ def api_leagues_betbet():
         league_nation_counts = {}  # {league_name: {nation: count}} per dedurre la nazione più comune
         
         # Prima passata: raccogli tutti i campionati e conta le nazioni
-        for doc in col.find(query, {"league": 1, "nation": 1}):
+        docs = list(col.find(query, {"league": 1, "nation": 1}))
+        
+        # Se non trova risultati, prova con sport_id come numero
+        if not docs:
+            try:
+                query_num = {"sport_id": int(sport_id), "settled": False}
+                docs = list(col.find(query_num, {"league": 1, "nation": 1}))
+            except (ValueError, TypeError):
+                pass
+        
+        # Se ancora non trova, prova senza filtro settled
+        if not docs:
+            query_no_settled = {"sport_id": sport_id}
+            docs = list(col.find(query_no_settled, {"league": 1, "nation": 1}))
+            
+            # Prova anche con sport_id come numero senza settled
+            if not docs:
+                try:
+                    query_no_settled_num = {"sport_id": int(sport_id)}
+                    docs = list(col.find(query_no_settled_num, {"league": 1, "nation": 1}))
+                except (ValueError, TypeError):
+                    pass
+        
+        for doc in docs:
             league_name = None
             nation_raw = doc.get("nation", "Altri")
             
@@ -763,11 +791,21 @@ def api_leagues_betbet():
         sorted_nations = sorted(nations_leagues.keys(), key=lambda x: (x != "Italia", x))
         ordered_nations = {nation: nations_leagues[nation] for nation in sorted_nations}
         
+        # Chiudi connessione MongoDB
+        if mongodb_connection:
+            mongodb_connection.close()
+        
         return jsonify({
             "success": True,
             "nations": ordered_nations
         })
     except Exception as e:
+        # Chiudi connessione MongoDB anche in caso di errore
+        if mongodb_connection:
+            try:
+                mongodb_connection.close()
+            except:
+                pass
         return jsonify({
             "success": False,
             "error": str(e),
@@ -918,11 +956,16 @@ def api_events_betbet():
     }
     sport_id = sport_id_map.get(sport, '1')
     
+    mongodb_connection = None
     try:
-        db = client["sports"]
+        # Connessione MongoDB per estrarre quote direttamente
+        uri = 'mongodb://admin:Mongolicani@52.210.150.253:27017/admin'
+        mongodb_connection = MongoClient(uri, tls=False, tlsAllowInvalidCertificates=True, server_api=pymongo.server_api.ServerApi(version="1", strict=True, deprecation_errors=True))
+        db = mongodb_connection["sports"]
         col = db["prematch"]
         
-        # Costruisci query
+        # Costruisci query - prova sia sport_id come stringa che come numero
+        # Prova prima con sport_id come stringa (formato più comune)
         query = {"sport_id": sport_id, "settled": False}
         if league:
             query["league.name"] = league
@@ -933,21 +976,62 @@ def api_events_betbet():
             query["nation"] = nation_english
         
         # Recupera eventi ordinati per time
+        # Assicurati che il campo 'id' sia incluso nella query (MongoDB include tutti i campi per default)
         eventi_raw = list(col.find(query).sort("time", 1).limit(limit))
+        
+        # Debug: verifica se gli eventi hanno il campo 'id'
+        if eventi_raw and len(eventi_raw) > 0:
+            first_event = eventi_raw[0]
+            if "id" not in first_event:
+                # Se il primo evento non ha 'id', verifica se è un problema generale
+                # Potrebbe essere che gli eventi non hanno il campo 'id' salvato
+                pass
+        
+        # Se non trova eventi, prova con sport_id come numero
+        if not eventi_raw:
+            try:
+                query_num = {"sport_id": int(sport_id), "settled": False}
+                if league:
+                    query_num["league.name"] = league
+                if nation:
+                    nation_english = nation_reverse_mapping.get(nation, nation)
+                    query_num["nation"] = nation_english
+                eventi_raw = list(col.find(query_num).sort("time", 1).limit(limit))
+            except (ValueError, TypeError):
+                pass
+        
+        # Se ancora non trova, prova senza filtro settled
+        if not eventi_raw:
+            query_no_settled = {"sport_id": sport_id}
+            if league:
+                query_no_settled["league.name"] = league
+            if nation:
+                nation_english = nation_reverse_mapping.get(nation, nation)
+                query_no_settled["nation"] = nation_english
+            eventi_raw = list(col.find(query_no_settled).sort("time", 1).limit(limit))
         
         # Converti formato BetsAPI -> formato betbet
         eventi = []
         for ev in eventi_raw:
             # Converti formato
+            # Estrai ID evento - prova prima con 'id', poi con 'id_event' (formato alternativo)
+            event_id = ev.get("id") or ev.get("id_event")
+            
             evento_convertito = {
-                "match_id": str(ev.get("id", "")),
+                "match_id": str(event_id) if event_id else "",
                 "home_name": ev.get("home", {}).get("name", "") if isinstance(ev.get("home"), dict) else "",
                 "away_name": ev.get("away", {}).get("name", "") if isinstance(ev.get("away"), dict) else "",
                 "league": ev.get("league", {}).get("name", "") if isinstance(ev.get("league"), dict) else ev.get("league", ""),
                 "sport": sport,
                 "nation": ev.get("nation", ""),
                 "quote": {},
-                "quote_1x2": {"1": None, "X": None, "2": None}
+                "quote_1x2": {"1": None, "X": None, "2": None},
+                "_debug": {
+                    "event_id": event_id,
+                    "event_id_type": type(event_id).__name__ if event_id else None,
+                    "calculated_found": False,
+                    "calculated_odds_count": 0
+                }
             }
             
             # Converti time in start_time_date e start_time
@@ -959,62 +1043,47 @@ def api_events_betbet():
                 except:
                     evento_convertito["start_time"] = str(ev.get("time", ""))
             
-            # Converti markets in quote
-            if "markets" in ev and ev["markets"]:
-                markets = ev["markets"]
-                quote = {}
-                
-                # 1x2 -> full_time_result
-                if "1x2" in markets and markets["1x2"]:
-                    quote["full_time_result"] = markets["1x2"]
-                    # Estrai quote_1x2
-                    for item in markets["1x2"]:
-                        if isinstance(item, dict):
-                            name = (item.get("name") or item.get("header") or "").strip().lower()
-                            odds = item.get("odds")
-                            if name == "1" or name == "home":
-                                evento_convertito["quote_1x2"]["1"] = odds
-                            elif name == "x" or name == "draw" or name == "pareggio":
-                                evento_convertito["quote_1x2"]["X"] = odds
-                            elif name == "2" or name == "away":
-                                evento_convertito["quote_1x2"]["2"] = odds
-                
-                # uo -> goals_over_under
-                if "uo" in markets and markets["uo"]:
-                    quote["goals_over_under"] = markets["uo"]
-                
-                # ggng -> both_teams_to_score
-                if "ggng" in markets and markets["ggng"]:
-                    quote["both_teams_to_score"] = markets["ggng"]
-                
-                # Aggiungi tutti gli altri markets
-                for key, value in markets.items():
-                    if key not in ["1x2", "uo", "ggng"]:
-                        quote[key] = value
-                
-                evento_convertito["quote"] = quote
-            
-            # Aggiungi dati goalscorer dalla collezione 'players'
-            try:
-                players_col = db["players"]
-                players_doc = players_col.find_one({"id": str(ev.get("id", ""))})
-                if players_doc and "odds" in players_doc:
-                    # Rimuovi _id per evitare errori di serializzazione JSON
-                    if "_id" in players_doc:
-                        del players_doc["_id"]
-                    evento_convertito["players"] = players_doc
-            except Exception as e:
-                # Ignora errori nel recupero dei players
-                pass
-            
-            # Aggiungi quote calcolate dalla collezione 'calculated'
+            # Estrai quote direttamente dalla collezione 'calculated' (non calcolate)
+            calculated_doc = None
+            calculated_keys_added = []  # Traccia le chiavi aggiunte da calculated
             try:
                 calculated_col = db["calculated"]
-                calculated_doc = calculated_col.find_one({"id": str(ev.get("id", ""))})
+                
+                # Cerca solo se abbiamo un ID valido (deve essere numerico come 184183098)
+                if event_id:
+                    # Prova prima come numero (formato più comune)
+                    try:
+                        calculated_doc = calculated_col.find_one({"id": int(event_id)})
+                    except (ValueError, TypeError):
+                        pass
+                    
+                    # Se non trovato, prova come stringa
+                    if not calculated_doc:
+                        calculated_doc = calculated_col.find_one({"id": str(event_id)})
+                    
+                    # Se ancora non trovato, prova senza conversione
+                    if not calculated_doc:
+                        calculated_doc = calculated_col.find_one({"id": event_id})
+                    
+                    # Se ancora non trovato, prova anche con id_event (formato alternativo)
+                    if not calculated_doc:
+                        try:
+                            calculated_doc = calculated_col.find_one({"id_event": int(event_id)})
+                        except (ValueError, TypeError):
+                            pass
+                        if not calculated_doc:
+                            calculated_doc = calculated_col.find_one({"id_event": str(event_id)})
+                
                 if calculated_doc and "odds" in calculated_doc:
                     calculated_odds = calculated_doc["odds"]
                     
-                    # Mappa le quote calcolate al formato quote
+                    # Debug: aggiorna info
+                    if "_debug" in evento_convertito:
+                        evento_convertito["_debug"]["calculated_found"] = True
+                        evento_convertito["_debug"]["calculated_odds_count"] = len(calculated_odds) if isinstance(calculated_odds, dict) else 0
+                        evento_convertito["_debug"]["calculated_original_keys"] = list(calculated_odds.keys()) if isinstance(calculated_odds, dict) else []
+                    
+                    # Inizializza quote se non esiste
                     if not evento_convertito.get("quote"):
                         evento_convertito["quote"] = {}
                     
@@ -1151,18 +1220,44 @@ def api_events_betbet():
                         "combo_1x2_first_goal": "combo_1x2_first_goal"
                     }
                     
-                    # Aggiungi tutte le quote calcolate (con mappatura se disponibile)
+                    # Estrai tutte le quote direttamente da calculated (con mappatura se disponibile)
+                    # Usa la variabile già definita all'inizio
+                    calculated_keys_added.clear()
                     for calc_key, calc_value in calculated_odds.items():
-                        if isinstance(calc_value, list):
+                        # Estrai sia liste che dizionari (alcune quote potrebbero essere strutturate)
+                        if isinstance(calc_value, (list, dict)):
                             # Usa la mappatura se disponibile, altrimenti usa la chiave originale
                             quote_key = calculated_mapping.get(calc_key, calc_key)
                             evento_convertito["quote"][quote_key] = calc_value
+                            calculated_keys_added.append(quote_key)
+                            
+                            # Se è 1x2, estrai anche quote_1x2
+                            if calc_key == "1x2" and isinstance(calc_value, list):
+                                for item in calc_value:
+                                    if isinstance(item, dict):
+                                        header = (item.get("header") or "").strip()
+                                        name = (item.get("name") or "").strip()
+                                        odds = item.get("odds")
+                                        
+                                        # Prova prima con header, poi con name
+                                        identifier = header or name
+                                        identifier_lower = identifier.lower()
+                                        
+                                        # Controlla per "1" o "Home"
+                                        if identifier == "1" or identifier_lower == "home" or identifier_lower == "1":
+                                            evento_convertito["quote_1x2"]["1"] = odds
+                                        # Controlla per "X", "Draw", "Tie", "Pareggio"
+                                        elif identifier == "X" or identifier_lower in ["draw", "tie", "pareggio", "x"]:
+                                            evento_convertito["quote_1x2"]["X"] = odds
+                                        # Controlla per "2" o "Away"
+                                        elif identifier == "2" or identifier_lower == "away" or identifier_lower == "2":
+                                            evento_convertito["quote_1x2"]["2"] = odds
                             
                             # Se è 1x2_1t o 1x2_2t, aggiorna anche quote_1x2 se necessario
                             if calc_key == "1x2_1t" and not evento_convertito["quote_1x2"]["1"]:
                                 for item in calc_value:
                                     if isinstance(item, dict):
-                                        header = (item.get("header") or "").strip()
+                                        header = (item.get("header") or item.get("name") or "").strip()
                                         odds = item.get("odds")
                                         if header == "1":
                                             evento_convertito["quote_1x2"]["1"] = odds
@@ -1170,15 +1265,197 @@ def api_events_betbet():
                                             evento_convertito["quote_1x2"]["X"] = odds
                                         elif header == "2":
                                             evento_convertito["quote_1x2"]["2"] = odds
+                
+                # Aggiungi markets come complemento anche se calculated ha alcune quote
+                if "markets" in ev and ev["markets"]:
+                    markets = ev["markets"]
+                    
+                    # Assicurati che quote esista
+                    if not evento_convertito.get("quote"):
+                        evento_convertito["quote"] = {}
+                    
+                    # 1x2 -> full_time_result (aggiungi solo se non già presente)
+                    if "1x2" in markets and markets["1x2"]:
+                        if "full_time_result" not in evento_convertito["quote"]:
+                            evento_convertito["quote"]["full_time_result"] = markets["1x2"]
+                        # Estrai quote_1x2 da markets (sovrascrivi quelle da calculated se presenti)
+                        # markets è la fonte più affidabile, quindi ha priorità
+                        for item in markets["1x2"]:
+                            if isinstance(item, dict):
+                                header = (item.get("header") or "").strip()
+                                name = (item.get("name") or "").strip()
+                                odds = item.get("odds")
+                                
+                                # Prova prima con header, poi con name
+                                identifier = header or name
+                                identifier_lower = identifier.lower()
+                                
+                                # Controlla per "1" o "Home"
+                                if identifier == "1" or identifier_lower == "home" or identifier_lower == "1":
+                                    evento_convertito["quote_1x2"]["1"] = odds
+                                # Controlla per "X", "Draw", "Tie", "Pareggio"
+                                elif identifier == "X" or identifier_lower in ["draw", "tie", "pareggio", "x"]:
+                                    evento_convertito["quote_1x2"]["X"] = odds
+                                # Controlla per "2" o "Away"
+                                elif identifier == "2" or identifier_lower == "away" or identifier_lower == "2":
+                                    evento_convertito["quote_1x2"]["2"] = odds
+                    
+                    # uo -> goals_over_under (aggiungi solo se non già presente)
+                    if "uo" in markets and markets["uo"]:
+                        if "goals_over_under" not in evento_convertito["quote"]:
+                            evento_convertito["quote"]["goals_over_under"] = markets["uo"]
+                    
+                    # ggng -> both_teams_to_score (aggiungi solo se non già presente)
+                    if "ggng" in markets and markets["ggng"]:
+                        if "both_teams_to_score" not in evento_convertito["quote"]:
+                            evento_convertito["quote"]["both_teams_to_score"] = markets["ggng"]
+                    
+                    # Aggiungi tutti gli altri markets che non sono già presenti
+                    # Mappa anche le chiavi markets comuni al formato standard
+                    markets_mapping = {
+                        "1x2": "full_time_result",
+                        "uo": "goals_over_under",
+                        "ggng": "both_teams_to_score",
+                        "dc": "double_chance",
+                        "1x2_1t": "half_time_result",
+                        "1x2_2t": "2nd_half_result",
+                        "dc_1t": "half_time_double_chance",
+                        "dc_2t": "2nd_half_double_chance",
+                        "uo_1t": "1st_half_goals_over_under",
+                        "uo_2t": "2nd_half_goals_over_under",
+                        "cs": "correct_score",
+                        "cs_1t": "1st_half_correct_score",
+                        "cs_2t": "2nd_half_correct_score",
+                        "dnb": "draw_no_bet",
+                        "dnb_1t": "1st_half_draw_no_bet",
+                        "dnb_2t": "2nd_half_draw_no_bet",
+                        "handicap": "handicap_result",
+                        "handicap_1t": "1st_half_handicap_result",
+                        "handicap_2t": "2nd_half_handicap_result",
+                        "asian_handicap": "asian_handicap",
+                        "hnb": "handicap_no_bet",
+                        "crn_uo": "corners_over_under",
+                        "crn_uo_1t": "1st_half_corners_over_under",
+                        "crn_1x2": "corners_1x2",
+                        "crd_uo": "cards_over_under",
+                        "crd_1x2": "cards_1x2",
+                        "first_goal": "first_team_to_score",
+                        "last_goal": "last_team_to_score",
+                        "odd_even": "goals_odd_even",
+                        "odd_even_1t": "1st_half_goals_odd_even",
+                        "odd_even_2t": "2nd_half_goals_odd_even",
+                        "tg": "total_goals",
+                        "tg_1t": "1st_half_total_goals",
+                        "tg_2t": "2nd_half_total_goals",
+                        "tg_home": "home_team_total_goals",
+                        "tg_away": "away_team_total_goals"
+                    }
+                    
+                    for key, value in markets.items():
+                        if key not in ["1x2", "uo", "ggng"]:
+                            # Usa la mappatura se disponibile, altrimenti usa la chiave originale
+                            quote_key = markets_mapping.get(key, key)
+                            # Aggiungi solo se non già presente (calculated ha priorità)
+                            if quote_key not in evento_convertito["quote"]:
+                                evento_convertito["quote"][quote_key] = value
+                            # Se è già presente ma è vuoto, aggiungi comunque
+                            elif not evento_convertito["quote"][quote_key] or (isinstance(evento_convertito["quote"][quote_key], list) and len(evento_convertito["quote"][quote_key]) == 0):
+                                evento_convertito["quote"][quote_key] = value
+                    
+                    # Debug: aggiungi info sulle chiavi finali
+                    if "_debug" in evento_convertito:
+                        evento_convertito["_debug"]["final_quote_keys"] = list(evento_convertito["quote"].keys())
+                        evento_convertito["_debug"]["calculated_keys_added"] = calculated_keys_added
             except Exception as calc_error:
-                # Ignora errori nella lettura delle quote calcolate
+                # Ignora errori nella lettura delle quote
                 pass
             
-            # Converti ObjectId in stringa
-            if "_id" in ev:
-                evento_convertito["_id"] = str(ev["_id"])
+            # Fallback finale: se ancora non ci sono quote, usa markets direttamente
+            if not evento_convertito.get("quote") or len(evento_convertito["quote"]) == 0:
+                if "markets" in ev and ev["markets"]:
+                    markets = ev["markets"]
+                    quote = {}
+                    
+                    # 1x2 -> full_time_result
+                    if "1x2" in markets and markets["1x2"]:
+                        quote["full_time_result"] = markets["1x2"]
+                        # Estrai quote_1x2 se non già estratte
+                        if not evento_convertito["quote_1x2"]["1"]:
+                            for item in markets["1x2"]:
+                                if isinstance(item, dict):
+                                    name = (item.get("name") or item.get("header") or "").strip().lower()
+                                    odds = item.get("odds")
+                                    if name == "1" or name == "home":
+                                        evento_convertito["quote_1x2"]["1"] = odds
+                                    elif name == "x" or name == "draw" or name == "pareggio":
+                                        evento_convertito["quote_1x2"]["X"] = odds
+                                    elif name == "2" or name == "away":
+                                        evento_convertito["quote_1x2"]["2"] = odds
+                    
+                    # uo -> goals_over_under
+                    if "uo" in markets and markets["uo"]:
+                        quote["goals_over_under"] = markets["uo"]
+                    
+                    # ggng -> both_teams_to_score
+                    if "ggng" in markets and markets["ggng"]:
+                        quote["both_teams_to_score"] = markets["ggng"]
+                    
+                    # Aggiungi tutti gli altri markets
+                    for key, value in markets.items():
+                        if key not in ["1x2", "uo", "ggng"]:
+                            quote[key] = value
+                    
+                    evento_convertito["quote"] = quote
+            
+            # Aggiungi dati goalscorer dalla collezione 'players'
+            # Usa lo stesso event_id estratto sopra (gestisce sia 'id' che 'id_event')
+            try:
+                players_col = db["players"]
+                players_doc = None
+                
+                # Cerca solo se abbiamo un ID valido
+                if event_id:
+                    # Prova prima come numero (formato più comune)
+                    try:
+                        players_doc = players_col.find_one({"id": int(event_id)})
+                    except (ValueError, TypeError):
+                        pass
+                    
+                    # Se non trovato, prova come stringa
+                    if not players_doc:
+                        players_doc = players_col.find_one({"id": str(event_id)})
+                    
+                    # Se ancora non trovato, prova senza conversione
+                    if not players_doc:
+                        players_doc = players_col.find_one({"id": event_id})
+                    
+                    # Se ancora non trovato, prova anche con id_event (formato alternativo)
+                    if not players_doc:
+                        try:
+                            players_doc = players_col.find_one({"id_event": int(event_id)})
+                        except (ValueError, TypeError):
+                            pass
+                        if not players_doc:
+                            players_doc = players_col.find_one({"id_event": str(event_id)})
+                
+                if players_doc and "odds" in players_doc:
+                    # Rimuovi _id per evitare errori di serializzazione JSON
+                    if "_id" in players_doc:
+                        del players_doc["_id"]
+                    evento_convertito["players"] = players_doc
+            except Exception as e:
+                # Ignora errori nel recupero dei players
+                pass
+            
+            # NON aggiungere _id alla risposta - vogliamo solo l'ID dell'evento
+            # Rimuovi _id se presente (non vogliamo mostrarlo)
+            if "_id" in evento_convertito:
+                del evento_convertito["_id"]
             
             eventi.append(evento_convertito)
+        
+        # Chiudi connessione MongoDB
+        mongodb_connection.close()
         
         return jsonify({
             "success": True,
@@ -1186,10 +1463,146 @@ def api_events_betbet():
             "count": len(eventi)
         })
     except Exception as e:
+        # Chiudi connessione MongoDB anche in caso di errore
+        if mongodb_connection:
+            try:
+                mongodb_connection.close()
+            except:
+                pass
         return jsonify({
             "success": False,
             "error": str(e),
             "results": []
+        }), 500
+
+@app.route("/api/debug-betbet", methods=["GET"])
+def api_debug_betbet():
+    """Endpoint di debug per verificare cosa c'è nel database"""
+    event_id = request.args.get("event_id", None)
+    mongodb_connection = None
+    try:
+        uri = 'mongodb://admin:Mongolicani@52.210.150.253:27017/admin'
+        mongodb_connection = MongoClient(uri, tls=False, tlsAllowInvalidCertificates=True, server_api=pymongo.server_api.ServerApi(version="1", strict=True, deprecation_errors=True))
+        db = mongodb_connection["sports"]
+        col = db["prematch"]
+        calculated_col = db["calculated"]
+        
+        # Se viene fornito un event_id, verifica quello specifico
+        if event_id:
+            # Trova l'evento in prematch
+            prematch_doc = col.find_one({"id": str(event_id)})
+            if not prematch_doc:
+                try:
+                    prematch_doc = col.find_one({"id": int(event_id)})
+                except (ValueError, TypeError):
+                    pass
+            
+            # Trova in calculated
+            calculated_doc = calculated_col.find_one({"id": str(event_id)})
+            if not calculated_doc:
+                try:
+                    calculated_doc = calculated_col.find_one({"id": int(event_id)})
+                except (ValueError, TypeError):
+                    pass
+            
+            # Se prematch non trovato, prova a cercare un evento qualsiasi per vedere la struttura
+            sample_doc = None
+            if not prematch_doc:
+                sample_doc = col.find_one({"sport_id": "1"}) or col.find_one({"sport_id": 1})
+            
+            result = {
+                "event_id": event_id,
+                "prematch_found": prematch_doc is not None,
+                "calculated_found": calculated_doc is not None,
+                "prematch_id": prematch_doc.get("id") if prematch_doc else None,
+                "prematch_id_type": type(prematch_doc.get("id")).__name__ if prematch_doc and prematch_doc.get("id") else None,
+                "calculated_id": calculated_doc.get("id") if calculated_doc else None,
+                "calculated_id_type": type(calculated_doc.get("id")).__name__ if calculated_doc and calculated_doc.get("id") else None,
+                "prematch_has_markets": "markets" in prematch_doc if prematch_doc else False,
+                "calculated_has_odds": "odds" in calculated_doc if calculated_doc else False,
+                "calculated_odds_keys": list(calculated_doc.get("odds", {}).keys()) if calculated_doc and "odds" in calculated_doc else [],
+                "sample_doc_has_id": "id" in sample_doc if sample_doc else False,
+                "sample_doc_id": sample_doc.get("id") if sample_doc and "id" in sample_doc else None,
+                "sample_doc_id_type": type(sample_doc.get("id")).__name__ if sample_doc and "id" in sample_doc else None
+            }
+            
+            mongodb_connection.close()
+            return jsonify({"success": True, **result})
+        
+        # Conta totale eventi
+        total = col.count_documents({})
+        
+        # Conta per sport_id
+        count_sport_1_str = col.count_documents({"sport_id": "1"})
+        count_sport_1_int = col.count_documents({"sport_id": 1})
+        
+        # Conta per settled
+        count_settled_false = col.count_documents({"settled": False})
+        count_settled_true = col.count_documents({"settled": True})
+        
+        # Conta calculated
+        total_calculated = calculated_col.count_documents({})
+        
+        # Prendi un esempio di documento
+        sample = col.find_one({})
+        sample_cleaned = {}
+        if sample:
+            sample_id = sample.get("id")
+            sample_id_type = type(sample_id).__name__ if sample_id else None
+            
+            # Verifica se esiste in calculated
+            calc_sample = None
+            if sample_id:
+                try:
+                    calc_sample = calculated_col.find_one({"id": int(sample_id)})
+                except (ValueError, TypeError):
+                    pass
+                if not calc_sample:
+                    calc_sample = calculated_col.find_one({"id": str(sample_id)})
+                if not calc_sample:
+                    calc_sample = calculated_col.find_one({"id": sample_id})
+            
+            # Verifica tutti i campi dell'evento per capire la struttura
+            sample_keys = list(sample.keys()) if sample else []
+            
+            sample_cleaned = {
+                "id": sample_id,
+                "id_type": sample_id_type,
+                "has_id_field": "id" in sample if sample else False,
+                "all_keys": sample_keys[:20],  # Primi 20 campi per non sovraccaricare
+                "sport_id": sample.get("sport_id"),
+                "settled": sample.get("settled"),
+                "time": sample.get("time"),
+                "home": sample.get("home"),
+                "away": sample.get("away"),
+                "league": sample.get("league"),
+                "has_markets": "markets" in sample and bool(sample.get("markets")),
+                "in_calculated": calc_sample is not None,
+                "calculated_has_odds": "odds" in calc_sample if calc_sample else False,
+                "calculated_odds_keys": list(calc_sample.get("odds", {}).keys()) if calc_sample and "odds" in calc_sample else []
+            }
+        
+        mongodb_connection.close()
+        
+        return jsonify({
+            "success": True,
+            "total_events": total,
+            "total_calculated": total_calculated,
+            "sport_id_1_string": count_sport_1_str,
+            "sport_id_1_int": count_sport_1_int,
+            "settled_false": count_settled_false,
+            "settled_true": count_settled_true,
+            "sample_document": sample_cleaned
+        })
+    except Exception as e:
+        if mongodb_connection:
+            try:
+                mongodb_connection.close()
+            except:
+                pass
+        return jsonify({
+            "success": False,
+            "error": str(e)
         }), 500
 
 @app.route("/api/search-betbet", methods=["GET"])
@@ -1216,45 +1629,110 @@ def api_search_betbet():
     }
     sport_id = sport_id_map.get(sport, '1')
     
+    mongodb_connection = None
     try:
-        db = client["sports"]
+        # Connessione MongoDB per estrarre quote direttamente
+        uri = 'mongodb://admin:Mongolicani@52.210.150.253:27017/admin'
+        mongodb_connection = MongoClient(uri, tls=False, tlsAllowInvalidCertificates=True, server_api=pymongo.server_api.ServerApi(version="1", strict=True, deprecation_errors=True))
+        db = mongodb_connection["sports"]
         col = db["prematch"]
         
-        # Crea query MongoDB
-        search_query = {
-            "sport_id": sport_id,
-            "settled": False,
-            "$or": [
-                {"id": {"$regex": query, "$options": "i"}},
-                {"home.name": {"$regex": query, "$options": "i"}},
-                {"away.name": {"$regex": query, "$options": "i"}},
-                {"league.name": {"$regex": query, "$options": "i"}}
-            ]
-        }
+        # Crea query MongoDB - prova prima con settled=False, poi senza
+        # Costruisci la parte $or per la ricerca
+        or_conditions = [
+            {"id": {"$regex": query, "$options": "i"}},
+            {"home.name": {"$regex": query, "$options": "i"}},
+            {"away.name": {"$regex": query, "$options": "i"}},
+            {"league.name": {"$regex": query, "$options": "i"}},
+            {"id_event": {"$regex": query, "$options": "i"}}
+        ]
         
         # Cerca anche per match esatto dell'ID
         if query.isdigit():
-            search_query["$or"].append({"id": query})
+            or_conditions.append({"id": query})
+            or_conditions.append({"id_event": query})
             try:
-                search_query["$or"].append({"id": int(query)})
+                or_conditions.append({"id": int(query)})
+                or_conditions.append({"id_event": int(query)})
             except ValueError:
                 pass
         
-        # Recupera eventi
+        # Prova prima con sport_id come stringa e settled=False
+        search_query = {
+            "sport_id": sport_id,
+            "settled": False,
+            "$or": or_conditions
+        }
         eventi_raw = list(col.find(search_query).sort("time", 1).limit(limit))
+        
+        # Se non trova risultati, prova con sport_id come numero
+        if not eventi_raw:
+            try:
+                search_query_num = {
+                    "sport_id": int(sport_id),
+                    "settled": False,
+                    "$or": or_conditions
+                }
+                eventi_raw = list(col.find(search_query_num).sort("time", 1).limit(limit))
+            except (ValueError, TypeError):
+                pass
+        
+        # Se ancora non trova risultati, prova senza filtro settled
+        if not eventi_raw:
+            search_query_no_settled = {
+                "sport_id": sport_id,
+                "$or": or_conditions
+            }
+            eventi_raw = list(col.find(search_query_no_settled).sort("time", 1).limit(limit))
+            
+            # Prova anche con sport_id come numero senza settled
+            if not eventi_raw:
+                try:
+                    search_query_no_settled_num = {
+                        "sport_id": int(sport_id),
+                        "$or": or_conditions
+                    }
+                    eventi_raw = list(col.find(search_query_no_settled_num).sort("time", 1).limit(limit))
+                except (ValueError, TypeError):
+                    pass
+        
+        # Debug: verifica se ci sono risultati
+        if not eventi_raw:
+            # Prova una query più semplice per vedere se ci sono eventi
+            test_query = {"sport_id": sport_id}
+            test_count = col.count_documents(test_query)
+            # Se ci sono eventi ma non trovati, potrebbe essere un problema con la query
+            if test_count > 0:
+                # Prova una ricerca più semplice
+                simple_query = {
+                    "$or": [
+                        {"home.name": {"$regex": query, "$options": "i"}},
+                        {"away.name": {"$regex": query, "$options": "i"}}
+                    ]
+                }
+                eventi_raw = list(col.find(simple_query).sort("time", 1).limit(limit))
         
         # Converti formato (stessa logica di api_events_betbet)
         eventi = []
         for ev in eventi_raw:
+            # Estrai ID evento - prova prima con 'id', poi con 'id_event' (formato alternativo)
+            event_id = ev.get("id") or ev.get("id_event")
+            
             evento_convertito = {
-                "match_id": str(ev.get("id", "")),
+                "match_id": str(event_id) if event_id else "",
                 "home_name": ev.get("home", {}).get("name", "") if isinstance(ev.get("home"), dict) else "",
                 "away_name": ev.get("away", {}).get("name", "") if isinstance(ev.get("away"), dict) else "",
                 "league": ev.get("league", {}).get("name", "") if isinstance(ev.get("league"), dict) else ev.get("league", ""),
                 "sport": sport,
                 "nation": ev.get("nation", ""),
                 "quote": {},
-                "quote_1x2": {"1": None, "X": None, "2": None}
+                "quote_1x2": {"1": None, "X": None, "2": None},
+                "_debug": {
+                    "event_id": event_id,
+                    "event_id_type": type(event_id).__name__ if event_id else None,
+                    "calculated_found": False,
+                    "calculated_odds_count": 0
+                }
             }
             
             if "time" in ev:
@@ -1265,56 +1743,36 @@ def api_search_betbet():
                 except:
                     evento_convertito["start_time"] = str(ev.get("time", ""))
             
-            if "markets" in ev and ev["markets"]:
-                markets = ev["markets"]
-                quote = {}
-                
-                if "1x2" in markets and markets["1x2"]:
-                    quote["full_time_result"] = markets["1x2"]
-                    for item in markets["1x2"]:
-                        if isinstance(item, dict):
-                            name = (item.get("name") or item.get("header") or "").strip().lower()
-                            odds = item.get("odds")
-                            if name == "1" or name == "home":
-                                evento_convertito["quote_1x2"]["1"] = odds
-                            elif name == "x" or name == "draw" or name == "pareggio":
-                                evento_convertito["quote_1x2"]["X"] = odds
-                            elif name == "2" or name == "away":
-                                evento_convertito["quote_1x2"]["2"] = odds
-                
-                if "uo" in markets and markets["uo"]:
-                    quote["goals_over_under"] = markets["uo"]
-                
-                if "ggng" in markets and markets["ggng"]:
-                    quote["both_teams_to_score"] = markets["ggng"]
-                
-                for key, value in markets.items():
-                    if key not in ["1x2", "uo", "ggng"]:
-                        quote[key] = value
-                
-                evento_convertito["quote"] = quote
-            
-            # Aggiungi dati goalscorer dalla collezione 'players'
-            try:
-                players_col = db["players"]
-                players_doc = players_col.find_one({"id": str(ev.get("id", ""))})
-                if players_doc and "odds" in players_doc:
-                    # Rimuovi _id per evitare errori di serializzazione JSON
-                    if "_id" in players_doc:
-                        del players_doc["_id"]
-                    evento_convertito["players"] = players_doc
-            except Exception as e:
-                # Ignora errori nel recupero dei players
-                pass
-            
-            # Aggiungi quote calcolate dalla collezione 'calculated'
+            # Estrai quote direttamente dalla collezione 'calculated' (non calcolate)
+            calculated_doc = None
+            calculated_keys_added = []  # Traccia le chiavi aggiunte da calculated
             try:
                 calculated_col = db["calculated"]
-                calculated_doc = calculated_col.find_one({"id": str(ev.get("id", ""))})
+                
+                # Salta se non abbiamo un ID
+                if event_id:
+                    # Prova sia come stringa che come numero
+                    calculated_doc = calculated_col.find_one({"id": str(event_id)})
+                    if not calculated_doc:
+                        try:
+                            calculated_doc = calculated_col.find_one({"id": int(event_id)})
+                        except (ValueError, TypeError):
+                            pass
+                    
+                    # Se non trovato, prova anche senza conversione
+                    if not calculated_doc:
+                        calculated_doc = calculated_col.find_one({"id": event_id})
+                
                 if calculated_doc and "odds" in calculated_doc:
                     calculated_odds = calculated_doc["odds"]
                     
-                    # Mappa le quote calcolate al formato quote
+                    # Debug: aggiorna info
+                    if "_debug" in evento_convertito:
+                        evento_convertito["_debug"]["calculated_found"] = True
+                        evento_convertito["_debug"]["calculated_odds_count"] = len(calculated_odds) if isinstance(calculated_odds, dict) else 0
+                        evento_convertito["_debug"]["calculated_original_keys"] = list(calculated_odds.keys()) if isinstance(calculated_odds, dict) else []
+                    
+                    # Inizializza quote se non esiste
                     if not evento_convertito.get("quote"):
                         evento_convertito["quote"] = {}
                     
@@ -1451,18 +1909,44 @@ def api_search_betbet():
                         "combo_1x2_first_goal": "combo_1x2_first_goal"
                     }
                     
-                    # Aggiungi tutte le quote calcolate (con mappatura se disponibile)
+                    # Estrai tutte le quote direttamente da calculated (con mappatura se disponibile)
+                    # Usa la variabile già definita all'inizio
+                    calculated_keys_added.clear()
                     for calc_key, calc_value in calculated_odds.items():
-                        if isinstance(calc_value, list):
+                        # Estrai sia liste che dizionari (alcune quote potrebbero essere strutturate)
+                        if isinstance(calc_value, (list, dict)):
                             # Usa la mappatura se disponibile, altrimenti usa la chiave originale
                             quote_key = calculated_mapping.get(calc_key, calc_key)
                             evento_convertito["quote"][quote_key] = calc_value
+                            calculated_keys_added.append(quote_key)
+                            
+                            # Se è 1x2, estrai anche quote_1x2
+                            if calc_key == "1x2" and isinstance(calc_value, list):
+                                for item in calc_value:
+                                    if isinstance(item, dict):
+                                        header = (item.get("header") or "").strip()
+                                        name = (item.get("name") or "").strip()
+                                        odds = item.get("odds")
+                                        
+                                        # Prova prima con header, poi con name
+                                        identifier = header or name
+                                        identifier_lower = identifier.lower()
+                                        
+                                        # Controlla per "1" o "Home"
+                                        if identifier == "1" or identifier_lower == "home" or identifier_lower == "1":
+                                            evento_convertito["quote_1x2"]["1"] = odds
+                                        # Controlla per "X", "Draw", "Tie", "Pareggio"
+                                        elif identifier == "X" or identifier_lower in ["draw", "tie", "pareggio", "x"]:
+                                            evento_convertito["quote_1x2"]["X"] = odds
+                                        # Controlla per "2" o "Away"
+                                        elif identifier == "2" or identifier_lower == "away" or identifier_lower == "2":
+                                            evento_convertito["quote_1x2"]["2"] = odds
                             
                             # Se è 1x2_1t o 1x2_2t, aggiorna anche quote_1x2 se necessario
                             if calc_key == "1x2_1t" and not evento_convertito["quote_1x2"]["1"]:
                                 for item in calc_value:
                                     if isinstance(item, dict):
-                                        header = (item.get("header") or "").strip()
+                                        header = (item.get("header") or item.get("name") or "").strip()
                                         odds = item.get("odds")
                                         if header == "1":
                                             evento_convertito["quote_1x2"]["1"] = odds
@@ -1470,8 +1954,186 @@ def api_search_betbet():
                                             evento_convertito["quote_1x2"]["X"] = odds
                                         elif header == "2":
                                             evento_convertito["quote_1x2"]["2"] = odds
+                
+                # Aggiungi markets come complemento anche se calculated ha alcune quote
+                if "markets" in ev and ev["markets"]:
+                    markets = ev["markets"]
+                    
+                    # Assicurati che quote esista
+                    if not evento_convertito.get("quote"):
+                        evento_convertito["quote"] = {}
+                    
+                    # 1x2 -> full_time_result (aggiungi solo se non già presente)
+                    if "1x2" in markets and markets["1x2"]:
+                        if "full_time_result" not in evento_convertito["quote"]:
+                            evento_convertito["quote"]["full_time_result"] = markets["1x2"]
+                        # Estrai quote_1x2 da markets (sovrascrivi quelle da calculated se presenti)
+                        # markets è la fonte più affidabile, quindi ha priorità
+                        for item in markets["1x2"]:
+                            if isinstance(item, dict):
+                                header = (item.get("header") or "").strip()
+                                name = (item.get("name") or "").strip()
+                                odds = item.get("odds")
+                                
+                                # Prova prima con header, poi con name
+                                identifier = header or name
+                                identifier_lower = identifier.lower()
+                                
+                                # Controlla per "1" o "Home"
+                                if identifier == "1" or identifier_lower == "home" or identifier_lower == "1":
+                                    evento_convertito["quote_1x2"]["1"] = odds
+                                # Controlla per "X", "Draw", "Tie", "Pareggio"
+                                elif identifier == "X" or identifier_lower in ["draw", "tie", "pareggio", "x"]:
+                                    evento_convertito["quote_1x2"]["X"] = odds
+                                # Controlla per "2" o "Away"
+                                elif identifier == "2" or identifier_lower == "away" or identifier_lower == "2":
+                                    evento_convertito["quote_1x2"]["2"] = odds
+                    
+                    # uo -> goals_over_under (aggiungi solo se non già presente)
+                    if "uo" in markets and markets["uo"]:
+                        if "goals_over_under" not in evento_convertito["quote"]:
+                            evento_convertito["quote"]["goals_over_under"] = markets["uo"]
+                    
+                    # ggng -> both_teams_to_score (aggiungi solo se non già presente)
+                    if "ggng" in markets and markets["ggng"]:
+                        if "both_teams_to_score" not in evento_convertito["quote"]:
+                            evento_convertito["quote"]["both_teams_to_score"] = markets["ggng"]
+                    
+                    # Aggiungi tutti gli altri markets che non sono già presenti
+                    # Mappa anche le chiavi markets comuni al formato standard
+                    markets_mapping = {
+                        "1x2": "full_time_result",
+                        "uo": "goals_over_under",
+                        "ggng": "both_teams_to_score",
+                        "dc": "double_chance",
+                        "1x2_1t": "half_time_result",
+                        "1x2_2t": "2nd_half_result",
+                        "dc_1t": "half_time_double_chance",
+                        "dc_2t": "2nd_half_double_chance",
+                        "uo_1t": "1st_half_goals_over_under",
+                        "uo_2t": "2nd_half_goals_over_under",
+                        "cs": "correct_score",
+                        "cs_1t": "1st_half_correct_score",
+                        "cs_2t": "2nd_half_correct_score",
+                        "dnb": "draw_no_bet",
+                        "dnb_1t": "1st_half_draw_no_bet",
+                        "dnb_2t": "2nd_half_draw_no_bet",
+                        "handicap": "handicap_result",
+                        "handicap_1t": "1st_half_handicap_result",
+                        "handicap_2t": "2nd_half_handicap_result",
+                        "asian_handicap": "asian_handicap",
+                        "hnb": "handicap_no_bet",
+                        "crn_uo": "corners_over_under",
+                        "crn_uo_1t": "1st_half_corners_over_under",
+                        "crn_1x2": "corners_1x2",
+                        "crd_uo": "cards_over_under",
+                        "crd_1x2": "cards_1x2",
+                        "first_goal": "first_team_to_score",
+                        "last_goal": "last_team_to_score",
+                        "odd_even": "goals_odd_even",
+                        "odd_even_1t": "1st_half_goals_odd_even",
+                        "odd_even_2t": "2nd_half_goals_odd_even",
+                        "tg": "total_goals",
+                        "tg_1t": "1st_half_total_goals",
+                        "tg_2t": "2nd_half_total_goals",
+                        "tg_home": "home_team_total_goals",
+                        "tg_away": "away_team_total_goals"
+                    }
+                    
+                    for key, value in markets.items():
+                        if key not in ["1x2", "uo", "ggng"]:
+                            # Usa la mappatura se disponibile, altrimenti usa la chiave originale
+                            quote_key = markets_mapping.get(key, key)
+                            # Aggiungi solo se non già presente (calculated ha priorità)
+                            if quote_key not in evento_convertito["quote"]:
+                                evento_convertito["quote"][quote_key] = value
+                            # Se è già presente ma è vuoto, aggiungi comunque
+                            elif not evento_convertito["quote"][quote_key] or (isinstance(evento_convertito["quote"][quote_key], list) and len(evento_convertito["quote"][quote_key]) == 0):
+                                evento_convertito["quote"][quote_key] = value
+                    
+                    # Debug: aggiungi info sulle chiavi finali
+                    if "_debug" in evento_convertito:
+                        evento_convertito["_debug"]["final_quote_keys"] = list(evento_convertito["quote"].keys())
+                        evento_convertito["_debug"]["calculated_keys_added"] = calculated_keys_added
             except Exception as calc_error:
-                # Ignora errori nella lettura delle quote calcolate
+                # Ignora errori nella lettura delle quote
+                pass
+            
+            # Fallback finale: se ancora non ci sono quote, usa markets direttamente
+            if not evento_convertito.get("quote") or len(evento_convertito["quote"]) == 0:
+                if "markets" in ev and ev["markets"]:
+                    markets = ev["markets"]
+                    quote = {}
+                    
+                    # 1x2 -> full_time_result
+                    if "1x2" in markets and markets["1x2"]:
+                        quote["full_time_result"] = markets["1x2"]
+                        # Estrai quote_1x2 se non già estratte
+                        if not evento_convertito["quote_1x2"]["1"]:
+                            for item in markets["1x2"]:
+                                if isinstance(item, dict):
+                                    name = (item.get("name") or item.get("header") or "").strip().lower()
+                                    odds = item.get("odds")
+                                    if name == "1" or name == "home":
+                                        evento_convertito["quote_1x2"]["1"] = odds
+                                    elif name == "x" or name == "draw" or name == "pareggio":
+                                        evento_convertito["quote_1x2"]["X"] = odds
+                                    elif name == "2" or name == "away":
+                                        evento_convertito["quote_1x2"]["2"] = odds
+                    
+                    # uo -> goals_over_under
+                    if "uo" in markets and markets["uo"]:
+                        quote["goals_over_under"] = markets["uo"]
+                    
+                    # ggng -> both_teams_to_score
+                    if "ggng" in markets and markets["ggng"]:
+                        quote["both_teams_to_score"] = markets["ggng"]
+                    
+                    # Aggiungi tutti gli altri markets
+                    for key, value in markets.items():
+                        if key not in ["1x2", "uo", "ggng"]:
+                            quote[key] = value
+                    
+                    evento_convertito["quote"] = quote
+            
+            # Aggiungi dati goalscorer dalla collezione 'players'
+            # Usa lo stesso event_id estratto sopra (gestisce sia 'id' che 'id_event')
+            try:
+                players_col = db["players"]
+                players_doc = None
+                
+                # Cerca solo se abbiamo un ID valido
+                if event_id:
+                    # Prova prima come numero (formato più comune)
+                    try:
+                        players_doc = players_col.find_one({"id": int(event_id)})
+                    except (ValueError, TypeError):
+                        pass
+                    
+                    # Se non trovato, prova come stringa
+                    if not players_doc:
+                        players_doc = players_col.find_one({"id": str(event_id)})
+                    
+                    # Se ancora non trovato, prova senza conversione
+                    if not players_doc:
+                        players_doc = players_col.find_one({"id": event_id})
+                    
+                    # Se ancora non trovato, prova anche con id_event (formato alternativo)
+                    if not players_doc:
+                        try:
+                            players_doc = players_col.find_one({"id_event": int(event_id)})
+                        except (ValueError, TypeError):
+                            pass
+                        if not players_doc:
+                            players_doc = players_col.find_one({"id_event": str(event_id)})
+                
+                if players_doc and "odds" in players_doc:
+                    # Rimuovi _id per evitare errori di serializzazione JSON
+                    if "_id" in players_doc:
+                        del players_doc["_id"]
+                    evento_convertito["players"] = players_doc
+            except Exception as e:
+                # Ignora errori nel recupero dei players
                 pass
             
             if "_id" in ev:
@@ -1479,12 +2141,21 @@ def api_search_betbet():
             
             eventi.append(evento_convertito)
         
+        # Chiudi connessione MongoDB
+        mongodb_connection.close()
+        
         return jsonify({
             "success": True,
             "results": eventi,
             "count": len(eventi)
         })
     except Exception as e:
+        # Chiudi connessione MongoDB anche in caso di errore
+        if mongodb_connection:
+            try:
+                mongodb_connection.close()
+            except:
+                pass
         return jsonify({
             "success": False,
             "error": str(e),
