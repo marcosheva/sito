@@ -246,6 +246,20 @@
             </div>
           </div>
           
+          <!-- Per Goalscorer: layout con sidebar a sinistra (partite) e contenuto centrale (marcatori) -->
+          <div id="goalscorer-layout" class="hidden flex flex-col md:flex-row gap-4 h-full">
+            <!-- Sidebar a sinistra con le partite (su mobile va sopra) -->
+            <div class="w-full md:w-64 bg-gray-800 rounded shadow border-2 border-gray-600 overflow-y-auto max-h-48 md:max-h-none order-1 md:order-1">
+              <div class="bg-gray-700 text-white text-center font-bold py-2 border-b border-gray-600 text-sm">⚽ Partite</div>
+              <div id="partite-list" class="p-2 flex flex-row md:flex-col overflow-x-auto md:overflow-x-visible gap-1 md:gap-0"></div>
+            </div>
+            <!-- Contenuto centrale con i marcatori -->
+            <div class="flex-1 bg-gray-800 rounded shadow border-2 border-yellow-500 overflow-y-auto order-2 md:order-2">
+              <div class="bg-gray-700 text-white text-center font-bold py-2 border-b border-gray-600 text-lg" id="partita-selezionata-title">Seleziona una partita</div>
+              <div id="marcatori-container" class="p-2 md:p-4"></div>
+            </div>
+          </div>
+          
           <!-- Layout normale per gli altri sport -->
           <div id="normal-layout" class="w-full bg-gray-800 rounded shadow border-2 border-yellow-500">
             <div class="bg-gray-700 text-white text-center font-bold py-2 border-b border-gray-600 text-lg" id="sport-title">CALCIO</div>
@@ -267,6 +281,9 @@
                 <button id="toggle-mercati-btn" class="px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 whitespace-nowrap col-span-8 flex items-center justify-center gap-1" title="Mostra/Nascondi tutti i mercati">
                   <span id="toggle-mercati-text">▼ Mostra tutti</span>
                 </button>
+                
+                <!-- Goalscorer sempre visibile dopo il pulsante -->
+                <button id="mercato-Goalscorer" class="mercato-tab-btn px-2 py-1 rounded text-xs font-bold bg-gray-600 text-white hover:bg-gray-500 mercato-tab whitespace-nowrap col-span-8" data-mercato="Goalscorer">Goalscorer</button>
                 
                 <!-- Righe 2-11 (nascoste di default) -->
                 <div id="mercati-righe-extra" class="hidden col-span-8 grid grid-cols-8 gap-1">
@@ -488,6 +505,7 @@
     let nationsLeagues = {};
     let nazioneSelezionata = null; // Traccia quale nazione è selezionata
     let expandedNations = new Set(); // Traccia quali nazioni sono espanse
+    let partitaSelezionata = null; // Variabile per partita selezionata (Goalscorer)
     
     // Non caricare subito, aspetta DOMContentLoaded
     const sportInfo = {
@@ -901,15 +919,25 @@
       
       // Mostra/nascondi layout in base allo sport
       const horseRacingLayout = document.getElementById('horse-racing-layout');
+      const goalscorerLayout = document.getElementById('goalscorer-layout');
       const normalLayout = document.getElementById('normal-layout');
       
       if (sport === 'horse racing' || sport === 'horseracing') {
         if (horseRacingLayout) horseRacingLayout.classList.remove('hidden');
+        if (goalscorerLayout) goalscorerLayout.classList.add('hidden');
+        if (normalLayout) normalLayout.classList.add('hidden');
+      } else if (mercatoSelezionato === 'Goalscorer' && sport === 'calcio') {
+        if (horseRacingLayout) horseRacingLayout.classList.add('hidden');
+        if (goalscorerLayout) goalscorerLayout.classList.remove('hidden');
         if (normalLayout) normalLayout.classList.add('hidden');
       } else {
         if (horseRacingLayout) horseRacingLayout.classList.add('hidden');
+        if (goalscorerLayout) goalscorerLayout.classList.add('hidden');
         if (normalLayout) normalLayout.classList.remove('hidden');
       }
+      
+      // Reset partita selezionata quando si cambia sport
+      partitaSelezionata = null;
       
       // Mostra/nascondi tab mercati in base allo sport
       const mercatiTabsContainer = document.getElementById('mercati-tabs-container');
@@ -1022,10 +1050,934 @@
         selectedTab.classList.add('bg-yellow-500', 'text-black');
       }
       
-      // Rerenderizza le partite con il nuovo mercato
-      if (matchesData.length > 0) {
-        renderMatches();
+      // Mostra/nascondi layout in base al mercato
+      const horseRacingLayout = document.getElementById('horse-racing-layout');
+      const goalscorerLayout = document.getElementById('goalscorer-layout');
+      const normalLayout = document.getElementById('normal-layout');
+      
+      if (mercato === 'Goalscorer' && sportSelezionato === 'calcio') {
+        if (horseRacingLayout) horseRacingLayout.classList.add('hidden');
+        if (goalscorerLayout) goalscorerLayout.classList.remove('hidden');
+        if (normalLayout) normalLayout.classList.add('hidden');
+        // Se non ci sono dati e c'è un campionato selezionato, caricali
+        if (matchesData.length === 0 && campoSelezionato) {
+          loadMatches().then(() => {
+            renderSquadreGoalscorer();
+            renderMarcatoriGoalscorer();
+          });
+        } else {
+          // Chiama sempre le funzioni per inizializzare la sidebar e il contenuto
+          renderSquadreGoalscorer();
+          renderMarcatoriGoalscorer();
+        }
+      } else {
+        if (horseRacingLayout) horseRacingLayout.classList.add('hidden');
+        if (goalscorerLayout) goalscorerLayout.classList.add('hidden');
+        if (normalLayout) normalLayout.classList.remove('hidden');
+        // Rerenderizza le partite con il nuovo mercato
+        if (matchesData.length > 0) {
+          renderMatches();
+        }
       }
+    }
+    
+    // Renderizza le partite nella sidebar per Goalscorer
+    function renderSquadreGoalscorer() {
+      const partiteList = document.getElementById('partite-list');
+      if (!partiteList) return;
+      
+      if (matchesData.length === 0) {
+        partiteList.innerHTML = '<div class="text-gray-400 text-sm p-2">Nessuna partita disponibile</div>';
+        return;
+      }
+      
+      // Raggruppa per data
+      const groupedByDate = {};
+      matchesData.forEach(ev => {
+        const date = new Date(ev.start_time_date || ev.start_time);
+        const dateStr = date.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' });
+        if (!groupedByDate[dateStr]) {
+          groupedByDate[dateStr] = [];
+        }
+        groupedByDate[dateStr].push(ev);
+      });
+      
+      let html = '';
+      Object.keys(groupedByDate).sort().forEach(date => {
+        html += `<div class="text-gray-400 text-xs font-semibold px-2 py-1 mb-1">${date}</div>`;
+        
+        groupedByDate[date].forEach(ev => {
+          const matchId = ev.match_id || ev.id || ev._id;
+          const homeName = (ev.home_name || '').trim();
+          const awayName = (ev.away_name || '').trim();
+          const time = new Date(ev.start_time_date || ev.start_time).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+          const isSelected = partitaSelezionata === matchId;
+          
+          html += `
+            <button class="partita-btn w-full md:w-full text-left px-2 md:px-3 py-1.5 md:py-2 mb-0 md:mb-1 rounded text-xs md:text-sm font-medium transition-colors ${
+              isSelected 
+                ? 'bg-yellow-500 text-black' 
+                : 'bg-gray-700 text-white hover:bg-gray-600'
+            }" 
+                    data-match-id="${matchId}">
+              <div class="font-bold">${homeName}</div>
+              <div class="text-xs opacity-75">vs ${awayName}</div>
+              <div class="text-xs opacity-60">${time}</div>
+            </button>
+          `;
+        });
+      });
+      
+      partiteList.innerHTML = html;
+      
+      // Aggiungi event listener
+      partiteList.querySelectorAll('.partita-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const matchId = this.getAttribute('data-match-id');
+          partitaSelezionata = matchId;
+          // Reset tab selezionata quando si cambia partita
+          const marcatoriContainer = document.getElementById('marcatori-container');
+          if (marcatoriContainer) {
+            marcatoriContainer.setAttribute('data-tab-selezionata', 'casa');
+          }
+          renderSquadreGoalscorer(); // Aggiorna UI
+          renderMarcatoriGoalscorer(); // Renderizza i marcatori
+        });
+      });
+    }
+    
+    // Renderizza i marcatori della partita selezionata per Goalscorer
+    function renderMarcatoriGoalscorer() {
+      const marcatoriContainer = document.getElementById('marcatori-container');
+      const partitaTitle = document.getElementById('partita-selezionata-title');
+      
+      if (!marcatoriContainer) return;
+      
+      if (!partitaSelezionata) {
+        if (partitaTitle) partitaTitle.textContent = 'Seleziona una partita';
+        marcatoriContainer.innerHTML = '<div class="text-gray-400 text-center py-8">Seleziona una partita dalla lista a sinistra</div>';
+        return;
+      }
+      
+      // Trova la partita selezionata
+      const partita = matchesData.find(ev => {
+        const matchId = ev.match_id || ev.id || ev._id;
+        return String(matchId) === String(partitaSelezionata);
+      });
+      
+      if (!partita) {
+        if (partitaTitle) partitaTitle.textContent = 'Partita non trovata';
+        marcatoriContainer.innerHTML = '<div class="text-gray-400 text-center py-8">Partita non trovata</div>';
+        return;
+      }
+      
+      const homeName = (partita.home_name || '').trim();
+      const awayName = (partita.away_name || '').trim();
+      const matchId = partita.match_id || partita.id || partita._id;
+      const time = new Date(partita.start_time_date || partita.start_time).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+      
+      if (partitaTitle) partitaTitle.textContent = `${homeName} - ${awayName} (${time})`;
+      
+      // Estrai tutti i dati dei players
+      const playersData = partita.players && partita.players.odds ? partita.players.odds : {};
+      
+      // Debug: verifica la struttura dei players
+      console.log('DEBUG players structure:', {
+        hasPlayers: !!partita.players,
+        hasOdds: !!(partita.players && partita.players.odds),
+        playersKeys: partita.players ? Object.keys(partita.players) : [],
+        oddsKeys: playersData ? Object.keys(playersData) : [],
+        hasSoa: !!(partita.players && partita.players.odds && partita.players.odds.soa),
+        soaType: partita.players && partita.players.odds && partita.players.odds.soa ? typeof partita.players.odds.soa : null,
+        soaIsArray: Array.isArray(partita.players && partita.players.odds && partita.players.odds.soa),
+        soaKeys: partita.players && partita.players.odds && partita.players.odds.soa && typeof partita.players.odds.soa === 'object' && !Array.isArray(partita.players.odds.soa) ? Object.keys(partita.players.odds.soa) : []
+      });
+      
+      // Se soa non è in players.odds, cerca anche direttamente in partita.players.odds (potrebbe essere annidato diversamente)
+      if (!playersData.soa && partita.players && partita.players.odds && partita.players.odds.soa) {
+        playersData.soa = partita.players.odds.soa;
+      }
+      
+      // Se soa è direttamente in partita.players (senza odds)
+      if (!playersData.soa && partita.players && partita.players.soa) {
+        playersData.soa = partita.players.soa;
+      }
+      
+      // Se mgs non è in players.odds, cerca anche in quote (dalla partita direttamente)
+      if (!playersData.mgs && partita.quote) {
+        // Cerca multi_scorers o mgs nella struttura quote
+        if (partita.quote.multi_scorers && Array.isArray(partita.quote.multi_scorers)) {
+          playersData.mgs = partita.quote.multi_scorers;
+        } else if (partita.quote.mgs && Array.isArray(partita.quote.mgs)) {
+          playersData.mgs = partita.quote.mgs;
+        }
+      }
+      
+      // Se gls non è in players.odds, cerca anche in quote (dalla partita direttamente)
+      if (!playersData.gls && partita.quote) {
+        // Cerca goalscorers o gls nella struttura quote
+        if (partita.quote.goalscorers && Array.isArray(partita.quote.goalscorers)) {
+          playersData.gls = partita.quote.goalscorers;
+        } else if (partita.quote.gls && Array.isArray(partita.quote.gls)) {
+          playersData.gls = partita.quote.gls;
+        }
+      }
+      
+      
+      // Mercati disponibili
+      const mercati = {
+        'score': 'Segna',
+        'anytime_1t': 'Anytime 1T',
+        'first': 'Primo Marcatore',
+        'last': 'Ultimo Marcatore',
+        'tgs': 'Team Goalscorer',
+        'doppietta': 'Doppietta',
+        'tripletta': 'Tripletta',
+        'segna_duo': 'Segna Duo',
+        'segna_plus': 'Segna Plus',
+        'anytime_1x2': 'Anytime 1X2',
+        'first_1x2': 'First 1X2',
+        'anytime_cs': 'Anytime Correct Score',
+        'first_cs_mix': 'First Correct Score Mix',
+        'soa': 'Score or Assist'
+      };
+      
+      // Funzione helper per estrarre odds
+      function getOddsValue(odd) {
+        if (typeof odd === 'string' || typeof odd === 'number') {
+          return String(odd);
+        } else if (odd && typeof odd === 'object' && odd.odds) {
+          return String(odd.odds);
+        } else if (odd && typeof odd === 'object' && '$numberDouble' in odd) {
+          return String(odd.$numberDouble);
+        }
+        return '-';
+      }
+      
+      // Funzione helper per renderizzare i players di un mercato
+      function renderMercatoPlayers(mercatoKey, mercatoNome, teamNumber) {
+        let mercatoData = playersData[mercatoKey];
+        
+        // Se il mercato è "score", estrai solo i players con header "Score" da soa
+        if (mercatoKey === 'score') {
+          // La struttura è: players.odds.soa (array) dove ogni elemento ha header: "Score"
+          // Cerca prima in partita.players.odds.soa (array) e filtra per header === "Score"
+          if (partita.players && partita.players.odds && partita.players.odds.soa && Array.isArray(partita.players.odds.soa)) {
+            mercatoData = partita.players.odds.soa.filter(player => {
+              const header = (player.header || '').trim();
+              return header === 'Score';
+            });
+          }
+          
+          // Se non trovato, cerca in playersData.soa (array) e filtra per header === "Score"
+          if ((!mercatoData || !Array.isArray(mercatoData) || mercatoData.length === 0) && playersData.soa && Array.isArray(playersData.soa)) {
+            mercatoData = playersData.soa.filter(player => {
+              const header = (player.header || '').trim();
+              return header === 'Score';
+            });
+          }
+          
+          // Se non trovato, cerca in partita.players.soa (array) e filtra per header === "Score"
+          if ((!mercatoData || !Array.isArray(mercatoData) || mercatoData.length === 0) && partita.players && partita.players.soa && Array.isArray(partita.players.soa)) {
+            mercatoData = partita.players.soa.filter(player => {
+              const header = (player.header || '').trim();
+              return header === 'Score';
+            });
+          }
+          
+          // Se non trovato, cerca in partita.players.soa.score (se soa è un oggetto con proprietà score)
+          if ((!mercatoData || !Array.isArray(mercatoData) || mercatoData.length === 0) && partita.players && partita.players.soa && partita.players.soa.score && Array.isArray(partita.players.soa.score)) {
+            mercatoData = partita.players.soa.score;
+          }
+          
+          // Se non trovato, cerca in partita.players.odds.soa.score (se soa è un oggetto con proprietà score)
+          if ((!mercatoData || !Array.isArray(mercatoData) || mercatoData.length === 0) && partita.players && partita.players.odds && partita.players.odds.soa && partita.players.odds.soa.score && Array.isArray(partita.players.odds.soa.score)) {
+            mercatoData = partita.players.odds.soa.score;
+          }
+          
+          // Se ancora non trovato, cerca anche direttamente in partita.players.odds.soa come array (filtra per header "Score")
+          if ((!mercatoData || !Array.isArray(mercatoData) || mercatoData.length === 0) && partita.players && partita.players.odds && partita.players.odds.soa && Array.isArray(partita.players.odds.soa)) {
+            mercatoData = partita.players.odds.soa.filter(player => {
+              const header = (player.header || '').trim();
+              return header === 'Score';
+            });
+          }
+          
+          // Se non trovato in playersData, cerca anche in quote
+          if ((!mercatoData || !Array.isArray(mercatoData) || mercatoData.length === 0) && partita.quote) {
+            // Cerca in quote.soa.score
+            if (partita.quote.soa && partita.quote.soa.score && Array.isArray(partita.quote.soa.score)) {
+              mercatoData = partita.quote.soa.score;
+            } else if (partita.quote.soa && Array.isArray(partita.quote.soa)) {
+              // Se soa è un array, filtra per header "Score"
+              mercatoData = partita.quote.soa.filter(player => {
+                const header = (player.header || '').trim();
+                return header === 'Score';
+              });
+            } else if (partita.quote.others && Array.isArray(partita.quote.others)) {
+              for (let other of partita.quote.others) {
+                if (other && other.sp && other.sp.soa) {
+                  if (other.sp.soa.score && Array.isArray(other.sp.soa.score)) {
+                    mercatoData = other.sp.soa.score;
+                    break;
+                  } else if (Array.isArray(other.sp.soa)) {
+                    mercatoData = other.sp.soa.filter(player => {
+                      const header = (player.header || '').trim();
+                      return header === 'Score';
+                    });
+                    if (mercatoData && mercatoData.length > 0) break;
+                  }
+                }
+              }
+            }
+          }
+          
+          // Se ancora non trovato, cerca anche in first_team_to_score (potrebbe contenere i dati "Segna")
+          if ((!mercatoData || !Array.isArray(mercatoData) || mercatoData.length === 0) && partita.quote) {
+            let firstTeamToScore = null;
+            // Cerca in quote.main.sp.first_team_to_score
+            if (partita.quote.main && partita.quote.main.sp && partita.quote.main.sp.first_team_to_score && Array.isArray(partita.quote.main.sp.first_team_to_score)) {
+              firstTeamToScore = partita.quote.main.sp.first_team_to_score;
+            } else if (partita.quote.first_team_to_score && Array.isArray(partita.quote.first_team_to_score)) {
+              firstTeamToScore = partita.quote.first_team_to_score;
+            } else if (partita.quote.others && Array.isArray(partita.quote.others)) {
+              for (let other of partita.quote.others) {
+                if (other && other.sp && other.sp.first_team_to_score && Array.isArray(other.sp.first_team_to_score)) {
+                  firstTeamToScore = other.sp.first_team_to_score;
+                  break;
+                }
+              }
+            }
+            
+            // Se trovato, converti in formato compatibile con "score"
+            if (firstTeamToScore && Array.isArray(firstTeamToScore)) {
+              mercatoData = firstTeamToScore.map(item => {
+                // Estrai il nome del giocatore e la quota
+                const playerName = item.name || '';
+                const odds = item.odds || '-';
+                // Determina la squadra (1 per casa, 2 per ospite) basandosi sul nome o header
+                const header = (item.header || '').trim();
+                const team = (header === '1' || item.name === '1') ? '1' : 
+                            (header === '2' || item.name === '2') ? '2' : 
+                            (item.team || item.name2 || '');
+                
+                return {
+                  name: playerName,
+                  odds: odds,
+                  header: 'Score',
+                  team: team,
+                  name2: team
+                };
+              }).filter(player => {
+                // Filtra solo i giocatori (non "1", "2", "No Goals")
+                const name = (player.name || '').trim().toLowerCase();
+                return name !== '1' && name !== '2' && name !== 'no goals' && name !== 'no goalscorer' && name.length > 0;
+              });
+            }
+          }
+        } else if (mercatoKey === 'anytime_1t') {
+          // Anytime 1T: da gls con header "Anytime1T" o "Anytime 1T"
+          const glsData = playersData.gls || (partita.players && partita.players.odds && partita.players.odds.gls);
+          if (glsData && Array.isArray(glsData)) {
+            mercatoData = glsData.filter(player => {
+              const header = (player.header || '').trim().toLowerCase();
+              return header === 'anytime1t' || header === 'anytime 1t' || header === 'anytime_1t';
+            });
+          }
+        } else if (mercatoKey === 'first') {
+          // Primo: da gls con header "First"
+          const glsData = playersData.gls || (partita.players && partita.players.odds && partita.players.odds.gls);
+          if (glsData && Array.isArray(glsData)) {
+            mercatoData = glsData.filter(player => {
+              const header = (player.header || '').trim();
+              return header === 'First';
+            });
+          }
+        } else if (mercatoKey === 'last') {
+          // Last: da gls con header "Last"
+          const glsData = playersData.gls || (partita.players && partita.players.odds && partita.players.odds.gls);
+          if (glsData && Array.isArray(glsData)) {
+            mercatoData = glsData.filter(player => {
+              const header = (player.header || '').trim();
+              return header === 'Last';
+            });
+          }
+        } else if (mercatoKey === 'tgs') {
+          // Team Goalscorer: da playersData.tgs
+          mercatoData = playersData.tgs || (partita.players && partita.players.odds && partita.players.odds.tgs);
+        } else if (mercatoKey === 'doppietta') {
+          // Doppietta: da mgs o gls con header "2 or More"
+          const mgsData = playersData.mgs || (partita.players && partita.players.odds && partita.players.odds.mgs);
+          if (mgsData && Array.isArray(mgsData)) {
+            mercatoData = mgsData.filter(player => {
+              const header = (player.header || '').trim();
+              return header === '2 or More' || header === '2+';
+            });
+          }
+          // Se non trovato in mgs, cerca in gls
+          if ((!mercatoData || !Array.isArray(mercatoData) || mercatoData.length === 0)) {
+            const glsData = playersData.gls || (partita.players && partita.players.odds && partita.players.odds.gls);
+            if (glsData && Array.isArray(glsData)) {
+              mercatoData = glsData.filter(player => {
+                const header = (player.header || '').trim();
+                return header === '2 or More' || header === '2+';
+              });
+            }
+          }
+        } else if (mercatoKey === 'tripletta') {
+          // Tripletta: da mgs o gls con header "3 or More"
+          const mgsData = playersData.mgs || (partita.players && partita.players.odds && partita.players.odds.mgs);
+          if (mgsData && Array.isArray(mgsData)) {
+            mercatoData = mgsData.filter(player => {
+              const header = (player.header || '').trim();
+              return header === '3 or More' || header === '3+';
+            });
+          }
+          // Se non trovato in mgs, cerca in gls
+          if ((!mercatoData || !Array.isArray(mercatoData) || mercatoData.length === 0)) {
+            const glsData = playersData.gls || (partita.players && partita.players.odds && partita.players.odds.gls);
+            if (glsData && Array.isArray(glsData)) {
+              mercatoData = glsData.filter(player => {
+                const header = (player.header || '').trim();
+                return header === '3 or More' || header === '3+';
+              });
+            }
+          }
+        } else if (mercatoKey === 'segna_duo') {
+          // Segna Duo: da gls con header "AnytimeDuo"
+          const glsData = playersData.gls || (partita.players && partita.players.odds && partita.players.odds.gls);
+          if (glsData && Array.isArray(glsData)) {
+            mercatoData = glsData.filter(player => {
+              const header = (player.header || '').trim();
+              return header === 'AnytimeDuo' || header === 'Anytime Duo';
+            });
+          }
+        } else if (mercatoKey === 'segna_plus') {
+          // Segna Plus: da gls con header "AnytimePlus"
+          const glsData = playersData.gls || (partita.players && partita.players.odds && partita.players.odds.gls);
+          if (glsData && Array.isArray(glsData)) {
+            mercatoData = glsData.filter(player => {
+              const header = (player.header || '').trim();
+              return header === 'AnytimePlus' || header === 'Anytime Plus';
+            });
+          }
+        } else {
+          // Per altri mercati (anytime_1x2, first_1x2, anytime_cs, first_cs_mix, soa, tgs), usa playersData diretto
+          mercatoData = playersData[mercatoKey];
+        }
+        
+        // Se il mercato non è in playersData, cerca anche in quote (per mgs e gls potrebbe essere in quote)
+        if ((!mercatoData || !Array.isArray(mercatoData) || mercatoData.length === 0) && partita.quote) {
+          // Cerca direttamente in quote
+          if (mercatoKey === 'mgs' && partita.quote.multi_scorers && Array.isArray(partita.quote.multi_scorers)) {
+            mercatoData = partita.quote.multi_scorers;
+          } else if ((mercatoKey === 'gls' || mercatoKey === 'anytime_1t' || mercatoKey === 'first' || mercatoKey === 'last' || mercatoKey === 'doppietta' || mercatoKey === 'tripletta' || mercatoKey === 'segna_duo' || mercatoKey === 'segna_plus') && partita.quote.goalscorers && Array.isArray(partita.quote.goalscorers)) {
+            // Per mercati derivati da gls, cerca in goalscorers e filtra per header
+            const goalscorers = partita.quote.goalscorers;
+            if (mercatoKey === 'anytime_1t') {
+              mercatoData = goalscorers.filter(player => {
+                const header = (player.header || '').trim().toLowerCase();
+                return header === 'anytime1t' || header === 'anytime 1t' || header === 'anytime_1t';
+              });
+            } else if (mercatoKey === 'first') {
+              mercatoData = goalscorers.filter(player => {
+                const header = (player.header || '').trim();
+                return header === 'First';
+              });
+            } else if (mercatoKey === 'last') {
+              mercatoData = goalscorers.filter(player => {
+                const header = (player.header || '').trim();
+                return header === 'Last';
+              });
+            } else if (mercatoKey === 'doppietta') {
+              mercatoData = goalscorers.filter(player => {
+                const header = (player.header || '').trim();
+                return header === '2 or More' || header === '2+';
+              });
+            } else if (mercatoKey === 'tripletta') {
+              mercatoData = goalscorers.filter(player => {
+                const header = (player.header || '').trim();
+                return header === '3 or More' || header === '3+';
+              });
+            } else if (mercatoKey === 'segna_duo') {
+              mercatoData = goalscorers.filter(player => {
+                const header = (player.header || '').trim();
+                return header === 'AnytimeDuo' || header === 'Anytime Duo';
+              });
+            } else if (mercatoKey === 'segna_plus') {
+              mercatoData = goalscorers.filter(player => {
+                const header = (player.header || '').trim();
+                return header === 'AnytimePlus' || header === 'Anytime Plus';
+              });
+            } else if (mercatoKey === 'gls') {
+              mercatoData = goalscorers;
+            }
+          } else if (partita.quote[mercatoKey] && Array.isArray(partita.quote[mercatoKey])) {
+            mercatoData = partita.quote[mercatoKey];
+          }
+          
+          // Se ancora non trovato, cerca in quote.others (struttura annidata)
+          if ((!mercatoData || !Array.isArray(mercatoData) || mercatoData.length === 0) && partita.quote.others && Array.isArray(partita.quote.others)) {
+            for (let other of partita.quote.others) {
+              if (other && other.sp) {
+                if (mercatoKey === 'mgs' && other.sp.multi_scorers && Array.isArray(other.sp.multi_scorers)) {
+                  mercatoData = other.sp.multi_scorers;
+                  break;
+                } else if ((mercatoKey === 'gls' || mercatoKey === 'anytime_1t' || mercatoKey === 'first' || mercatoKey === 'last' || mercatoKey === 'doppietta' || mercatoKey === 'tripletta' || mercatoKey === 'segna_duo' || mercatoKey === 'segna_plus') && other.sp.goalscorers && Array.isArray(other.sp.goalscorers)) {
+                  // Per mercati derivati da gls, cerca in goalscorers e filtra per header
+                  const goalscorers = other.sp.goalscorers;
+                  if (mercatoKey === 'anytime_1t') {
+                    mercatoData = goalscorers.filter(player => {
+                      const header = (player.header || '').trim().toLowerCase();
+                      return header === 'anytime1t' || header === 'anytime 1t' || header === 'anytime_1t';
+                    });
+                  } else if (mercatoKey === 'first') {
+                    mercatoData = goalscorers.filter(player => {
+                      const header = (player.header || '').trim();
+                      return header === 'First';
+                    });
+                  } else if (mercatoKey === 'last') {
+                    mercatoData = goalscorers.filter(player => {
+                      const header = (player.header || '').trim();
+                      return header === 'Last';
+                    });
+                  } else if (mercatoKey === 'doppietta') {
+                    mercatoData = goalscorers.filter(player => {
+                      const header = (player.header || '').trim();
+                      return header === '2 or More' || header === '2+';
+                    });
+                  } else if (mercatoKey === 'tripletta') {
+                    mercatoData = goalscorers.filter(player => {
+                      const header = (player.header || '').trim();
+                      return header === '3 or More' || header === '3+';
+                    });
+                  } else if (mercatoKey === 'segna_duo') {
+                    mercatoData = goalscorers.filter(player => {
+                      const header = (player.header || '').trim();
+                      return header === 'AnytimeDuo' || header === 'Anytime Duo';
+                    });
+                  } else if (mercatoKey === 'segna_plus') {
+                    mercatoData = goalscorers.filter(player => {
+                      const header = (player.header || '').trim();
+                      return header === 'AnytimePlus' || header === 'Anytime Plus';
+                    });
+                  } else if (mercatoKey === 'gls') {
+                    mercatoData = goalscorers;
+                  }
+                  if (mercatoData && mercatoData.length > 0) break;
+                } else if (other.sp[mercatoKey] && Array.isArray(other.sp[mercatoKey])) {
+                  mercatoData = other.sp[mercatoKey];
+                  break;
+                }
+              }
+            }
+          }
+          
+          // Se è "score" e non trovato, cerca anche in soa da quote
+          if (mercatoKey === 'score' && (!mercatoData || !Array.isArray(mercatoData) || mercatoData.length === 0)) {
+            let soaData = null;
+            if (partita.quote && partita.quote.soa && Array.isArray(partita.quote.soa)) {
+              soaData = partita.quote.soa;
+            } else if (partita.quote && partita.quote.others && Array.isArray(partita.quote.others)) {
+              for (let other of partita.quote.others) {
+                if (other && other.sp && other.sp.soa && Array.isArray(other.sp.soa)) {
+                  soaData = other.sp.soa;
+                  break;
+                }
+              }
+            }
+            if (soaData) {
+              mercatoData = soaData.filter(player => {
+                const header = (player.header || '').trim();
+                return header === 'Score';
+              });
+            }
+          }
+        }
+        
+        // Per "score", mostra sempre il mercato anche se vuoto
+        if (mercatoKey === 'score') {
+          // Se non ci sono dati, crea un array vuoto per permettere il rendering
+          if (!mercatoData || !Array.isArray(mercatoData)) {
+            mercatoData = [];
+          }
+        } else if (!mercatoData || !Array.isArray(mercatoData) || mercatoData.length === 0) {
+          return '';
+        }
+        
+        // Filtra solo i players della squadra selezionata
+        // Per mgs, doppietta, tripletta potrebbe non esserci il campo team/name2, quindi mostra tutti i players
+        let teamPlayers;
+        if (mercatoKey === 'mgs' || mercatoKey === 'doppietta' || mercatoKey === 'tripletta') {
+          // Per mgs, doppietta, tripletta, mostra tutti i players (il filtro per squadra verrà fatto dopo se necessario)
+          teamPlayers = mercatoData;
+        } else {
+          // Per gls, score e altri mercati, filtra per squadra
+          // Per "score" da soa, usa SEMPRE name2 (che è "1" o "2") invece di team (che può essere "Player/Last 5")
+          teamPlayers = mercatoData.filter(player => {
+            // Per "score", usa sempre name2 perché team può essere "Player/Last 5"
+            // name2 contiene "1" per casa o "2" per ospite
+            const playerTeam = (mercatoKey === 'score') ? (player.name2 || player.team) : (player.team || player.name2);
+            // Se non c'è team/name2, mostra il player (potrebbe essere da quote)
+            if (!playerTeam) {
+              return true;
+            }
+            // Confronta come stringa per gestire sia "1"/"2" che numeri
+            return String(playerTeam) === String(teamNumber);
+          });
+        }
+        
+        // Per "score", mostra sempre anche se vuoto
+        if (mercatoKey !== 'score' && teamPlayers.length === 0) {
+          return '';
+        }
+        
+        // ID univoco per questo mercato
+        const mercatoId = `mercato-${mercatoKey}-team-${teamNumber}`;
+        
+        // Gestione speciale per mercati 1X2
+        if (mercatoKey === 'anytime_1x2' || mercatoKey === 'first_1x2') {
+          // Raggruppa per giocatore
+          const playersByName = {};
+          teamPlayers.forEach(player => {
+            const playerName = (player.name || '').trim();
+            if (!playerName || playerName.toLowerCase().includes('no goalscorer')) {
+              return;
+            }
+            if (!playersByName[playerName]) {
+              playersByName[playerName] = { '1': null, 'X': null, '2': null };
+            }
+            // Il header è formato come "anytime_1", "anytime_X", "anytime_2", "first_1", "first_X", "first_2"
+            const header = (player.header || '').trim().toLowerCase();
+            // Estrai il risultato dal header (ultimo carattere dopo l'underscore o ultimo carattere)
+            let result = null;
+            if (header.includes('_')) {
+              const parts = header.split('_');
+              result = parts[parts.length - 1]; // Prendi l'ultima parte dopo l'underscore
+            } else if (header.length > 0) {
+              result = header[header.length - 1]; // Prendi l'ultimo carattere
+            }
+            
+            // Normalizza il risultato (può essere "1", "x", "2")
+            if (result === '1' || result === 'x' || result === '2') {
+              const normalizedResult = result.toUpperCase() === 'X' ? 'X' : result;
+              playersByName[playerName][normalizedResult] = player;
+            }
+          });
+          
+          let html = `
+            <div class="mb-2 border border-gray-600 rounded">
+              <button class="mercato-toggle-btn w-full flex items-center justify-between px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white font-bold text-sm transition-colors" data-mercato-id="${mercatoId}">
+                <span>${mercatoNome}</span>
+                <span class="toggle-icon">▶</span>
+              </button>
+              <div id="${mercatoId}" class="hidden p-2 bg-gray-800">
+                <div class="overflow-x-auto">
+                  <table class="w-full border-collapse">
+                    <thead>
+                      <tr class="bg-gray-900">
+                        <th class="text-left text-white text-xs font-bold px-2 py-2 border-b border-gray-600">Giocatore</th>
+                        <th class="text-center text-white text-xs font-bold px-2 py-2 border-b border-gray-600 w-20">1</th>
+                        <th class="text-center text-white text-xs font-bold px-2 py-2 border-b border-gray-600 w-20">X</th>
+                        <th class="text-center text-white text-xs font-bold px-2 py-2 border-b border-gray-600 w-20">2</th>
+                      </tr>
+                    </thead>
+                    <tbody>`;
+          
+          Object.keys(playersByName).sort().forEach(playerName => {
+            const playerData = playersByName[playerName];
+            html += `<tr class="hover:bg-gray-700">`;
+            
+            // Nome giocatore
+            html += `<td class="text-white text-xs sm:text-sm px-2 py-2 border-b border-gray-700 truncate">${playerName}</td>`;
+            
+            // Quote 1, X, 2 in colonne
+            ['1', 'X', '2'].forEach(result => {
+              const player = playerData[result];
+              html += `<td class="text-center px-2 py-2 border-b border-gray-700">`;
+              
+              if (player) {
+                const playerOdds = getOddsValue(player.odds);
+                const quotaNum = parseFloat(playerOdds);
+                const quotaFormattata = quotaNum > 1 && !isNaN(quotaNum) ? formattaQuota(playerOdds) : '-';
+                const isSelected = selections.some(s => s.id == matchId && s.categoria === 'Goalscorer' && s.segno === `${playerName} ${result}`);
+                const evento = `${homeName} - ${awayName}`;
+                
+                html += `
+                  <button class="quote-btn w-full bg-gray-900 hover:bg-yellow-500 hover:text-black text-white px-2 py-1 rounded text-xs font-bold ${isSelected ? 'bg-yellow-500 text-black' : ''} ${quotaNum <= 1 || isNaN(quotaNum) ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}" 
+                          data-match-id="${matchId}" 
+                          data-categoria="Goalscorer" 
+                          data-segno="${playerName.replace(/"/g, '&quot;')} ${result}" 
+                          data-quota="${playerOdds}" 
+                          data-evento="${evento.replace(/"/g, '&quot;')}"
+                          ${quotaNum <= 1 || isNaN(quotaNum) ? 'disabled' : ''}>
+                    ${quotaFormattata}
+                  </button>`;
+              } else {
+                html += `<button class="w-full bg-gray-900 text-gray-500 px-2 py-1 rounded text-xs font-bold cursor-not-allowed" disabled>-</button>`;
+              }
+              
+              html += `</td>`;
+            });
+            
+            html += `</tr>`;
+          });
+          
+          html += `
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>`;
+          return html;
+        }
+        
+        // Gestione speciale per mercato score (Segna) - mostra sempre, anche se vuoto
+        if (mercatoKey === 'score') {
+          let html = `
+            <div class="mb-2 border border-gray-600 rounded">
+              <button class="mercato-toggle-btn w-full flex items-center justify-between px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white font-bold text-sm transition-colors" data-mercato-id="${mercatoId}">
+                <span>${mercatoNome}</span>
+                <span class="toggle-icon">▶</span>
+              </button>
+              <div id="${mercatoId}" class="hidden p-2 bg-gray-800">`;
+          
+          if (teamPlayers.length === 0) {
+            html += `<div class="text-gray-400 text-center py-4 text-sm">Nessun dato disponibile</div>`;
+          } else {
+            html += `
+                <div class="overflow-x-auto">
+                  <table class="w-full border-collapse">
+                    <thead>
+                      <tr class="bg-gray-900">
+                        <th class="text-left text-white text-xs font-bold px-2 py-2 border-b border-gray-600">Giocatore</th>
+                        <th class="text-center text-white text-xs font-bold px-2 py-2 border-b border-gray-600 w-24">Quota</th>
+                      </tr>
+                    </thead>
+                    <tbody>`;
+            
+            // Ordina i players per quota
+            const sortedPlayers = [...teamPlayers].sort((a, b) => {
+              const oddsA = parseFloat(getOddsValue(a.odds) || '999');
+              const oddsB = parseFloat(getOddsValue(b.odds) || '999');
+              return oddsA - oddsB;
+            });
+            
+            sortedPlayers.forEach(player => {
+              const playerName = (player.name || '').trim();
+              if (!playerName || playerName.toLowerCase().includes('no goalscorer')) {
+                return;
+              }
+              
+              const playerOdds = getOddsValue(player.odds);
+              const quotaNum = parseFloat(playerOdds);
+              const quotaFormattata = quotaNum > 1 && !isNaN(quotaNum) ? formattaQuota(playerOdds) : '-';
+              const isSelected = selections.some(s => s.id == matchId && s.categoria === 'Goalscorer' && s.segno === `${playerName} ${mercatoNome}`);
+              const evento = `${homeName} - ${awayName}`;
+              
+              html += `
+                <tr class="hover:bg-gray-700">
+                  <td class="text-white text-xs sm:text-sm px-2 py-2 border-b border-gray-700 truncate">${playerName}</td>
+                  <td class="text-center px-2 py-2 border-b border-gray-700">
+                    <button class="quote-btn w-full bg-gray-900 hover:bg-yellow-500 hover:text-black text-white px-2 py-1 rounded text-xs font-bold ${isSelected ? 'bg-yellow-500 text-black' : ''} ${quotaNum <= 1 || isNaN(quotaNum) ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}" 
+                            data-match-id="${matchId}" 
+                            data-categoria="Goalscorer" 
+                            data-segno="${playerName.replace(/"/g, '&quot;')} ${mercatoNome}" 
+                            data-quota="${playerOdds}" 
+                            data-evento="${evento.replace(/"/g, '&quot;')}"
+                            ${quotaNum <= 1 || isNaN(quotaNum) ? 'disabled' : ''}>
+                      ${quotaFormattata}
+                    </button>
+                  </td>
+                </tr>`;
+            });
+            
+            html += `
+                      </tbody>
+                    </table>
+                  </div>`;
+          }
+          
+          html += `
+              </div>
+            </div>`;
+          
+          return html;
+        }
+        
+        // Gestione standard per altri mercati - semplificata per kroosbet
+        const playersByHeader = {};
+        teamPlayers.forEach(player => {
+          const header = (player.header || 'Anytime').trim();
+          if (!playersByHeader[header]) {
+            playersByHeader[header] = [];
+          }
+          playersByHeader[header].push(player);
+        });
+        
+        let html = `
+          <div class="mb-2 border border-gray-600 rounded">
+            <button class="mercato-toggle-btn w-full flex items-center justify-between px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white font-bold text-sm transition-colors" data-mercato-id="${mercatoId}">
+              <span>${mercatoNome}</span>
+              <span class="toggle-icon">▶</span>
+            </button>
+            <div id="${mercatoId}" class="hidden p-2 bg-gray-800">`;
+        
+        // Ordina gli header
+        const headerOrder = ['Anytime', 'First', 'Last', '2 or More', '3 or More'];
+        const sortedHeaders = Object.keys(playersByHeader).sort((a, b) => {
+          const indexA = headerOrder.indexOf(a);
+          const indexB = headerOrder.indexOf(b);
+          if (indexA === -1 && indexB === -1) return a.localeCompare(b);
+          if (indexA === -1) return 1;
+          if (indexB === -1) return -1;
+          return indexA - indexB;
+        });
+        
+        sortedHeaders.forEach(header => {
+          html += `<div class="text-gray-300 text-xs font-semibold px-2 py-1 mt-1 mb-1">${header}</div>`;
+          
+          // Ordina i players per quota
+          const sortedPlayers = [...playersByHeader[header]].sort((a, b) => {
+            const oddsA = parseFloat(getOddsValue(a.odds) || '999');
+            const oddsB = parseFloat(getOddsValue(b.odds) || '999');
+            return oddsA - oddsB;
+          });
+          
+          sortedPlayers.forEach(player => {
+            const playerName = (player.name || '').trim();
+            if (!playerName || playerName.toLowerCase().includes('no goalscorer')) {
+              return;
+            }
+            
+            const playerOdds = getOddsValue(player.odds);
+            const quotaNum = parseFloat(playerOdds);
+            const quotaFormattata = quotaNum > 1 && !isNaN(quotaNum) ? formattaQuota(playerOdds) : '-';
+            const isSelected = selections.some(s => s.id == matchId && s.categoria === 'Goalscorer' && s.segno === playerName);
+            const evento = `${homeName} - ${awayName}`;
+            
+            html += `
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between py-1 px-2 hover:bg-gray-700 rounded gap-1 sm:gap-0">
+                <span class="text-white text-xs sm:text-sm truncate">${playerName}</span>
+                <button class="quote-btn bg-gray-900 hover:bg-yellow-500 hover:text-black text-white px-3 sm:px-4 py-1 rounded text-xs sm:text-sm font-bold min-w-[60px] w-full sm:w-auto text-center ${isSelected ? 'bg-yellow-500 text-black' : ''} ${quotaNum <= 1 || isNaN(quotaNum) ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}" 
+                        data-match-id="${matchId}" 
+                        data-categoria="Goalscorer" 
+                        data-segno="${playerName.replace(/"/g, '&quot;')}" 
+                        data-quota="${playerOdds}" 
+                        data-evento="${evento.replace(/"/g, '&quot;')}"
+                        ${quotaNum <= 1 || isNaN(quotaNum) ? 'disabled' : ''}>
+                  ${quotaFormattata}
+                </button>
+              </div>`;
+          });
+        });
+        
+        html += `
+            </div>
+          </div>`;
+        return html;
+      }
+      
+      // Variabile per tab selezionata (Casa o Ospite)
+      let tabSelezionata = marcatoriContainer.getAttribute('data-tab-selezionata') || 'casa';
+      
+      let html = `
+        <div class="mb-4">
+          <div class="flex gap-2 mb-4">
+            <button class="tab-team-btn flex-1 px-4 py-2 rounded font-bold transition-colors ${
+              tabSelezionata === 'casa' 
+                ? 'bg-yellow-500 text-black' 
+                : 'bg-gray-700 text-white hover:bg-gray-600'
+            }" data-team="casa" data-team-number="1">
+              ${homeName}
+            </button>
+            <button class="tab-team-btn flex-1 px-4 py-2 rounded font-bold transition-colors ${
+              tabSelezionata === 'ospite' 
+                ? 'bg-yellow-500 text-black' 
+                : 'bg-gray-700 text-white hover:bg-gray-600'
+            }" data-team="ospite" data-team-number="2">
+              ${awayName}
+            </button>
+          </div>
+          
+          <div id="team-casa-content" class="${tabSelezionata === 'casa' ? '' : 'hidden'}">`;
+      
+      // Renderizza mercati per Casa (team 1) - ordine come richiesto
+      const mercatiOrder = ['score', 'anytime_1t', 'first', 'last', 'tgs', 'doppietta', 'tripletta', 'segna_duo', 'segna_plus', 'anytime_1x2', 'first_1x2', 'anytime_cs', 'first_cs_mix', 'soa'];
+      mercatiOrder.forEach(mercatoKey => {
+        if (mercati[mercatoKey]) {
+          html += renderMercatoPlayers(mercatoKey, mercati[mercatoKey], '1');
+        }
+      });
+      
+      html += `</div>
+          
+          <div id="team-ospite-content" class="${tabSelezionata === 'ospite' ? '' : 'hidden'}">`;
+      
+      // Renderizza mercati per Ospite (team 2) - mantieni l'ordine con "Segna" per primo
+      mercatiOrder.forEach(mercatoKey => {
+        if (mercati[mercatoKey]) {
+          html += renderMercatoPlayers(mercatoKey, mercati[mercatoKey], '2');
+        }
+      });
+      
+      html += `</div>
+        </div>`;
+      
+      marcatoriContainer.innerHTML = html;
+      
+      // Aggiungi event listener per i tab
+      marcatoriContainer.querySelectorAll('.tab-team-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const team = this.getAttribute('data-team');
+          tabSelezionata = team;
+          marcatoriContainer.setAttribute('data-tab-selezionata', team);
+          
+          // Aggiorna UI tab
+          marcatoriContainer.querySelectorAll('.tab-team-btn').forEach(t => {
+            t.classList.remove('bg-yellow-500', 'text-black');
+            t.classList.add('bg-gray-700', 'text-white');
+          });
+          this.classList.remove('bg-gray-700', 'text-white');
+          this.classList.add('bg-yellow-500', 'text-black');
+          
+          // Mostra/nascondi contenuti
+          document.getElementById('team-casa-content').classList.toggle('hidden', team !== 'casa');
+          document.getElementById('team-ospite-content').classList.toggle('hidden', team !== 'ospite');
+        });
+      });
+      
+      // Aggiungi event listener ai pulsanti toggle mercati
+      marcatoriContainer.querySelectorAll('.mercato-toggle-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const mercatoId = this.getAttribute('data-mercato-id');
+          const mercatoContent = document.getElementById(mercatoId);
+          const toggleIcon = this.querySelector('.toggle-icon');
+          
+          if (mercatoContent) {
+            mercatoContent.classList.toggle('hidden');
+            // Cambia icona
+            if (mercatoContent.classList.contains('hidden')) {
+              toggleIcon.textContent = '▶';
+            } else {
+              toggleIcon.textContent = '▼';
+            }
+          }
+        });
+      });
+      
+      // Aggiungi event listener ai pulsanti quote
+      marcatoriContainer.querySelectorAll('.quote-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          if (this.disabled) return;
+          const matchId = this.getAttribute('data-match-id');
+          const categoria = this.getAttribute('data-categoria');
+          const segno = this.getAttribute('data-segno').replace(/&quot;/g, '"');
+          const quota = this.getAttribute('data-quota');
+          const evento = this.getAttribute('data-evento').replace(/&quot;/g, '"');
+          selectQuote(matchId, categoria, segno, quota, evento);
+        });
+      });
     }
     
     // Calcola colonne per mercato
@@ -3797,6 +4749,10 @@
           if (sportSelezionato === 'horse racing' || sportSelezionato === 'horseracing') {
             renderCampiHorseRacing();
             renderCorseHorseRacing();
+          } else if (mercatoSelezionato === 'Goalscorer' && sportSelezionato === 'calcio') {
+            // Per Goalscorer, renderizza partite e marcatori
+            renderSquadreGoalscorer();
+            renderMarcatoriGoalscorer();
           } else {
             renderMatches();
           }
