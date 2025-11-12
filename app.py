@@ -648,26 +648,28 @@ def api_leagues_betbet():
         league_nation_counts = {}  # {league_name: {nation: count}} per dedurre la nazione più comune
         
         # Prima passata: raccogli tutti i campionati e conta le nazioni
-        docs = list(col.find(query, {"league": 1, "nation": 1}))
+        # Usa limit per evitare di caricare troppi documenti (ottimizzazione performance)
+        max_docs_for_leagues = 1000  # Limite ragionevole per estrarre campionati
+        docs = list(col.find(query, {"league": 1, "nation": 1}).limit(max_docs_for_leagues))
         
         # Se non trova risultati, prova con sport_id come numero
         if not docs:
             try:
                 query_num = {"sport_id": int(sport_id), "settled": False}
-                docs = list(col.find(query_num, {"league": 1, "nation": 1}))
+                docs = list(col.find(query_num, {"league": 1, "nation": 1}).limit(max_docs_for_leagues))
             except (ValueError, TypeError):
                 pass
         
         # Se ancora non trova, prova senza filtro settled
         if not docs:
             query_no_settled = {"sport_id": sport_id}
-            docs = list(col.find(query_no_settled, {"league": 1, "nation": 1}))
+            docs = list(col.find(query_no_settled, {"league": 1, "nation": 1}).limit(max_docs_for_leagues))
             
             # Prova anche con sport_id come numero senza settled
             if not docs:
                 try:
                     query_no_settled_num = {"sport_id": int(sport_id)}
-                    docs = list(col.find(query_no_settled_num, {"league": 1, "nation": 1}))
+                    docs = list(col.find(query_no_settled_num, {"league": 1, "nation": 1}).limit(max_docs_for_leagues))
                 except (ValueError, TypeError):
                     pass
         
@@ -784,12 +786,13 @@ def api_leagues_betbet():
         for nation in nations_leagues:
             nations_leagues[nation].sort(key=lambda x: x["name"])
         
-        # NON rimuovere "Altri" - includi tutte le nazioni
-        # Se "Altri" esiste, mantienila nella lista
-        
         # Ordina: prima Italia, poi altre alfabeticamente
         sorted_nations = sorted(nations_leagues.keys(), key=lambda x: (x != "Italia", x))
         ordered_nations = {nation: nations_leagues[nation] for nation in sorted_nations}
+        
+        # Per sport diversi da calcio, rimuovi nazioni vuote (senza campionati)
+        if sport != 'calcio':
+            ordered_nations = {nation: leagues for nation, leagues in ordered_nations.items() if len(leagues) > 0}
         
         # Chiudi connessione MongoDB
         if mongodb_connection:
@@ -919,7 +922,9 @@ def api_search():
 def api_events_betbet():
     """API endpoint per ottenere gli eventi sportivi da MongoDB database 'sports' (formato BetsAPI)"""
     sport = request.args.get("sport", "calcio")
-    limit = int(request.args.get("limit", 500))
+    # Limite più basso per sport non-calcio per migliorare le performance
+    default_limit = 200 if sport == 'calcio' else 100
+    limit = int(request.args.get("limit", default_limit))
     league = request.args.get("league", None)
     nation = request.args.get("nation", None)
     
@@ -976,8 +981,15 @@ def api_events_betbet():
             query["nation"] = nation_english
         
         # Recupera eventi ordinati per time
-        # Assicurati che il campo 'id' sia incluso nella query (MongoDB include tutti i campi per default)
-        eventi_raw = list(col.find(query).sort("time", 1).limit(limit))
+        # Usa proiezione per limitare i campi recuperati e migliorare le performance
+        # Include solo i campi necessari per il rendering iniziale
+        projection = {
+            "id": 1, "id_event": 1, "sport_id": 1, "time": 1, "time_status": 1,
+            "league": 1, "home": 1, "away": 1, "ss": 1, "our_event_id": 1,
+            "r_id": 1, "updated_at": 1, "odds_updated_at": 1, "settled": 1,
+            "has_players": 1, "markets": 1, "nation": 1
+        }
+        eventi_raw = list(col.find(query, projection).sort("time", 1).limit(limit))
         
         # Debug: verifica se gli eventi hanno il campo 'id'
         if eventi_raw and len(eventi_raw) > 0:
@@ -996,7 +1008,7 @@ def api_events_betbet():
                 if nation:
                     nation_english = nation_reverse_mapping.get(nation, nation)
                     query_num["nation"] = nation_english
-                eventi_raw = list(col.find(query_num).sort("time", 1).limit(limit))
+                eventi_raw = list(col.find(query_num, projection).sort("time", 1).limit(limit))
             except (ValueError, TypeError):
                 pass
         
@@ -1008,7 +1020,20 @@ def api_events_betbet():
             if nation:
                 nation_english = nation_reverse_mapping.get(nation, nation)
                 query_no_settled["nation"] = nation_english
-            eventi_raw = list(col.find(query_no_settled).sort("time", 1).limit(limit))
+            eventi_raw = list(col.find(query_no_settled, projection).sort("time", 1).limit(limit))
+            
+            # Prova anche con sport_id come numero senza settled
+            if not eventi_raw:
+                try:
+                    query_no_settled_num = {"sport_id": int(sport_id)}
+                    if league:
+                        query_no_settled_num["league.name"] = league
+                    if nation:
+                        nation_english = nation_reverse_mapping.get(nation, nation)
+                        query_no_settled_num["nation"] = nation_english
+                    eventi_raw = list(col.find(query_no_settled_num, projection).sort("time", 1).limit(limit))
+                except (ValueError, TypeError):
+                    pass
         
         # Converti formato BetsAPI -> formato betbet
         eventi = []
@@ -1657,13 +1682,21 @@ def api_search_betbet():
             except ValueError:
                 pass
         
+        # Proiezione per limitare i campi recuperati (ottimizzazione performance)
+        projection_search = {
+            "id": 1, "id_event": 1, "sport_id": 1, "time": 1, "time_status": 1,
+            "league": 1, "home": 1, "away": 1, "ss": 1, "our_event_id": 1,
+            "r_id": 1, "updated_at": 1, "odds_updated_at": 1, "settled": 1,
+            "has_players": 1, "markets": 1, "nation": 1
+        }
+        
         # Prova prima con sport_id come stringa e settled=False
         search_query = {
             "sport_id": sport_id,
             "settled": False,
             "$or": or_conditions
         }
-        eventi_raw = list(col.find(search_query).sort("time", 1).limit(limit))
+        eventi_raw = list(col.find(search_query, projection_search).sort("time", 1).limit(limit))
         
         # Se non trova risultati, prova con sport_id come numero
         if not eventi_raw:
@@ -1673,7 +1706,7 @@ def api_search_betbet():
                     "settled": False,
                     "$or": or_conditions
                 }
-                eventi_raw = list(col.find(search_query_num).sort("time", 1).limit(limit))
+                eventi_raw = list(col.find(search_query_num, projection_search).sort("time", 1).limit(limit))
             except (ValueError, TypeError):
                 pass
         
@@ -1683,7 +1716,7 @@ def api_search_betbet():
                 "sport_id": sport_id,
                 "$or": or_conditions
             }
-            eventi_raw = list(col.find(search_query_no_settled).sort("time", 1).limit(limit))
+            eventi_raw = list(col.find(search_query_no_settled, projection_search).sort("time", 1).limit(limit))
             
             # Prova anche con sport_id come numero senza settled
             if not eventi_raw:
@@ -1692,7 +1725,7 @@ def api_search_betbet():
                         "sport_id": int(sport_id),
                         "$or": or_conditions
                     }
-                    eventi_raw = list(col.find(search_query_no_settled_num).sort("time", 1).limit(limit))
+                    eventi_raw = list(col.find(search_query_no_settled_num, projection_search).sort("time", 1).limit(limit))
                 except (ValueError, TypeError):
                     pass
         
