@@ -190,23 +190,6 @@
                 <div class="text-xs text-gray-400 px-2 py-1">Caricamento campionati...</div>
               </div>
             </div>
-            <div class="sport-item" data-sport="golf">
-              <div id="golf-toggle" class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer">
-                <div class="flex items-center space-x-2">
-                  <span class="text-lg">🏌️</span>
-                  <span class="text-xs font-bold">Golf</span>
-                </div>
-                <div class="flex items-center space-x-1">
-                  <span class="sport-indicator hidden text-yellow-400">✓</span>
-                  <svg id="golf-arrow" class="w-3 h-3 text-gray-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                  </svg>
-                </div>
-              </div>
-              <div id="golf-submenu" class="hidden ml-4 mt-1 space-y-1">
-                <div class="text-xs text-gray-400 px-2 py-1">Caricamento campionati...</div>
-              </div>
-            </div>
             <div class="sport-item" data-sport="pingpong">
               <div id="pingpong-toggle" class="flex items-center justify-between px-1 py-1 hover:bg-gray-600 rounded cursor-pointer">
                 <div class="flex items-center space-x-2">
@@ -717,7 +700,6 @@
       'american football': { icon: '🏈', nome: 'American Football' },
       'volleyball': { icon: '🏐', nome: 'Volleyball' },
       'water polo': { icon: '🏓', nome: 'Water Polo' },
-      'golf': { icon: '🏌️', nome: 'Golf' },
       'pingpong': { icon: '🎾', nome: 'Pingpong' },
       'pallamano': { icon: '🏐', nome: 'Pallamano' },
       'freccette': { icon: '�', nome: 'Freccette' },
@@ -758,7 +740,6 @@
         'american football': { submenu: 'american-football-submenu', arrow: 'american-football-arrow' },
         'volleyball': { submenu: 'volleyball-submenu', arrow: 'volleyball-arrow' },
         'water polo': { submenu: 'water-polo-submenu', arrow: 'water-polo-arrow' },
-        'golf': { submenu: 'golf-submenu', arrow: 'golf-arrow' },
         'pingpong': { submenu: 'pingpong-submenu', arrow: 'pingpong-arrow' },
         'futsal': { submenu: 'futsal-submenu', arrow: 'futsal-arrow' },
         'pallamano': { submenu: 'pallamano-submenu', arrow: 'pallamano-arrow' },
@@ -816,7 +797,6 @@
         'american football': 'american-football-submenu',
         'volleyball': 'volleyball-submenu',
         'water polo': 'water-polo-submenu',
-        'golf': 'golf-submenu',
         'pingpong': 'pingpong-submenu',
         'futsal': 'futsal-submenu',
         'pallamano': 'pallamano-submenu',
@@ -880,23 +860,7 @@
               loadMatches();
             }
           }
-          // Seleziona automaticamente il primo campionato solo per il calcio (Serie A)
-          else if (sportSelezionato === 'calcio' && !campionatoSelezionato && nationsLeagues['Italia'] && nationsLeagues['Italia'].length > 0) {
-            // Cerca Serie A
-            const serieA = nationsLeagues['Italia'].find(league => 
-              league.full_name && (league.full_name.includes('Serie A') || league.full_name.includes('serie a'))
-            );
-            
-            if (serieA) {
-              // Passa la nazione direttamente per evitare ambiguità
-              selezionaCampionato(serieA.full_name, 'Italia');
-            } else if (nationsLeagues['Italia'].length > 0) {
-              // Se non c'è Serie A, seleziona il primo campionato italiano
-              const primoCampionato = nationsLeagues['Italia'][0];
-              // Passa la nazione direttamente per evitare ambiguità
-              selezionaCampionato(primoCampionato.full_name, 'Italia');
-            }
-          }
+          // Non selezionare automaticamente campionati - l'utente deve selezionare manualmente
         } else {
           console.error('loadLeagues: risposta API non valida', data);
           submenu.innerHTML = '<div class="text-xs text-red-400 px-2 py-1">Errore caricamento campionati</div>';
@@ -1003,7 +967,6 @@
         'american football': 'american-football-submenu',
         'volleyball': 'volleyball-submenu',
         'water polo': 'water-polo-submenu',
-        'golf': 'golf-submenu',
         'pingpong': 'pingpong-submenu',
         'futsal': 'futsal-submenu',
         'pallamano': 'pallamano-submenu',
@@ -8159,7 +8122,6 @@
           'american football': { toggle: 'american-football-toggle', icon: '🏈', nome: 'American Football' },
           'volleyball': { toggle: 'volleyball-toggle', icon: '🏐', nome: 'Volleyball' },
           'water polo': { toggle: 'water-polo-toggle', icon: '🏓', nome: 'Water Polo' },
-          'golf': { toggle: 'golf-toggle', icon: '🏌️', nome: 'Golf' },
           'pingpong': { toggle: 'pingpong-toggle', icon: '🎾', nome: 'Pingpong' },
           'futsal': { toggle: 'futsal-toggle', icon: '⚽', nome: 'Futsal' },
           'pallamano': { toggle: 'pallamano-toggle', icon: '🎾', nome: 'Pallamano' },
@@ -8194,7 +8156,6 @@
                 'american football': { arrow: 'american-football-arrow' },
                 'volleyball': { arrow: 'volleyball-arrow' },
                 'water polo': { arrow: 'water-polo-arrow' },
-                'golf': { arrow: 'golf-arrow' },
                 'pingpong': { arrow: 'pingpong-arrow' },
                 'futsal': { arrow: 'futsal-arrow' },
                 'pallamano': { arrow: 'pallamano-arrow' },
