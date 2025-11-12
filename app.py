@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pymongo import MongoClient
 from bson import ObjectId
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -299,8 +299,8 @@ def gestionale():
             if result.matched_count == 0 and user_id_to_check != user_id:
                 result = movimenti_col.update_one(
                     {"_id": ObjectId(mov_id), "user_id": user_id_to_check},
-                    {"$set": {"tipo": tipo, "descrizione": descrizione, "importo": importo}}
-                )
+                        {"$set": {"tipo": tipo, "descrizione": descrizione, "importo": importo}}
+                    )
             
             if result.matched_count > 0:
                 flash("✏️ Movimento modificato con successo", "info")
@@ -453,6 +453,13 @@ def kroosbet():
     credito = inizializza_credito_utente(current_user.id)
     return render_template("kroosbet.html", credito=credito)
 
+@app.route("/betbet")
+@login_required
+def betbet():
+    # Inizializza credito se non esiste
+    credito = inizializza_credito_utente(current_user.id)
+    return render_template("betbet.html", credito=credito)
+
 def inizializza_credito_utente(user_id):
     """Inizializza il credito dell'utente se non esiste"""
     user = users_col.find_one({"_id": ObjectId(user_id)})
@@ -584,6 +591,189 @@ def api_leagues():
             "nations": {}
         }), 500
 
+@app.route("/api/leagues-betbet", methods=["GET", "POST", "OPTIONS"])
+def api_leagues_betbet():
+    """API endpoint per ottenere nazioni e campionati dal database 'sports' (formato BetsAPI)"""
+    sport = request.args.get("sport", "calcio")
+    
+    # Mappatura nazioni (inglese -> italiano)
+    nation_mapping = {
+        "Italy": "Italia",
+        "Argentina": "Argentina",
+        "Australia": "Australia",
+        "Austria": "Austria",
+        "Brazil": "Brasile",
+        "Bulgaria": "Bulgaria",
+        "China": "Cina",
+        "Denmark": "Danimarca",
+        "Ecuador": "Ecuador",
+        "England": "Inghilterra",
+        "France": "Francia",
+        "Germany": "Germania",
+        "Greece": "Grecia",
+        "Israel": "Israele",
+        "Netherlands": "Paesi Bassi",
+        "Paraguay": "Paraguay",
+        "Poland": "Polonia",
+        "Slovenia": "Slovenia",
+        "Spain": "Spagna"
+    }
+    
+    # Mappa sport UI -> sport_id BetsAPI
+    sport_id_map = {
+        'calcio': '1', 'basket': '18', 'tennis': '13', 'hockey': '17',
+        'baseball': '16', 'pallamano': '78', 'freccette': '15', 'pingpong': '92',
+        'rugby': '8', 'futsal': '83', 'volleyball': '91', 'pallanuoto': '110',
+        'football': '12', 'boxing': '9', 'E-Sport': '151', 'Badminton': '94',
+        'Cricket': '3', 'Squash': '107', 'Horse Racing': '2'
+    }
+    sport_id = sport_id_map.get(sport, '1')
+    
+    try:
+        db = client["sports"]
+        col = db["prematch"]
+        
+        # Query per il sport specifico
+        query = {"sport_id": sport_id, "settled": False}
+        
+        # Recupera tutti i campionati unici iterando sui documenti
+        # Questo approccio è più robusto e gestisce diversi formati
+        # Usa (league_name, nation) come chiave per distinguere campionati con stesso nome ma nazioni diverse
+        leagues_seen = set()  # Set di tuple (league_name, nation) per evitare duplicati
+        league_nation_counts = {}  # {league_name: {nation: count}} per dedurre la nazione più comune
+        
+        # Prima passata: raccogli tutti i campionati e conta le nazioni
+        for doc in col.find(query, {"league": 1, "nation": 1}):
+            league_name = None
+            nation_raw = doc.get("nation", "Altri")
+            
+            # Estrai il nome del campionato
+            league = doc.get("league")
+            if isinstance(league, dict):
+                league_name = league.get("name")
+            elif isinstance(league, str):
+                league_name = league
+            
+            if not league_name:
+                continue
+            
+            # Se nation è vuoto, prova a estrarlo dal league se è un oggetto
+            if not nation_raw or nation_raw == "Altri":
+                if isinstance(league, dict) and "nation" in league:
+                    nation_raw = league["nation"]
+            
+            # Se ancora vuoto o "Altri", prova a dedurre dal nome del campionato
+            if not nation_raw or nation_raw == "Altri":
+                league_lower = league_name.lower()
+                # Deduzione nazione dal nome del campionato
+                if "brazil" in league_lower or "brasil" in league_lower:
+                    nation_raw = "Brazil"
+                elif "italy" in league_lower or "italia" in league_lower:
+                    nation_raw = "Italy"
+                elif "spain" in league_lower or "spagna" in league_lower:
+                    nation_raw = "Spain"
+                elif "england" in league_lower or "inghilterra" in league_lower:
+                    nation_raw = "England"
+                elif "france" in league_lower or "francia" in league_lower:
+                    nation_raw = "France"
+                elif "germany" in league_lower or "germania" in league_lower:
+                    nation_raw = "Germany"
+            
+            # Conta le nazioni per ogni campionato (per dedurre la nazione più comune)
+            if league_name not in league_nation_counts:
+                league_nation_counts[league_name] = {}
+            if nation_raw and nation_raw != "Altri":
+                league_nation_counts[league_name][nation_raw] = league_nation_counts[league_name].get(nation_raw, 0) + 1
+            
+            # Salva la combinazione (league_name, nation) se abbiamo una nazione valida
+            if nation_raw and nation_raw != "Altri":
+                leagues_seen.add((league_name, nation_raw))
+        
+        # Seconda passata: per i campionati che non abbiamo ancora visto con nazione valida,
+        # usa la nazione più comune se disponibile
+        # Prima raccogliamo tutte le combinazioni (league_name, nation) che abbiamo visto
+        leagues_by_name = {}  # {league_name: [nations]}
+        for league_name, nation_raw in leagues_seen:
+            if league_name not in leagues_by_name:
+                leagues_by_name[league_name] = []
+            leagues_by_name[league_name].append(nation_raw)
+        
+        # Per ogni campionato che abbiamo visto, se ha più nazioni, le includiamo tutte
+        # Se un campionato non è stato visto con nazione valida, usa la più comune
+        final_leagues = set()
+        for league_name in league_nation_counts:
+            if league_name in leagues_by_name:
+                # Aggiungi tutte le nazioni trovate per questo campionato
+                for nation in leagues_by_name[league_name]:
+                    final_leagues.add((league_name, nation))
+            else:
+                # Se non abbiamo visto questo campionato con nazione valida, usa la più comune
+                counts = league_nation_counts[league_name]
+                if counts:
+                    most_common_nation = max(counts.items(), key=lambda x: x[1])[0]
+                    final_leagues.add((league_name, most_common_nation))
+        
+        # Aggiungi anche i campionati che abbiamo visto direttamente
+        final_leagues.update(leagues_seen)
+        
+        # Organizza per nazione
+        nations_leagues = {}
+        for league_name, nation_raw in final_leagues:
+            # Applica mappatura per traduzione (se esiste), altrimenti usa il nome originale
+            # Questo assicura che TUTTE le nazioni vengano incluse, anche quelle non mappate
+            nation = nation_mapping.get(nation_raw, nation_raw)
+            
+            # Se la nazione è ancora "Altri" o vuota, prova a dedurla dal nome del campionato
+            if not nation or nation == "Altri":
+                # Prova a dedurre la nazione dal nome del campionato (es. "Brazil Serie A" -> "Brasile")
+                if "brazil" in league_name.lower() or "brasil" in league_name.lower():
+                    nation = "Brasile"
+                elif "italy" in league_name.lower() or "italia" in league_name.lower():
+                    nation = "Italia"
+                elif "spain" in league_name.lower() or "spagna" in league_name.lower():
+                    nation = "Spagna"
+                elif "england" in league_name.lower() or "inghilterra" in league_name.lower():
+                    nation = "Inghilterra"
+                elif "france" in league_name.lower() or "francia" in league_name.lower():
+                    nation = "Francia"
+                elif "germany" in league_name.lower() or "germania" in league_name.lower():
+                    nation = "Germania"
+                else:
+                    # Se non riesci a dedurla, usa il nome originale o "Altri"
+                    nation = nation_raw if nation_raw else "Altri"
+            
+            if nation not in nations_leagues:
+                nations_leagues[nation] = []
+            
+            # Evita duplicati
+            if not any(l["name"] == league_name for l in nations_leagues[nation]):
+                nations_leagues[nation].append({
+                    "name": league_name,
+                    "full_name": league_name
+                })
+        
+        # Ordina i campionati per nome
+        for nation in nations_leagues:
+            nations_leagues[nation].sort(key=lambda x: x["name"])
+        
+        # NON rimuovere "Altri" - includi tutte le nazioni
+        # Se "Altri" esiste, mantienila nella lista
+        
+        # Ordina: prima Italia, poi altre alfabeticamente
+        sorted_nations = sorted(nations_leagues.keys(), key=lambda x: (x != "Italia", x))
+        ordered_nations = {nation: nations_leagues[nation] for nation in sorted_nations}
+        
+        return jsonify({
+            "success": True,
+            "nations": ordered_nations
+        })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "nations": {}
+        }), 500
+
 @app.route("/api/events")
 def api_events():
     """API endpoint per ottenere gli eventi sportivi da MongoDB"""
@@ -674,6 +864,620 @@ def api_search():
             # Converti ObjectId in stringa per JSON
             if "_id" in ev:
                 ev["_id"] = str(ev["_id"])
+        
+        return jsonify({
+            "success": True,
+            "results": eventi,
+            "count": len(eventi)
+        })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "results": []
+        }), 500
+
+@app.route("/api/events-betbet")
+def api_events_betbet():
+    """API endpoint per ottenere gli eventi sportivi da MongoDB database 'sports' (formato BetsAPI)"""
+    sport = request.args.get("sport", "calcio")
+    limit = int(request.args.get("limit", 500))
+    league = request.args.get("league", None)
+    nation = request.args.get("nation", None)
+    
+    # Mappatura nazioni (italiano -> inglese per query)
+    nation_reverse_mapping = {
+        "Italia": "Italy",
+        "Argentina": "Argentina",
+        "Australia": "Australia",
+        "Austria": "Austria",
+        "Brasile": "Brazil",
+        "Bulgaria": "Bulgaria",
+        "Cina": "China",
+        "Danimarca": "Denmark",
+        "Ecuador": "Ecuador",
+        "Inghilterra": "England",
+        "Francia": "France",
+        "Germania": "Germany",
+        "Grecia": "Greece",
+        "Israele": "Israel",
+        "Paesi Bassi": "Netherlands",
+        "Paraguay": "Paraguay",
+        "Polonia": "Poland",
+        "Slovenia": "Slovenia",
+        "Spagna": "Spain"
+    }
+    
+    # Mappa sport UI -> sport_id BetsAPI
+    sport_id_map = {
+        'calcio': '1', 'basket': '18', 'tennis': '13', 'hockey': '17',
+        'baseball': '16', 'pallamano': '78', 'freccette': '15', 'pingpong': '92',
+        'rugby': '8', 'futsal': '83', 'volleyball': '91', 'pallanuoto': '110',
+        'football': '12', 'boxing': '9', 'E-Sport': '151', 'Badminton': '94',
+        'Cricket': '3', 'Squash': '107', 'Horse Racing': '2'
+    }
+    sport_id = sport_id_map.get(sport, '1')
+    
+    try:
+        db = client["sports"]
+        col = db["prematch"]
+        
+        # Costruisci query
+        query = {"sport_id": sport_id, "settled": False}
+        if league:
+            query["league.name"] = league
+        # Aggiungi filtro per nazione se fornito (per evitare ambiguità con campionati omonimi)
+        if nation:
+            # Converti nazione italiana in inglese se necessario
+            nation_english = nation_reverse_mapping.get(nation, nation)
+            query["nation"] = nation_english
+        
+        # Recupera eventi ordinati per time
+        eventi_raw = list(col.find(query).sort("time", 1).limit(limit))
+        
+        # Converti formato BetsAPI -> formato betbet
+        eventi = []
+        for ev in eventi_raw:
+            # Converti formato
+            evento_convertito = {
+                "match_id": str(ev.get("id", "")),
+                "home_name": ev.get("home", {}).get("name", "") if isinstance(ev.get("home"), dict) else "",
+                "away_name": ev.get("away", {}).get("name", "") if isinstance(ev.get("away"), dict) else "",
+                "league": ev.get("league", {}).get("name", "") if isinstance(ev.get("league"), dict) else ev.get("league", ""),
+                "sport": sport,
+                "nation": ev.get("nation", ""),
+                "quote": {},
+                "quote_1x2": {"1": None, "X": None, "2": None}
+            }
+            
+            # Converti time in start_time_date e start_time
+            if "time" in ev:
+                try:
+                    time_int = int(ev["time"])
+                    evento_convertito["start_time_date"] = datetime.fromtimestamp(time_int, tz=timezone.utc)
+                    evento_convertito["start_time"] = evento_convertito["start_time_date"].strftime("%Y-%m-%d %H:%M:%S")
+                except:
+                    evento_convertito["start_time"] = str(ev.get("time", ""))
+            
+            # Converti markets in quote
+            if "markets" in ev and ev["markets"]:
+                markets = ev["markets"]
+                quote = {}
+                
+                # 1x2 -> full_time_result
+                if "1x2" in markets and markets["1x2"]:
+                    quote["full_time_result"] = markets["1x2"]
+                    # Estrai quote_1x2
+                    for item in markets["1x2"]:
+                        if isinstance(item, dict):
+                            name = (item.get("name") or item.get("header") or "").strip().lower()
+                            odds = item.get("odds")
+                            if name == "1" or name == "home":
+                                evento_convertito["quote_1x2"]["1"] = odds
+                            elif name == "x" or name == "draw" or name == "pareggio":
+                                evento_convertito["quote_1x2"]["X"] = odds
+                            elif name == "2" or name == "away":
+                                evento_convertito["quote_1x2"]["2"] = odds
+                
+                # uo -> goals_over_under
+                if "uo" in markets and markets["uo"]:
+                    quote["goals_over_under"] = markets["uo"]
+                
+                # ggng -> both_teams_to_score
+                if "ggng" in markets and markets["ggng"]:
+                    quote["both_teams_to_score"] = markets["ggng"]
+                
+                # Aggiungi tutti gli altri markets
+                for key, value in markets.items():
+                    if key not in ["1x2", "uo", "ggng"]:
+                        quote[key] = value
+                
+                evento_convertito["quote"] = quote
+            
+            # Aggiungi dati goalscorer dalla collezione 'players'
+            try:
+                players_col = db["players"]
+                players_doc = players_col.find_one({"id": str(ev.get("id", ""))})
+                if players_doc and "odds" in players_doc:
+                    # Rimuovi _id per evitare errori di serializzazione JSON
+                    if "_id" in players_doc:
+                        del players_doc["_id"]
+                    evento_convertito["players"] = players_doc
+            except Exception as e:
+                # Ignora errori nel recupero dei players
+                pass
+            
+            # Aggiungi quote calcolate dalla collezione 'calculated'
+            try:
+                calculated_col = db["calculated"]
+                calculated_doc = calculated_col.find_one({"id": str(ev.get("id", ""))})
+                if calculated_doc and "odds" in calculated_doc:
+                    calculated_odds = calculated_doc["odds"]
+                    
+                    # Mappa le quote calcolate al formato quote
+                    if not evento_convertito.get("quote"):
+                        evento_convertito["quote"] = {}
+                    
+                    # Mappatura chiavi calculated -> quote (tutti i mercati dal JSON)
+                    calculated_mapping = {
+                        # Over/Under Gol
+                        "uo": "goals_over_under",
+                        "uo_1t": "1st_half_goals_over_under",
+                        "uo_2t": "2nd_half_goals_over_under",
+                        "uo_home": "home_team_goals_over_under",  # O/U C/O finale
+                        "uo_away": "away_team_goals_over_under",  # O/U C/O finale
+                        "uo_1t_home": "1st_half_home_team_goals_over_under",  # O/U 1T C/O
+                        "uo_1t_away": "1st_half_away_team_goals_over_under",  # O/U 1T C/O
+                        "uo_2t_home": "2nd_half_home_team_goals_over_under",  # O/U 2T C/O
+                        "uo_2t_away": "2nd_half_away_team_goals_over_under",  # O/U 2T C/O
+                        "uo_special": "goals_over_under_special",
+                        # Alternative keys per O/U C/O
+                        "home_team_total_goals": "home_team_total_goals",
+                        "away_team_total_goals": "away_team_total_goals",
+                        "team_total_goals": "team_total_goals",
+                        "1st_half_team_total_goals": "1st_half_team_total_goals",
+                        "2nd_half_team_total_goals": "2nd_half_team_total_goals",
+                        
+                        # 1X2 e Doppia Chance
+                        "1x2": "full_time_result",
+                        "dc": "double_chance",
+                        "1x2_1t": "half_time_result",
+                        "1x2_2t": "2nd_half_result",
+                        "dc_1t": "half_time_double_chance",
+                        "dc_2t": "2nd_half_double_chance",
+                        "1t_ft": "half_time_full_time",
+                        "dc_1t_ft": "half_time_full_time_double_chance",
+                        
+                        # First/Last Goal
+                        "first_goal": "first_team_to_score",
+                        "last_goal": "last_team_to_score",
+                        
+                        # Early/Late Goal
+                        "early_goal": "early_goal",
+                        "late_goal": "late_goal",
+                        
+                        # Corners
+                        "crn_uo": "corners_over_under",
+                        "crn_uo_1t": "1st_half_corners_over_under",
+                        "crn_uo_3": "corners_over_under_3way",
+                        "corner_multi": "corners_multi",
+                        "crn_odd_even": "corners_odd_even",
+                        "crn_odd_even_1t": "1st_half_corners_odd_even",
+                        "crn_odd_even_home": "corners_odd_even_home",
+                        "crn_odd_even_away": "corners_odd_even_away",
+                        "crn_odd_even_1t_home": "1st_half_corners_odd_even_home",
+                        "crn_odd_even_1t_away": "1st_half_corners_odd_even_away",
+                        
+                        # Cards
+                        "crd_uo": "cards_over_under",
+                        "crd_1x2": "cards_1x2",
+                        
+                        # Total Goals
+                        "tg": "total_goals",
+                        "tg_1t": "1st_half_total_goals",
+                        "tg_2t": "2nd_half_total_goals",
+                        "tg_home": "home_team_total_goals",
+                        "tg_away": "away_team_total_goals",
+                        "alternative_total_goals": "alternative_total_goals",
+                        "1st_half_alternative_total_goals": "1st_half_alternative_total_goals",
+                        "2nd_half_alternative_total_goals": "2nd_half_alternative_total_goals",
+                        
+                        # Odd/Even
+                        "odd_even": "goals_odd_even",
+                        "odd_even_1t": "1st_half_goals_odd_even",
+                        "odd_even_2t": "2nd_half_goals_odd_even",
+                        "team_goals_odd_even": "team_goals_odd_even",
+                        
+                        # Correct Score
+                        "cs": "correct_score",
+                        "cs_1t": "1st_half_correct_score",
+                        "cs_2t": "2nd_half_correct_score",
+                        "cs_ht_ft": "half_time_full_time_correct_score",
+                        
+                        # Draw No Bet
+                        "dnb": "draw_no_bet",
+                        "dnb_1t": "1st_half_draw_no_bet",
+                        "dnb_2t": "2nd_half_draw_no_bet",
+                        
+                        # Handicap
+                        "handicap": "handicap_result",
+                        "handicap_1t": "1st_half_handicap_result",
+                        "handicap_2t": "2nd_half_handicap_result",
+                        "asian_handicap": "asian_handicap",
+                        
+                        # Handicap No Bet
+                        "hnb": "handicap_no_bet",
+                        "hnb_1t": "1st_half_handicap_no_bet",
+                        "hnb_2t": "2nd_half_handicap_no_bet",
+                        
+                        # Asian No Bet
+                        "anb": "asian_no_bet",
+                        "anb_1t": "1st_half_asian_no_bet",
+                        "anb_2t": "2nd_half_asian_no_bet",
+                        
+                        # Goal No Bet
+                        "gnb": "goal_no_bet",
+                        
+                        # Half More Goals
+                        "half_more_goals": "half_more_goals",
+                        
+                        # Combo Markets
+                        "comboDc1tOu": "combo_double_chance_1t_over_under",
+                        "comboDc2tOu": "combo_double_chance_2t_over_under",
+                        "combo_dc_multi": "combo_double_chance_multi",
+                        
+                        # Multi Goals
+                        "multigol": "multi_goals",
+                        "multi1t": "multi_goals_1t",
+                        "multi2t": "multi_goals_2t",
+                        "multi1t_ft": "multi_goals_1t_full_time",
+                        "match_goals_range": "match_goals_range",
+                        "1st_half_match_goals_range": "1st_half_match_goals_range",
+                        "2nd_half_match_goals_range": "2nd_half_match_goals_range",
+                        "home_team_match_goals_range": "home_team_match_goals_range",
+                        "away_team_match_goals_range": "away_team_match_goals_range",
+                        "match_goals_range_corners": "match_goals_range_corners",
+                        "1st_half_2nd_half_match_goals_range": "1st_half_2nd_half_match_goals_range",
+                        
+                        # Special Markets
+                        "home_score_1_2": "home_score_1_2",
+                        "away_score_1_2": "away_score_1_2",
+                        "home_wins_both": "home_wins_both_halves",
+                        "away_wins_both": "away_wins_both_halves",
+                        "home_or_away_win_both": "home_or_away_win_both_halves",
+                        "home_win_at_least_one": "home_win_at_least_one_half",
+                        "away_win_at_least_one": "away_win_at_least_one_half",
+                        "wins_from_behind": "wins_from_behind",
+                        "combo_1x2_first_goal": "combo_1x2_first_goal"
+                    }
+                    
+                    # Aggiungi tutte le quote calcolate (con mappatura se disponibile)
+                    for calc_key, calc_value in calculated_odds.items():
+                        if isinstance(calc_value, list):
+                            # Usa la mappatura se disponibile, altrimenti usa la chiave originale
+                            quote_key = calculated_mapping.get(calc_key, calc_key)
+                            evento_convertito["quote"][quote_key] = calc_value
+                            
+                            # Se è 1x2_1t o 1x2_2t, aggiorna anche quote_1x2 se necessario
+                            if calc_key == "1x2_1t" and not evento_convertito["quote_1x2"]["1"]:
+                                for item in calc_value:
+                                    if isinstance(item, dict):
+                                        header = (item.get("header") or "").strip()
+                                        odds = item.get("odds")
+                                        if header == "1":
+                                            evento_convertito["quote_1x2"]["1"] = odds
+                                        elif header == "X":
+                                            evento_convertito["quote_1x2"]["X"] = odds
+                                        elif header == "2":
+                                            evento_convertito["quote_1x2"]["2"] = odds
+            except Exception as calc_error:
+                # Ignora errori nella lettura delle quote calcolate
+                pass
+            
+            # Converti ObjectId in stringa
+            if "_id" in ev:
+                evento_convertito["_id"] = str(ev["_id"])
+            
+            eventi.append(evento_convertito)
+        
+        return jsonify({
+            "success": True,
+            "results": eventi,
+            "count": len(eventi)
+        })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "results": []
+        }), 500
+
+@app.route("/api/search-betbet", methods=["GET"])
+def api_search_betbet():
+    """API endpoint per cercare eventi nel database 'sports' (formato BetsAPI)"""
+    sport = request.args.get("sport", "calcio")
+    query = request.args.get("q", "").strip()
+    limit = int(request.args.get("limit", 50))
+    
+    if not query:
+        return jsonify({
+            "success": False,
+            "error": "Query vuota",
+            "results": []
+        }), 400
+    
+    # Mappa sport UI -> sport_id BetsAPI
+    sport_id_map = {
+        'calcio': '1', 'basket': '18', 'tennis': '13', 'hockey': '17',
+        'baseball': '16', 'pallamano': '78', 'freccette': '15', 'pingpong': '92',
+        'rugby': '8', 'futsal': '83', 'volleyball': '91', 'pallanuoto': '110',
+        'football': '12', 'boxing': '9', 'E-Sport': '151', 'Badminton': '94',
+        'Cricket': '3', 'Squash': '107', 'Horse Racing': '2'
+    }
+    sport_id = sport_id_map.get(sport, '1')
+    
+    try:
+        db = client["sports"]
+        col = db["prematch"]
+        
+        # Crea query MongoDB
+        search_query = {
+            "sport_id": sport_id,
+            "settled": False,
+            "$or": [
+                {"id": {"$regex": query, "$options": "i"}},
+                {"home.name": {"$regex": query, "$options": "i"}},
+                {"away.name": {"$regex": query, "$options": "i"}},
+                {"league.name": {"$regex": query, "$options": "i"}}
+            ]
+        }
+        
+        # Cerca anche per match esatto dell'ID
+        if query.isdigit():
+            search_query["$or"].append({"id": query})
+            try:
+                search_query["$or"].append({"id": int(query)})
+            except ValueError:
+                pass
+        
+        # Recupera eventi
+        eventi_raw = list(col.find(search_query).sort("time", 1).limit(limit))
+        
+        # Converti formato (stessa logica di api_events_betbet)
+        eventi = []
+        for ev in eventi_raw:
+            evento_convertito = {
+                "match_id": str(ev.get("id", "")),
+                "home_name": ev.get("home", {}).get("name", "") if isinstance(ev.get("home"), dict) else "",
+                "away_name": ev.get("away", {}).get("name", "") if isinstance(ev.get("away"), dict) else "",
+                "league": ev.get("league", {}).get("name", "") if isinstance(ev.get("league"), dict) else ev.get("league", ""),
+                "sport": sport,
+                "nation": ev.get("nation", ""),
+                "quote": {},
+                "quote_1x2": {"1": None, "X": None, "2": None}
+            }
+            
+            if "time" in ev:
+                try:
+                    time_int = int(ev["time"])
+                    evento_convertito["start_time_date"] = datetime.fromtimestamp(time_int, tz=timezone.utc)
+                    evento_convertito["start_time"] = evento_convertito["start_time_date"].strftime("%Y-%m-%d %H:%M:%S")
+                except:
+                    evento_convertito["start_time"] = str(ev.get("time", ""))
+            
+            if "markets" in ev and ev["markets"]:
+                markets = ev["markets"]
+                quote = {}
+                
+                if "1x2" in markets and markets["1x2"]:
+                    quote["full_time_result"] = markets["1x2"]
+                    for item in markets["1x2"]:
+                        if isinstance(item, dict):
+                            name = (item.get("name") or item.get("header") or "").strip().lower()
+                            odds = item.get("odds")
+                            if name == "1" or name == "home":
+                                evento_convertito["quote_1x2"]["1"] = odds
+                            elif name == "x" or name == "draw" or name == "pareggio":
+                                evento_convertito["quote_1x2"]["X"] = odds
+                            elif name == "2" or name == "away":
+                                evento_convertito["quote_1x2"]["2"] = odds
+                
+                if "uo" in markets and markets["uo"]:
+                    quote["goals_over_under"] = markets["uo"]
+                
+                if "ggng" in markets and markets["ggng"]:
+                    quote["both_teams_to_score"] = markets["ggng"]
+                
+                for key, value in markets.items():
+                    if key not in ["1x2", "uo", "ggng"]:
+                        quote[key] = value
+                
+                evento_convertito["quote"] = quote
+            
+            # Aggiungi dati goalscorer dalla collezione 'players'
+            try:
+                players_col = db["players"]
+                players_doc = players_col.find_one({"id": str(ev.get("id", ""))})
+                if players_doc and "odds" in players_doc:
+                    # Rimuovi _id per evitare errori di serializzazione JSON
+                    if "_id" in players_doc:
+                        del players_doc["_id"]
+                    evento_convertito["players"] = players_doc
+            except Exception as e:
+                # Ignora errori nel recupero dei players
+                pass
+            
+            # Aggiungi quote calcolate dalla collezione 'calculated'
+            try:
+                calculated_col = db["calculated"]
+                calculated_doc = calculated_col.find_one({"id": str(ev.get("id", ""))})
+                if calculated_doc and "odds" in calculated_doc:
+                    calculated_odds = calculated_doc["odds"]
+                    
+                    # Mappa le quote calcolate al formato quote
+                    if not evento_convertito.get("quote"):
+                        evento_convertito["quote"] = {}
+                    
+                    # Mappatura chiavi calculated -> quote (tutti i mercati dal JSON)
+                    calculated_mapping = {
+                        # Over/Under Gol
+                        "uo": "goals_over_under",
+                        "uo_1t": "1st_half_goals_over_under",
+                        "uo_2t": "2nd_half_goals_over_under",
+                        "uo_home": "home_team_goals_over_under",  # O/U C/O finale
+                        "uo_away": "away_team_goals_over_under",  # O/U C/O finale
+                        "uo_1t_home": "1st_half_home_team_goals_over_under",  # O/U 1T C/O
+                        "uo_1t_away": "1st_half_away_team_goals_over_under",  # O/U 1T C/O
+                        "uo_2t_home": "2nd_half_home_team_goals_over_under",  # O/U 2T C/O
+                        "uo_2t_away": "2nd_half_away_team_goals_over_under",  # O/U 2T C/O
+                        "uo_special": "goals_over_under_special",
+                        # Alternative keys per O/U C/O
+                        "home_team_total_goals": "home_team_total_goals",
+                        "away_team_total_goals": "away_team_total_goals",
+                        "team_total_goals": "team_total_goals",
+                        "1st_half_team_total_goals": "1st_half_team_total_goals",
+                        "2nd_half_team_total_goals": "2nd_half_team_total_goals",
+                        
+                        # 1X2 e Doppia Chance
+                        "1x2": "full_time_result",
+                        "dc": "double_chance",
+                        "1x2_1t": "half_time_result",
+                        "1x2_2t": "2nd_half_result",
+                        "dc_1t": "half_time_double_chance",
+                        "dc_2t": "2nd_half_double_chance",
+                        "1t_ft": "half_time_full_time",
+                        "dc_1t_ft": "half_time_full_time_double_chance",
+                        
+                        # First/Last Goal
+                        "first_goal": "first_team_to_score",
+                        "last_goal": "last_team_to_score",
+                        
+                        # Early/Late Goal
+                        "early_goal": "early_goal",
+                        "late_goal": "late_goal",
+                        
+                        # Corners
+                        "crn_uo": "corners_over_under",
+                        "crn_uo_1t": "1st_half_corners_over_under",
+                        "crn_uo_3": "corners_over_under_3way",
+                        "corner_multi": "corners_multi",
+                        "crn_odd_even": "corners_odd_even",
+                        "crn_odd_even_1t": "1st_half_corners_odd_even",
+                        "crn_odd_even_home": "corners_odd_even_home",
+                        "crn_odd_even_away": "corners_odd_even_away",
+                        "crn_odd_even_1t_home": "1st_half_corners_odd_even_home",
+                        "crn_odd_even_1t_away": "1st_half_corners_odd_even_away",
+                        
+                        # Cards
+                        "crd_uo": "cards_over_under",
+                        "crd_1x2": "cards_1x2",
+                        
+                        # Total Goals
+                        "tg": "total_goals",
+                        "tg_1t": "1st_half_total_goals",
+                        "tg_2t": "2nd_half_total_goals",
+                        "tg_home": "home_team_total_goals",
+                        "tg_away": "away_team_total_goals",
+                        "alternative_total_goals": "alternative_total_goals",
+                        "1st_half_alternative_total_goals": "1st_half_alternative_total_goals",
+                        "2nd_half_alternative_total_goals": "2nd_half_alternative_total_goals",
+                        
+                        # Odd/Even
+                        "odd_even": "goals_odd_even",
+                        "odd_even_1t": "1st_half_goals_odd_even",
+                        "odd_even_2t": "2nd_half_goals_odd_even",
+                        "team_goals_odd_even": "team_goals_odd_even",
+                        
+                        # Correct Score
+                        "cs": "correct_score",
+                        "cs_1t": "1st_half_correct_score",
+                        "cs_2t": "2nd_half_correct_score",
+                        "cs_ht_ft": "half_time_full_time_correct_score",
+                        
+                        # Draw No Bet
+                        "dnb": "draw_no_bet",
+                        "dnb_1t": "1st_half_draw_no_bet",
+                        "dnb_2t": "2nd_half_draw_no_bet",
+                        
+                        # Handicap
+                        "handicap": "handicap_result",
+                        "handicap_1t": "1st_half_handicap_result",
+                        "handicap_2t": "2nd_half_handicap_result",
+                        "asian_handicap": "asian_handicap",
+                        
+                        # Handicap No Bet
+                        "hnb": "handicap_no_bet",
+                        "hnb_1t": "1st_half_handicap_no_bet",
+                        "hnb_2t": "2nd_half_handicap_no_bet",
+                        
+                        # Asian No Bet
+                        "anb": "asian_no_bet",
+                        "anb_1t": "1st_half_asian_no_bet",
+                        "anb_2t": "2nd_half_asian_no_bet",
+                        
+                        # Goal No Bet
+                        "gnb": "goal_no_bet",
+                        
+                        # Half More Goals
+                        "half_more_goals": "half_more_goals",
+                        
+                        # Combo Markets
+                        "comboDc1tOu": "combo_double_chance_1t_over_under",
+                        "comboDc2tOu": "combo_double_chance_2t_over_under",
+                        "combo_dc_multi": "combo_double_chance_multi",
+                        
+                        # Multi Goals
+                        "multigol": "multi_goals",
+                        "multi1t": "multi_goals_1t",
+                        "multi2t": "multi_goals_2t",
+                        "multi1t_ft": "multi_goals_1t_full_time",
+                        "match_goals_range": "match_goals_range",
+                        "1st_half_match_goals_range": "1st_half_match_goals_range",
+                        "2nd_half_match_goals_range": "2nd_half_match_goals_range",
+                        "home_team_match_goals_range": "home_team_match_goals_range",
+                        "away_team_match_goals_range": "away_team_match_goals_range",
+                        "match_goals_range_corners": "match_goals_range_corners",
+                        "1st_half_2nd_half_match_goals_range": "1st_half_2nd_half_match_goals_range",
+                        
+                        # Special Markets
+                        "home_score_1_2": "home_score_1_2",
+                        "away_score_1_2": "away_score_1_2",
+                        "home_wins_both": "home_wins_both_halves",
+                        "away_wins_both": "away_wins_both_halves",
+                        "home_or_away_win_both": "home_or_away_win_both_halves",
+                        "home_win_at_least_one": "home_win_at_least_one_half",
+                        "away_win_at_least_one": "away_win_at_least_one_half",
+                        "wins_from_behind": "wins_from_behind",
+                        "combo_1x2_first_goal": "combo_1x2_first_goal"
+                    }
+                    
+                    # Aggiungi tutte le quote calcolate (con mappatura se disponibile)
+                    for calc_key, calc_value in calculated_odds.items():
+                        if isinstance(calc_value, list):
+                            # Usa la mappatura se disponibile, altrimenti usa la chiave originale
+                            quote_key = calculated_mapping.get(calc_key, calc_key)
+                            evento_convertito["quote"][quote_key] = calc_value
+                            
+                            # Se è 1x2_1t o 1x2_2t, aggiorna anche quote_1x2 se necessario
+                            if calc_key == "1x2_1t" and not evento_convertito["quote_1x2"]["1"]:
+                                for item in calc_value:
+                                    if isinstance(item, dict):
+                                        header = (item.get("header") or "").strip()
+                                        odds = item.get("odds")
+                                        if header == "1":
+                                            evento_convertito["quote_1x2"]["1"] = odds
+                                        elif header == "X":
+                                            evento_convertito["quote_1x2"]["X"] = odds
+                                        elif header == "2":
+                                            evento_convertito["quote_1x2"]["2"] = odds
+            except Exception as calc_error:
+                # Ignora errori nella lettura delle quote calcolate
+                pass
+            
+            if "_id" in ev:
+                evento_convertito["_id"] = str(ev["_id"])
+            
+            eventi.append(evento_convertito)
         
         return jsonify({
             "success": True,
