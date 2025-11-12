@@ -823,6 +823,7 @@ def api_events():
     league = request.args.get("league", None)  # Filtro opzionale per campionato
     add_hour = request.args.get("add_hour", "false").lower() == "true"  # Parametro per aggiungere 1 ora
     
+    mongodb_connection_sports = None
     try:
         db = client["bet365"]
         col = db[sport]
@@ -845,6 +846,53 @@ def api_events():
             # Converti ObjectId in stringa per JSON
             if "_id" in ev:
                 ev["_id"] = str(ev["_id"])
+            
+            # Aggiungi dati goalscorer dalla collezione 'players' del database 'sports'
+            # Estrai event_id dal match_id o id
+            event_id = ev.get("match_id") or ev.get("id")
+            if event_id:
+                try:
+                    # Connessione al database sports per i players
+                    if not mongodb_connection_sports:
+                        uri = 'mongodb://admin:Mongolicani@52.210.150.253:27017/admin'
+                        mongodb_connection_sports = MongoClient(uri, tls=False, tlsAllowInvalidCertificates=True, server_api=pymongo.server_api.ServerApi(version="1", strict=True, deprecation_errors=True))
+                    
+                    players_db = mongodb_connection_sports["sports"]
+                    players_col = players_db["players"]
+                    players_doc = None
+                    
+                    # Cerca players con event_id (prova come numero, stringa, e id_event)
+                    try:
+                        players_doc = players_col.find_one({"id": int(event_id)})
+                    except (ValueError, TypeError):
+                        pass
+                    
+                    if not players_doc:
+                        players_doc = players_col.find_one({"id": str(event_id)})
+                    
+                    if not players_doc:
+                        players_doc = players_col.find_one({"id": event_id})
+                    
+                    if not players_doc:
+                        try:
+                            players_doc = players_col.find_one({"id_event": int(event_id)})
+                        except (ValueError, TypeError):
+                            pass
+                        if not players_doc:
+                            players_doc = players_col.find_one({"id_event": str(event_id)})
+                    
+                    if players_doc:
+                        # Rimuovi _id per evitare errori di serializzazione JSON
+                        if "_id" in players_doc:
+                            del players_doc["_id"]
+                        ev["players"] = players_doc
+                except Exception as e:
+                    # Ignora errori nel recupero dei players
+                    pass
+        
+        # Chiudi connessione MongoDB sports se aperta
+        if mongodb_connection_sports:
+            mongodb_connection_sports.close()
         
         return jsonify({
             "success": True,
@@ -852,6 +900,12 @@ def api_events():
             "count": len(eventi)
         })
     except Exception as e:
+        # Chiudi connessione MongoDB sports anche in caso di errore
+        if mongodb_connection_sports:
+            try:
+                mongodb_connection_sports.close()
+            except:
+                pass
         return jsonify({
             "success": False,
             "error": str(e),
@@ -1463,10 +1517,14 @@ def api_events_betbet():
                         if not players_doc:
                             players_doc = players_col.find_one({"id_event": str(event_id)})
                 
-                if players_doc and "odds" in players_doc:
+                if players_doc:
                     # Rimuovi _id per evitare errori di serializzazione JSON
                     if "_id" in players_doc:
                         del players_doc["_id"]
+                    # Il documento players può avere la struttura:
+                    # - players.odds.soa.score (formato standard)
+                    # - players.soa.score (formato alternativo)
+                    # Assicurati che la struttura sia accessibile nel frontend
                     evento_convertito["players"] = players_doc
             except Exception as e:
                 # Ignora errori nel recupero dei players
@@ -2160,10 +2218,14 @@ def api_search_betbet():
                         if not players_doc:
                             players_doc = players_col.find_one({"id_event": str(event_id)})
                 
-                if players_doc and "odds" in players_doc:
+                if players_doc:
                     # Rimuovi _id per evitare errori di serializzazione JSON
                     if "_id" in players_doc:
                         del players_doc["_id"]
+                    # Il documento players può avere la struttura:
+                    # - players.odds.soa.score (formato standard)
+                    # - players.soa.score (formato alternativo)
+                    # Assicurati che la struttura sia accessibile nel frontend
                     evento_convertito["players"] = players_doc
             except Exception as e:
                 # Ignora errori nel recupero dei players
